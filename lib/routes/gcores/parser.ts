@@ -222,7 +222,7 @@ const parseBlock = (block: Block, entityMap: Readonly<Record<string, Entity>>): 
         lastOffset = range.offset + range.length;
     }
 
-    resultParts.push(text.slice(lastOffset));
+    resultParts.push(text.substring(lastOffset));
 
     return `${blockType.element ? `<${blockType.element}>` : ''}${resultParts.join('').replaceAll('\n', '<br>')}${blockType.element ? `</${blockType.element}>` : ''}`;
 };

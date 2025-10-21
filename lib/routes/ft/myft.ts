@@ -55,12 +55,12 @@ async function handler(ctx) {
                 item.category = [
                     $('.n-content-tag--with-follow').text(),
                     ...$('.article__right-bottom a.concept-list__concept')
-                        .toArray()
-                        .map((e) => $(e).text().trim()),
+                        .map((i, e) => $(e).text().trim())
+                        .get(),
                 ];
                 item.author = $('a.n-content-tag--author')
-                    .toArray()
-                    .map((e) => ({ name: $(e).text() }));
+                    .map((i, e) => ({ name: $(e).text() }))
+                    .get();
 
                 return item;
             })

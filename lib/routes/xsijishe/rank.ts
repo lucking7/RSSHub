@@ -11,7 +11,7 @@ const baseUrl = 'https://xsijishe.com';
 
 export const route: Route = {
     path: '/rank/:type',
-    categories: ['bbs'],
+    categories: ['bbs', 'popular'],
     example: '/xsijishe/rank/weekly',
     parameters: {
         type: {
@@ -67,7 +67,7 @@ async function handler(ctx) {
         'Accept-Encoding': 'gzip, deflate, br',
         'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
         Cookie: config.xsijishe.cookie,
-        'User-Agent': config.xsijishe.userAgent,
+        'User-Agent': config.xsijishe.user_agent,
     };
 
     const resp = await got(url, {

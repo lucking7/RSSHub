@@ -24,8 +24,7 @@ async function handler() {
     const title_main = $('channel > title').text();
     const description_main = $('channel > description').text();
     const items = $('channel > item')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             const $item = $(item);
             const link = $item.find('link').text();
             const title = $item.find('title').text();
@@ -37,7 +36,8 @@ async function handler() {
                 title,
                 description,
             };
-        });
+        })
+        .get();
 
     return {
         title: title_main,

@@ -36,35 +36,34 @@ async function handler(ctx) {
     const title = $('#content h1').text().trim();
     const description = $('div.doulist-about').text().trim();
     const out = $('div.doulist-item')
-        .toArray()
-        .map((item) => {
-            const type = $(item).find('div.source').text().trim();
+        .map(function () {
+            const type = $(this).find('div.source').text().trim();
 
-            let title = $(item).find('div.bd.doulist-note div.title a').text().trim();
-            let link = $(item).find('div.bd.doulist-note div.title a').attr('href');
-            let description = $(item).find('div.bd.doulist-note  div.abstract').text().trim();
+            let title = $(this).find('div.bd.doulist-note div.title a').text().trim();
+            let link = $(this).find('div.bd.doulist-note div.title a').attr('href');
+            let description = $(this).find('div.bd.doulist-note  div.abstract').text().trim();
 
             if (type === '来自：豆瓣广播') {
-                title = $(item).find('p.status-content > a').text().trim();
-                link = $(item).find('p.status-content a').attr('href');
+                title = $(this).find('p.status-content > a').text().trim();
+                link = $(this).find('p.status-content a').attr('href');
 
-                description = $(item).find('span.status-recommend-text').text().trim();
+                description = $(this).find('span.status-recommend-text').text().trim();
             }
 
             if (type === '来自：豆瓣电影' || type === '来自：豆瓣' || type === '来自：豆瓣读书' || type === '来自：豆瓣音乐') {
-                title = $(item).find('div.bd.doulist-subject div.title a').text().trim();
-                link = $(item).find('div.bd.doulist-subject div.title a').attr('href');
+                title = $(this).find('div.bd.doulist-subject div.title a').text().trim();
+                link = $(this).find('div.bd.doulist-subject div.title a').attr('href');
 
-                description = $(item).find('div.bd.doulist-subject div.abstract').text().trim();
+                description = $(this).find('div.bd.doulist-subject div.abstract').text().trim();
 
-                const ft = $(item).find('div.ft div.comment-item.content').text().trim();
+                const ft = $(this).find('div.ft div.comment-item.content').text().trim();
 
-                const img = $(item).find('div.post a img').attr('src');
+                const img = $(this).find('div.post a img').attr('src');
 
                 description = '<div><img width="100" src="' + img + '"></div>' + description + '<blockquote>' + ft + '</blockquote>';
             }
 
-            const date = $(item).find('div.ft div.actions time span').attr('title');
+            const date = $(this).find('div.ft div.actions time span').attr('title');
 
             const single = {
                 title,
@@ -73,7 +72,8 @@ async function handler(ctx) {
                 pubDate: new Date(date).toUTCString(),
             };
             return single;
-        });
+        })
+        .get();
 
     return {
         title,

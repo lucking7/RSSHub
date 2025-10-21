@@ -16,7 +16,6 @@ export const route: Route = {
     features: {
         antiCrawler: true,
         supportBT: true,
-        nsfw: true,
     },
     radar: [
         {

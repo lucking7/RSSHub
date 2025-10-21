@@ -33,11 +33,13 @@ async function handler(ctx) {
     const $ = load(res.data);
 
     const itemArray = $('.archive-module-half-container,.archive-module-third-container')
-        .toArray()
-        .map((element) => ({
-            url: $(element).find('a').attr('href'),
-            title: $(element).find('.archive-module-text').first().text(),
-        }));
+        .map(function () {
+            return {
+                url: $(this).find('a').attr('href'),
+                title: $(this).find('.archive-module-text').first().text(),
+            };
+        })
+        .get();
 
     const out = await utils.parseList(itemArray, ctx, utils.parseBooks);
 

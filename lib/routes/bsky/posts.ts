@@ -5,11 +5,11 @@ import { parseDate } from '@/utils/parse-date';
 import { resolveHandle, getProfile, getAuthorFeed } from './utils';
 import { art } from '@/utils/render';
 import path from 'node:path';
-import querystring from 'node:querystring';
+import querystring from 'querystring';
 
 export const route: Route = {
     path: '/profile/:handle/:routeParams?',
-    categories: ['social-media'],
+    categories: ['social-media', 'popular'],
     view: ViewType.SocialMedia,
     example: '/bsky/profile/bsky.app',
     parameters: {

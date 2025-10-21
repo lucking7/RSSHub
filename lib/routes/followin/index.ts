@@ -5,7 +5,7 @@ import { apiUrl, favicon, getBParam, getBuildId, getGToken, parseList, parseItem
 
 export const route: Route = {
     path: '/:categoryId?/:lang?',
-    categories: ['finance'],
+    categories: ['finance', 'popular'],
     view: ViewType.Articles,
     example: '/followin',
     parameters: {

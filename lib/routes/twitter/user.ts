@@ -5,7 +5,7 @@ import logger from '@/utils/logger';
 
 export const route: Route = {
     path: '/user/:id/:routeParams?',
-    categories: ['social-media'],
+    categories: ['social-media', 'popular'],
     view: ViewType.SocialMedia,
     example: '/twitter/user/_RSSHub',
     parameters: {

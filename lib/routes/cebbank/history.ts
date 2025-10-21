@@ -45,8 +45,7 @@ async function handler(ctx) {
     const $ = load(res.data);
 
     const items = $('.lczj_box tbody tr')
-        .toArray()
-        .map((e, i) => {
+        .map((i, e) => {
             if (i < 2) {
                 return null;
             }
@@ -61,7 +60,8 @@ async function handler(ctx) {
                     time: c('td:nth-child(6)').text(),
                 }),
             };
-        });
+        })
+        .get();
     items.pop();
 
     const ret = {

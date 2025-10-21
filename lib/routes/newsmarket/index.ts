@@ -49,8 +49,7 @@ async function handler(ctx) {
 
     const list = $('.title a')
         .slice(0, ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 20)
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
 
             return {
@@ -58,7 +57,8 @@ async function handler(ctx) {
                 link: item.attr('href'),
                 pubDate: parseDate(),
             };
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         list.map((item) =>

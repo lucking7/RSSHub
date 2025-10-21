@@ -97,7 +97,6 @@ async function handler(ctx) {
 
         $ = load(response.data);
 
-        const seenLinks = new Set<string>();
         items = $('dt a')
             .toArray()
             .map((item) => {
@@ -108,13 +107,7 @@ async function handler(ctx) {
                     link: new URL(item.attr('href'), currentUrl).href,
                 };
             })
-            .filter((item) => {
-                if (seenLinks.has(item.link)) {
-                    return false;
-                }
-                seenLinks.add(item.link);
-                return true;
-            })
+            .reduce((prev, cur) => (prev.length && prev.at(-1).link === cur.link ? prev : [...prev, cur]), [])
             .slice(0, limit);
     }
 

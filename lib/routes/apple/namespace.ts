@@ -2,6 +2,6 @@ import type { Namespace } from '@/types';
 
 export const namespace: Namespace = {
     name: 'Apple',
-    url: 'apple.com',
+    url: 'apps.apple.com',
     lang: 'en',
 };

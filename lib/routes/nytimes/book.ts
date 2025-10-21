@@ -18,7 +18,7 @@ const categoryList = {
 
 export const route: Route = {
     path: '/book/:category?',
-    categories: ['traditional-media'],
+    categories: ['traditional-media', 'popular'],
     view: ViewType.Notifications,
     example: '/nytimes/book/combined-print-and-e-book-nonfiction',
     parameters: {
@@ -68,8 +68,7 @@ async function handler(ctx) {
         dataTitle = $('h1').eq(0).text();
 
         items = $('article[itemprop=itemListElement]')
-            .toArray()
-            .map((elem, index) => {
+            .map((index, elem) => {
                 const $item = $(elem);
                 const firstInfo = $item.find('p').eq(0).text();
                 const $name = $item.find('h3[itemprop=name]');
@@ -96,7 +95,8 @@ async function handler(ctx) {
                     description: `<figure><img src="${imageLink}" alt="test"/><figcaption><span>${description}</span></figcaption></figure><br/>${firstInfo}<br/>Author: ${author}<br/>Publisher: ${publisher}`,
                     link: primaryLink,
                 };
-            });
+            })
+            .get();
     }
 
     return {

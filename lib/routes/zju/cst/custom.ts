@@ -11,19 +11,24 @@ async function getPage(id) {
     const $ = load(res.data);
     const content = $('.lm_new ul li');
 
-    return content.toArray().map((item) => {
-        item = $(item);
+    return (
+        content &&
+        content
+            .map((index, item) => {
+                item = $(item);
 
-        const title = item.find('a').text();
-        const pubDate = parseDate(item.find('.fr').text());
-        const link = item.find('a').attr('href');
+                const title = item.find('a').text();
+                const pubDate = parseDate(item.find('.fr').text());
+                const link = item.find('a').attr('href');
 
-        return {
-            title,
-            pubDate,
-            link,
-        };
-    });
+                return {
+                    title,
+                    pubDate,
+                    link,
+                };
+            })
+            .get()
+    );
 }
 
 export const route: Route = {

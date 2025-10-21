@@ -68,8 +68,7 @@ async function handler(ctx) {
     const response = await got.get(newsUrl);
     const $ = load(response.data);
     const list = $('#focusNews > div.focusItem[type=article]')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             const title = $(item).find('div.focusTitle > span').text();
             const link = rootUrl + $(item).find('a:nth-child(1)').attr('href');
             const pubDate = parseDate($(item).attr('edittime'), 'YYYYMMDDHHmmss');
@@ -79,7 +78,8 @@ async function handler(ctx) {
                 link,
                 pubDate,
             };
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         list.map(async (item) => {

@@ -24,8 +24,7 @@ async function handler() {
     const $ = load(response);
 
     const item = $('tr.story')
-        .toArray()
-        .map((story) => {
+        .map((_, story) => {
             const title = $(story).find('a').first().text();
             const nextRow = $(story).next();
             const metas = nextRow.text().trimStart().split('|');
@@ -42,8 +41,8 @@ async function handler() {
             const comments = Number.parseInt(a.text());
             const description = nextRow
                 .find('p')
-                .toArray()
-                .map((p) => $(p).text())
+                .map((_, p) => $(p).text())
+                .get()
                 .join('<br>');
             return {
                 title,
@@ -55,7 +54,8 @@ async function handler() {
                 pubDate,
                 description,
             };
-        });
+        })
+        .get();
 
     return {
         title: 'Index',

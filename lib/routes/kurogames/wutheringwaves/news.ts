@@ -63,10 +63,7 @@ Language codes for the \`${Parameter.Language}\` parameter:
                 };
 
                 return cache.tryGet(`wutheringwaves:${language}:${article.articleId}`, async () => {
-                    const articleDetails = await ofetch<Article>(contentUrl, { query: { t: Date.now() } });
-                    // Article content may not always be available, e.g: https://wutheringwaves.kurogames.com/zh-tw/main/news/detail/2596
-                    const articleContent = articleDetails.articleContent ?? '';
-
+                    const { articleContent } = await ofetch<Article>(contentUrl, { query: { t: Date.now() } });
                     const $ = cheerio.load(articleContent);
 
                     item.description = $.html() ?? article.articleDesc ?? '';

@@ -28,8 +28,7 @@ const getPageLength = async (url) => {
 const getArticleList = ($, paperUrl) => {
     const pageName = $('.zi .zi-top .banci strong').text();
     const list = $('.zi-meat ul>li')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             const link = $(item).find('a').attr('href');
             const title = $(item).find('a div').text();
             return {
@@ -37,7 +36,8 @@ const getArticleList = ($, paperUrl) => {
                 title: `[${pageName}] ${title}`,
                 // pubDate,
             };
-        });
+        })
+        .get();
 
     return list;
 };
@@ -67,13 +67,11 @@ const getListArticles = async (list, cache) => {
                 const subtitle = $('.right-meat .futi').text();
                 const article = $('.right-meat .tuwen .article #ozoom').html();
                 const pics = $('.right-meat .tuwen .picture')
-                    .toArray()
-                    .map((item) => {
+                    .map((_, item) => {
                         const pic = {};
                         $(item)
                             .find('tr')
-                            .toArray()
-                            .map((row) => {
+                            .map((_, row) => {
                                 const src = $(row).find('img').attr('src');
                                 if (src) {
                                     pic.src = src;
@@ -81,9 +79,11 @@ const getListArticles = async (list, cache) => {
                                     pic.des = $(row).find('td').text();
                                 }
                                 return null;
-                            });
+                            })
+                            .get();
                         return pic;
-                    });
+                    })
+                    .get();
 
                 item.author = $('.right-meat .author').text();
                 item.description = renderDescription({ subtitle, quotation, article, pics });

@@ -50,8 +50,7 @@ async function handler(ctx) {
     $('.comp_pagination').remove();
 
     const list = $('.comp_contents_1x article')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
 
             const a = item.find('h2 a');
@@ -70,7 +69,8 @@ async function handler(ctx) {
                     +9
                 ),
             };
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         list.map((item) =>

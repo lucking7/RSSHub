@@ -1,8 +1,11 @@
 import { Route } from '@/types';
 import cache from '@/utils/cache';
-import ofetch from '@/utils/ofetch';
+import got from '@/utils/got';
 import { load } from 'cheerio';
 import { parseDate } from '@/utils/parse-date';
+import logger from '@/utils/logger';
+import { CookieJar } from 'tough-cookie';
+import puppeteer from '@/utils/puppeteer';
 
 export const route: Route = {
     path: '/ygafz/:type?',
@@ -39,9 +42,30 @@ async function handler(ctx) {
     const baseUrl = 'https://ygafz.sysu.edu.cn';
     const url = `${baseUrl}/${type}`;
 
-    const response = await ofetch(url);
-    const $ = load(response);
+    const browser = await puppeteer();
+    const page = await browser.newPage();
+    await page.setRequestInterception(true);
+    page.on('request', (request) => {
+        request.resourceType() === 'document' || request.resourceType() === 'script' ? request.continue() : request.abort();
+    });
 
+    logger.http(`Requesting ${url}`);
+    await page.goto(url, {
+        waitUntil: 'domcontentloaded',
+    });
+    await page.waitForSelector('[data-block-plugin-id]');
+    const response = await page.content();
+
+    const cookieJar = new CookieJar();
+    const cookies = await page.cookies();
+    cookies.reduce((jar, cookie) => {
+        jar.setCookie(`${cookie.name}=${cookie.value}`, url);
+        return jar;
+    }, cookieJar);
+
+    await browser.close();
+
+    const $ = load(response);
     const list = $('.list-content a')
         .toArray()
         .map((item) => {
@@ -56,13 +80,15 @@ async function handler(ctx) {
     const items = await Promise.all(
         list.map((item) =>
             cache.tryGet(item.link, async () => {
-                const data = await ofetch(item.link);
+                const { data } = await got(item.link, {
+                    cookieJar,
+                });
                 const $ = load(data);
 
                 item.author = $('.article-submit')
                     .text()
                     .match(/发布人：(.*)/)[1];
-                item.description = $('div[data-block-plugin-id="entity_field:node:body"]').html() + ($('div[data-block-plugin-id="entity_field:node:attachments"]').html() ?? '');
+                item.description = $('div[data-block-plugin-id="entity_field:node:body"]').html();
                 return item;
             })
         )

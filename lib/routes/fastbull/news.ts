@@ -9,7 +9,7 @@ import path from 'node:path';
 
 export const route: Route = {
     path: '/news',
-    categories: ['finance'],
+    categories: ['finance', 'popular'],
     view: ViewType.Articles,
     example: '/fastbull/news',
     parameters: {},

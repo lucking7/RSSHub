@@ -11,7 +11,7 @@ const PATH_LIST = {
 
 export const route: Route = {
     path: '/category/:name',
-    categories: ['new-media'],
+    categories: ['new-media', 'popular'],
     example: '/ifanr/category/早报',
     parameters: {
         name: {

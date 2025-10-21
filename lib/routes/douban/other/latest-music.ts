@@ -32,7 +32,7 @@ async function handler(ctx) {
         const url = 'https://music.douban.com/latest';
         const res = await got.get(url);
         const $ = load(res.data);
-        const list = $('.dlist').toArray();
+        const list = $('.dlist').get();
 
         data = {
             title,

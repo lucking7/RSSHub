@@ -8,7 +8,7 @@ import path from 'node:path';
 
 export const route: Route = {
     path: ['/likes/:user'],
-    categories: ['social-media'],
+    categories: ['social-media', 'popular'],
     example: '/cara/likes/fengz',
     parameters: { user: 'username' },
     name: 'Likes',

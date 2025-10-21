@@ -8,7 +8,7 @@ import { art } from '@/utils/render';
 
 const domain = 'theblockbeats.info';
 const rootUrl = `https://www.${domain}`;
-const apiBase = `https://api.blockbeats.cn`;
+const apiBase = `https://api.${domain}`;
 
 const render = (data) => {
     const html = art(path.join(__dirname, 'templates/description.art'), data);
@@ -38,7 +38,7 @@ const channelMap = {
 
 export const route: Route = {
     path: '/:channel?/:original?',
-    categories: ['finance'],
+    categories: ['finance', 'popular'],
     view: ViewType.Articles,
     example: '/theblockbeats/newsflash',
     parameters: {
@@ -62,7 +62,7 @@ export const route: Route = {
         },
     },
     name: '新闻快讯',
-    maintainers: ['Fatpandac', 'jameshih', 'DIYgod'],
+    maintainers: ['Fatpandac', 'jameshih'],
     handler,
     radar: [
         {

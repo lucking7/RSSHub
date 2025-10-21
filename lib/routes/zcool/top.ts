@@ -8,7 +8,7 @@ const baseUrl = 'https://www.zcool.com.cn';
 
 export const route: Route = {
     path: '/top/:type',
-    categories: ['design'],
+    categories: ['design', 'popular'],
     view: ViewType.Pictures,
     example: '/zcool/top/design',
     parameters: {

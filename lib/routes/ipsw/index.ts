@@ -49,25 +49,26 @@ async function handler(ctx) {
         },
     });
     const $ = load(response.data);
-    const list = pname.includes(',')
+    let list = {};
+    list = pname.includes(',')
         ? $('.firmware')
-              .toArray()
-              .map((item) => {
+              .map(function () {
                   const info = {
-                      title: $(item).find('td').eq(1).text(),
-                      link: replaceurl($(item).attr('onclick')),
+                      title: $(this).find('td').eq(1).text(),
+                      link: replaceurl($(this).attr('onclick')),
                   };
                   return info;
               })
+              .get()
         : $('.products a')
-              .toArray()
-              .map((item) => {
+              .map(function () {
                   const info = {
-                      title: $(item).find('img').attr('alt'),
-                      link: $(item).attr('href'),
+                      title: $(this).find('img').attr('alt'),
+                      link: $(this).attr('href'),
                   };
                   return info;
-              });
+              })
+              .get();
 
     const out = await Promise.all(
         list.map((info) => {

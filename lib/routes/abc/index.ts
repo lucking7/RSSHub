@@ -43,7 +43,7 @@ async function handler(ctx) {
     let currentUrl = '';
     let documentId;
 
-    if (Number.isNaN(category)) {
+    if (isNaN(category)) {
         currentUrl = new URL(category, rootUrl).href;
     } else {
         documentId = category;

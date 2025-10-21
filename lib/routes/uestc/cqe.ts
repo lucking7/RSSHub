@@ -51,7 +51,7 @@ async function handler(ctx) {
         throw new InvalidParameterError('type not supported');
     }
 
-    const browser = await puppeteer();
+    const browser = await puppeteer({ stealth: true });
     const page = await browser.newPage();
     await page.setRequestInterception(true);
     page.on('request', (request) => {
@@ -68,8 +68,7 @@ async function handler(ctx) {
     const items = $('div.Newslist li');
 
     const out = $(items)
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
             const newsTitle = item.find('a').attr('title');
             const newsLink = baseUrl + item.find('a').attr('href').slice(3);
@@ -80,7 +79,8 @@ async function handler(ctx) {
                 link: newsLink,
                 pubDate: newsPubDate,
             };
-        });
+        })
+        .get();
 
     return {
         title: `大学生文化素质教育中心-${mapTitle[type]}`,

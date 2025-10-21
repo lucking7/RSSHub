@@ -12,7 +12,7 @@ const categories = {
 
 export const route: Route = {
     path: '/:category?',
-    categories: ['finance'],
+    categories: ['finance', 'popular'],
     view: ViewType.Articles,
     example: '/finviz',
     parameters: {

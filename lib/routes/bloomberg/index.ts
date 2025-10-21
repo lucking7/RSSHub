@@ -18,7 +18,7 @@ const siteTitleMapping = {
 
 export const route: Route = {
     path: '/:site?',
-    categories: ['finance'],
+    categories: ['finance', 'popular'],
     view: ViewType.Articles,
     example: '/bloomberg/bbiz',
     parameters: {

@@ -54,7 +54,7 @@ async function handler(ctx) {
     let items = $('item')
         .slice(-limit)
         .toArray()
-        .toReversed()
+        .reverse()
         .map((item) => {
             item = $(item);
 

@@ -5,7 +5,7 @@ import ConfigNotFoundError from '@/errors/types/config-not-found';
 
 export const route: Route = {
     path: '/stars/:user/:repo',
-    categories: ['programming'],
+    categories: ['programming', 'popular'],
     example: '/github/stars/DIYgod/RSSHub',
     view: ViewType.Notifications,
     parameters: { user: 'GitHub username', repo: 'GitHub repo name' },
@@ -61,7 +61,7 @@ async function handler(ctx) {
         },
     });
 
-    const data = response.data.data.repository.stargazers.edges.toReversed();
+    const data = response.data.data.repository.stargazers.edges.reverse();
 
     return {
         allowEmpty: true,

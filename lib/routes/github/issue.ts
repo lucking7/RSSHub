@@ -11,7 +11,7 @@ import { parseDate } from '@/utils/parse-date';
 
 export const route: Route = {
     path: '/issue/:user/:repo/:state?/:labels?',
-    categories: ['programming'],
+    categories: ['programming', 'popular'],
     view: ViewType.Notifications,
     example: '/github/issue/DIYgod/RSSHub/open',
     parameters: {

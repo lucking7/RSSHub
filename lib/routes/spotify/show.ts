@@ -5,7 +5,7 @@ import { parseDate } from '@/utils/parse-date';
 
 export const route: Route = {
     path: '/show/:id',
-    categories: ['multimedia'],
+    categories: ['multimedia', 'popular'],
     view: ViewType.Audios,
     example: '/spotify/show/5CfCWKI5pZ28U0uOzXkDHe',
     parameters: { id: 'Show ID' },

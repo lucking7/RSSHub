@@ -10,7 +10,7 @@ const apiUrl = 'https://nwapi.nhk.jp';
 
 export const route: Route = {
     path: '/news/:lang?',
-    categories: ['traditional-media'],
+    categories: ['traditional-media', 'popular'],
     view: ViewType.Articles,
     example: '/nhk/news/en',
     parameters: {

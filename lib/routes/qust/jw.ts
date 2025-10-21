@@ -35,8 +35,7 @@ async function handler() {
     });
     const $ = load(response.data);
     const items = $('.winstyle60982 tr a.c60982')
-        .toArray()
-        .map((element) => {
+        .map((_, element) => {
             const linkElement = $(element);
             const itemTitle = linkElement.text().trim();
             const path = linkElement.attr('href');
@@ -45,7 +44,8 @@ async function handler() {
                 title: itemTitle,
                 link: itemUrl,
             };
-        });
+        })
+        .get();
 
     return {
         title: '青岛科技大学 - 教务通知',

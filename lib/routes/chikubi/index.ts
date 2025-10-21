@@ -12,7 +12,6 @@ export const route: Route = {
         supportBT: false,
         supportPodcast: false,
         supportScihub: false,
-        nsfw: true,
     },
     name: '最新記事',
     maintainers: ['SnowAgar25'],

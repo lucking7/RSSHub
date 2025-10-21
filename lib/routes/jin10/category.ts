@@ -9,33 +9,12 @@ import path from 'node:path';
 import { config } from '@/config';
 
 export const route: Route = {
-    path: '/category/:id/:filter?',
+    path: '/category/:id',
     categories: ['finance'],
     view: ViewType.Notifications,
     example: '/jin10/category/36',
-    parameters: {
-        id: '分类id，见下表',
-        filter: '广告过滤控制。默认过滤广告，填写 `all` 显示全部内容（包含广告），留空则过滤广告',
-    },
+    parameters: { id: '分类id，见下表' },
     description: `
-:::tip
-**默认过滤广告**，提供纯净的快讯订阅体验。
-
-使用方法：
-- \`/jin10/category/36\` - 过滤广告（默认，推荐）⭐
-- \`/jin10/category/36/all\` - 显示全部内容（包含广告）
-
-过滤规则（默认启用）：
-1. 过滤VIP锁定内容（如"VIP专享快讯，解锁直达"）
-2. 过滤推广文章（type=2，通常包含"点击查看..."）
-3. 过滤包含诱导点击的内容
-
-如需查看所有内容（包含广告），请使用 \`all\` 参数。
-:::
-
-## 分类列表
-
-
 | Name           | ID   |
 |----------------|------|
 | 贵金属         | 1    |
@@ -191,18 +170,14 @@ export const route: Route = {
 };
 
 async function handler(ctx) {
-    const { id, filter = '' } = ctx.req.param();
-    // 默认开启过滤，只有明确指定 'all' 才显示全部（包含广告）
-    const enableFilter = filter !== 'all';
-
+    const id = ctx.req.param('id');
     const data = await cache.tryGet(
-        `jin10:category:${id}`,
+        'jin10:aa:${category}',
         async () => {
             const { data: response } = await got('https://4a735ea38f8146198dc205d2e2d1bd28.z3c.jin10.com/flash', {
                 headers: {
                     'x-app-id': 'bVBF4FyRTn5NJF5n',
                     'x-version': '1.0',
-                    'handleerror': 'true',
                 },
                 searchParams: {
                     channel: '-8200',
@@ -216,39 +191,7 @@ async function handler(ctx) {
         false
     );
 
-    // 过滤广告函数
-    const filterAds = (item) => {
-        // 1. 过滤VIP锁定内容（lock=true）
-        if (item.data.lock === true) {
-            return false;
-        }
-
-        // 2. 过滤推广文章（type=2）
-        if (item.type === 2) {
-            return false;
-        }
-
-        // 3. 过滤包含"点击查看..."的诱导内容
-        const content = item.data.content || '';
-        if (content.includes('点击查看...')) {
-            return false;
-        }
-
-        // 4. 过滤VIP专享内容（通过remark判断）
-        if (item.remark && item.remark.length > 0) {
-            const hasVipRemark = item.remark.some((r) => r.lock === true || r.content?.includes('VIP用户'));
-            if (hasVipRemark) {
-                return false;
-            }
-        }
-
-        return true;
-    };
-
-    // 应用过滤
-    const filteredData = enableFilter ? data.filter(filterAds) : data;
-
-    const item = filteredData.map((item) => {
+    const item = data.map((item) => {
         const titleMatch = item.data.content.match(/^【(.*?)】/);
         let title;
         let content = item.data.content;
@@ -271,7 +214,7 @@ async function handler(ctx) {
     });
 
     return {
-        title: enableFilter ? '金十数据' : '金十数据（含广告）',
+        title: '金十数据',
         link: 'https://www.jin10.com/',
         item,
     };

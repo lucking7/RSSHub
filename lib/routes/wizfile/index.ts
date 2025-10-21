@@ -36,8 +36,7 @@ async function handler() {
     const $ = load(response.data);
 
     const items = $('section.blog-section > div > div > div > h4')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             const title = $(item)
                 .text()
                 .replace(/\(.*?\)/, '');
@@ -56,7 +55,8 @@ async function handler() {
                 pubDate,
                 guid: `${currentUrl}${title}`,
             };
-        });
+        })
+        .get();
 
     return {
         title: `WziFile - 更新日志`,

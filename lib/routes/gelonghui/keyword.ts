@@ -6,7 +6,7 @@ import { parseItem } from './utils';
 
 export const route: Route = {
     path: '/keyword/:keyword',
-    categories: ['finance'],
+    categories: ['finance', 'popular'],
     view: ViewType.Articles,
     example: '/gelonghui/keyword/早报',
     parameters: { keyword: '搜索关键字' },

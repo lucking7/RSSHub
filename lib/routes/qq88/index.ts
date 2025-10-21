@@ -40,8 +40,7 @@ async function handler(ctx) {
 
     const list = $('.entry-title a')
         .slice(0, 15)
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
 
             return {
@@ -49,7 +48,8 @@ async function handler(ctx) {
                 link: item.attr('href'),
                 pubDate: parseDate(item.parent().next().find('.mh-meta-date').eq(-1).text().split('：')[1]),
             };
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         list.map((item) =>

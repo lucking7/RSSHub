@@ -12,7 +12,7 @@ export const parseInteger = (value?: string | number, fallback?: number): number
     }
 
     if (value === undefined) {
-        return fallback === undefined ? NaN : fallback;
+        return fallback === undefined ? Number.NaN : fallback;
     }
 
     const parsed = Number.parseInt(value, 10);

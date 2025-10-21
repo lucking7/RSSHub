@@ -38,13 +38,17 @@ async function handler(ctx) {
         title: `澎湃美数课作品集-${category}`,
         link,
         description: desc,
-        item: list.toArray().map((item) => {
-            item = $(item);
-            return {
-                title: item.find('.archive_up a').first().text(),
-                description: `描述：${item.find('.imgdown p').text()}`,
-                link: item.find('.archive_up a').attr('href'),
-            };
-        }),
+        item:
+            list &&
+            list
+                .map((index, item) => {
+                    item = $(item);
+                    return {
+                        title: item.find('.archive_up a').first().text(),
+                        description: `描述：${item.find('.imgdown p').text()}`,
+                        link: item.find('.archive_up a').attr('href'),
+                    };
+                })
+                .get(),
     };
 }

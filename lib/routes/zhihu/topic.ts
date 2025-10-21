@@ -10,12 +10,7 @@ export const route: Route = {
     example: '/zhihu/topic/19828946',
     parameters: { topicId: '话题 id', isTop: '仅精华，默认为否，其他值为是' },
     features: {
-        requireConfig: [
-            {
-                name: 'ZHIHU_COOKIES',
-                description: '',
-            },
-        ],
+        requireConfig: false,
         requirePuppeteer: false,
         antiCrawler: true,
         supportBT: false,
@@ -38,11 +33,10 @@ async function handler(ctx) {
     const link = `https://www.zhihu.com/topic/${topicId}/${isTop ? 'top-answers' : 'newest'}`;
 
     const topicMeta = await cache.tryGet(`zhihu:topic:${topicId}`, async () => {
-        const url = `https://www.zhihu.com/topic/${topicId}`;
-        const apiPath = `/api/v4/topics/${topicId}/intro?include=content.meta.content.photos`;
-        const signedHeader = await getSignedHeader(url, apiPath);
-        const { data: response } = await got('https://www.zhihu.com' + apiPath, {
-            headers: signedHeader,
+        const { data: response } = await got(`https://www.zhihu.com/api/v4/topics/${topicId}/intro`, {
+            searchParams: {
+                include: 'content.meta.content.photos',
+            },
         });
         return response;
     });

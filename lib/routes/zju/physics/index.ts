@@ -54,8 +54,7 @@ async function handler(ctx) {
 
     const $ = load(res.data);
     const items = $('#arthd li')
-        .toArray()
-        .map((item) => {
+        .map((index, item) => {
             item = $(item);
             return {
                 title: item.find('a').attr('title'),
@@ -64,7 +63,8 @@ async function handler(ctx) {
                 link: `http://physics.zju.edu.cn/${item.find('a').attr('href')}`,
                 // link: `http://10.14.122.238/${item.find('a').attr('href')}`,
             };
-        });
+        })
+        .get();
 
     return {
         title: map.get(type).title,

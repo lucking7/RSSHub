@@ -1,5 +1,5 @@
 import { Route } from '@/types';
-import { getOriginUrl, getArticleDesc } from './utils';
+import { originUrl, getArticleDesc } from './utils';
 import cache from '@/utils/cache';
 import ofetch from '@/utils/ofetch';
 import { load } from 'cheerio';
@@ -11,7 +11,7 @@ export const route: Route = {
     example: '/jpxgmn/weekly',
     radar: [
         {
-            source: ['mei5.vip/'],
+            source: ['www.12356782.xyz/'],
             target: '/weekly',
         },
     ],
@@ -21,7 +21,7 @@ export const route: Route = {
 };
 
 async function handler() {
-    const response = await ofetch.raw(await getOriginUrl());
+    const response = await ofetch.raw(originUrl);
     const baseUrl = new URL(response.url).origin;
     const $ = load(response._data);
     const items = $('aside div:nth-child(2) li')

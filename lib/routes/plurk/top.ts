@@ -8,7 +8,7 @@ const categoryList = new Set(['topReplurks', 'topFavorites', 'topResponded']);
 
 export const route: Route = {
     path: '/top/:category?/:lang?',
-    categories: ['social-media'],
+    categories: ['social-media', 'popular'],
     view: ViewType.SocialMedia,
     example: '/plurk/top/topReplurks',
     parameters: { category: 'Category, see the table below, `topReplurks` by default', lang: 'Language, see the table below, `en` by default' },

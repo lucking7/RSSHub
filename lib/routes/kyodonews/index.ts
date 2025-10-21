@@ -59,8 +59,7 @@ async function handler(ctx) {
         title = $('channel > title').text();
         description = $('channel > description').text();
         items = $('item')
-            .toArray()
-            .map((item) => {
+            .map((_, item) => {
                 const $item = $(item);
                 const link = $item.find('link').text();
                 // const pubDate = $item.find('pubDate').text();
@@ -68,20 +67,21 @@ async function handler(ctx) {
                     link,
                     // pubDate,  // no need to normalize because it's from a valid RSS feed
                 };
-            });
+            })
+            .get();
     } else {
         title = $('head > title').text();
         description = $('meta[name="description"]').attr('content');
         image = resolveRelativeLink($('head > link[rel="apple-touch-icon"]').attr('href'), rootUrl) || image;
         items = $('div.sec-latest > ul > li')
-            .toArray()
-            .map((item) => {
+            .map((_, item) => {
                 item = $(item);
                 const link = item.find('a').attr('href');
                 return {
                     link: resolveRelativeLink(link, rootUrl),
                 };
-            });
+            })
+            .get();
     }
 
     items = await Promise.all(
@@ -130,8 +130,8 @@ async function handler(ctx) {
                 }
 
                 item.category = $('p.credit > a')
-                    .toArray()
-                    .map((a) => $(a).text());
+                    .map((_, a) => $(a).text())
+                    .get();
                 return item;
             })
         )

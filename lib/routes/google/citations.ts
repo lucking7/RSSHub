@@ -4,7 +4,7 @@ import { load } from 'cheerio';
 
 export const route: Route = {
     path: '/citations/:id',
-    categories: ['journal'],
+    categories: ['journal', 'popular'],
     example: '/google/citations/mlmE4JMAAAAJ',
     parameters: { id: 'N' },
     features: {
@@ -40,7 +40,7 @@ async function handler(ctx) {
     const name = $('#gsc_prf_in').text();
     const description = `Google Scholar Citation Monitor: ${name}; Profile: ${profile}; HomePage: ${homePage}`;
 
-    const list = $('#gsc_a_b .gsc_a_tr').toArray();
+    const list = $('#gsc_a_b .gsc_a_tr').get();
 
     const out = list.map((item) => {
         const $ = load(item);

@@ -9,14 +9,11 @@ import path from 'node:path';
 import { config } from '@/config';
 
 export const route: Route = {
-    path: '/:important?/:filter?',
-    categories: ['finance'],
+    path: '/:important?',
+    categories: ['finance', 'popular'],
     view: ViewType.Notifications,
     example: '/jin10',
-    parameters: {
-        important: '只看重要，任意值开启，留空关闭',
-        filter: '广告过滤控制。默认过滤广告，填写 `all` 显示全部内容（包含广告），留空则过滤广告',
-    },
+    parameters: { important: '只看重要，任意值开启，留空关闭' },
     features: {
         requireConfig: false,
         requirePuppeteer: false,
@@ -35,31 +32,10 @@ export const route: Route = {
     maintainers: ['laampui'],
     handler,
     url: 'jin10.com/',
-    description: `
-:::tip
-**默认过滤广告**，提供纯净的快讯订阅体验。
-
-使用方法：
-- \`/jin10\` - 过滤广告（默认，推荐）⭐
-- \`/jin10/important\` - 只看重要快讯且过滤广告（推荐）⭐⭐
-- \`/jin10//all\` - 显示全部内容（包含广告）
-- \`/jin10/important/all\` - 只看重要快讯，包含广告
-
-过滤规则（默认启用）：
-1. 过滤VIP锁定内容（如"VIP专享快讯，解锁直达"）
-2. 过滤推广文章（type=2，通常包含"点击查看..."）
-3. 过滤包含诱导点击的内容
-
-如需查看所有内容（包含广告），请使用 \`all\` 参数。
-:::
-    `,
 };
 
 async function handler(ctx) {
-    const { important = false, filter = '' } = ctx.req.param();
-    // 默认开启过滤，只有明确指定 'all' 才显示全部（包含广告）
-    const enableFilter = filter !== 'all';
-
+    const { important = false } = ctx.req.param();
     const data = await cache.tryGet(
         'jin10:index',
         async () => {
@@ -79,39 +55,7 @@ async function handler(ctx) {
         false
     );
 
-    // 过滤广告函数
-    const filterAds = (item) => {
-        // 1. 过滤VIP锁定内容（lock=true）
-        if (item.data.lock === true) {
-            return false;
-        }
-
-        // 2. 过滤推广文章（type=2）
-        if (item.type === 2) {
-            return false;
-        }
-
-        // 3. 过滤包含"点击查看..."的诱导内容
-        const content = item.data.content || '';
-        if (content.includes('点击查看...')) {
-            return false;
-        }
-
-        // 4. 过滤VIP专享内容（通过remark判断）
-        if (item.remark && item.remark.length > 0) {
-            const hasVipRemark = item.remark.some((r) => r.lock === true || r.content?.includes('VIP用户'));
-            if (hasVipRemark) {
-                return false;
-            }
-        }
-
-        return true;
-    };
-
-    // 应用过滤
-    const filteredData = enableFilter ? data.filter(filterAds) : data;
-
-    const item = filteredData.map((item) => {
+    const item = data.map((item) => {
         const titleMatch = item.data.content.match(/^【(.*?)】/);
         let title;
         let content = item.data.content;
@@ -136,7 +80,7 @@ async function handler(ctx) {
     });
 
     return {
-        title: enableFilter ? '金十数据' : '金十数据（含广告）',
+        title: '金十数据',
         link: 'https://www.jin10.com/',
         item: important ? item.filter((item) => item.important) : item,
     };

@@ -60,7 +60,7 @@ const alias = {
 
 export const route: Route = {
     path: '/ranking/:mode/:date?',
-    categories: ['social-media'],
+    categories: ['social-media', 'popular'],
     view: ViewType.Pictures,
     example: '/pixiv/ranking/week',
     parameters: {

@@ -68,8 +68,7 @@ async function handler(ctx: Context) {
     const $ = load(response.data);
 
     const list = $('.txt-elise')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             const $item = $(item);
             const $link = $item.find('a');
             // Skip elements without links or with empty href
@@ -81,6 +80,7 @@ async function handler(ctx: Context) {
                 link: rootUrl + '/' + $link.attr('href'),
             };
         })
+        .get()
         .filter(Boolean);
 
     const items = await Promise.all(

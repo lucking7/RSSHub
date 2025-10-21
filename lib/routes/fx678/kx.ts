@@ -7,7 +7,7 @@ import timezone from '@/utils/timezone';
 
 export const route: Route = {
     path: '/kx',
-    categories: ['finance'],
+    categories: ['finance', 'popular'],
     view: ViewType.Notifications,
     example: '/fx678/kx',
     parameters: {},
@@ -24,7 +24,7 @@ export const route: Route = {
             source: ['fx678.com/kx'],
         },
     ],
-    name: '7x24 小时快讯',
+    name: '汇通网 7x24 小时快讯',
     maintainers: ['occupy5', 'dousha'],
     handler,
     url: 'fx678.com/kx',
@@ -37,9 +37,12 @@ async function handler() {
     // 页面新闻消息列表
     const list = $('.body_zb ul .body_zb_li .zb_word')
         .find('.list_font_pic > a:first-child')
-        .toArray()
+        .map((i, e) => $(e).attr('href'))
         .slice(0, 30)
-        .map((e) => $(e).attr('href'));
+        .get();
+
+    const STRIP_TEXT_PREFIX = /^(?:\s*|\uFEFF)*汇通财经APP讯[—–-]+\s*/i;
+    const STRIP_HTML_PREFIX = /^(?:\s*<b>\s*)?汇通财经APP讯[—–-]+(?:\s*<\/b>)?\s*/i;
 
     const out = await Promise.all(
         list.map((itemUrl) =>
@@ -52,10 +55,16 @@ async function handler() {
                 const datetimeString = $('.article-cont .details i').text().trim();
                 const articlePubDate = timezone(parseDate(datetimeString, 'YYYY-MM-DD HH:mm:ss'), +8);
 
+                const titleRaw = $('.article-main .foreword').text().trim();
+                const titleCleaned = titleRaw.replace(STRIP_TEXT_PREFIX, '').split('——').pop().trim();
+
+                const descRawHtml = (contentPart.length > 1 ? contentPart : forewordPart) || '';
+                const descCleanedHtml = descRawHtml.replace(STRIP_HTML_PREFIX, '');
+
                 const item = {
-                    title: $('.article-main .foreword').text().trim().split('——').pop(),
+                    title: titleCleaned,
                     link: itemUrl,
-                    description: contentPart.length > 1 ? contentPart : forewordPart,
+                    description: descCleanedHtml,
                     pubDate: articlePubDate,
                 };
 
@@ -64,7 +73,7 @@ async function handler() {
         )
     );
     return {
-        title: '7x24小时快讯',
+        title: '汇通网 - 7x24 小时快讯',
         link,
         item: out,
     };

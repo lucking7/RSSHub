@@ -54,7 +54,7 @@ async function handler(ctx) {
 
     const $ = load(response.data);
 
-    const list = $('span a').toArray();
+    const list = $('span a').get();
 
     const result = await util.ProcessFeed(list, cache);
 

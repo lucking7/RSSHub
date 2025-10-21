@@ -10,7 +10,7 @@ const render = (data) => art(path.join(__dirname, 'templates/chart.art'), data);
 
 export const route: Route = {
     path: '/chart/:chart?',
-    categories: ['multimedia'],
+    categories: ['multimedia', 'popular'],
     view: ViewType.Notifications,
     parameters: {
         chart: {

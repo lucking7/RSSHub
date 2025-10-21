@@ -6,7 +6,7 @@ import ofetch from '@/utils/ofetch';
 
 export const route: Route = {
     path: '/rss/:cat?',
-    categories: ['traditional-media'],
+    categories: ['traditional-media', 'popular'],
     view: ViewType.Articles,
     example: '/nytimes/rss/HomePage',
     parameters: {

@@ -1,4 +1,4 @@
-import { DataItem, Route } from '@/types';
+import { Route } from '@/types';
 import cache from '@/utils/cache';
 import { load } from 'cheerio';
 import got from '@/utils/got';
@@ -8,7 +8,7 @@ import timezone from '@/utils/timezone';
 export const route: Route = {
     path: '/rail/:category?/:topic?',
     categories: ['new-media'],
-    example: '/ally/rail/hyzix/chengguijiaotong',
+    example: '/ally/rail/hyzix/chengguijiaotong/',
     parameters: { category: '分类，可在 URL 中找到；略去则抓取首页', topic: '话题，可在 URL 中找到；并非所有页面均有此字段' },
     features: {
         requireConfig: false,
@@ -40,28 +40,26 @@ async function handler(ctx) {
 
     const response = await got.get(pageUrl);
     const $ = load(response.data);
-    let title = '';
-    const titleLinks = $('.container .regsiter a').toArray().slice(1); // what a typo... drop "首页"
-    for (const link of titleLinks) {
-        const linkText = $(link).text();
-        title = title ? `${title} - ${linkText}` : linkText;
-    }
+    let title = $('.container .regsiter a') // what a typo...
+        .get()
+        .slice(1) // drop "首页"
+        .reduce((prev, curr) => (prev ? `${prev} - ${$(curr).text()}` : $(curr).text()), '');
     title = title || (category && topic ? `${category} - ${topic}` : category) || '首页';
     let links = [
         // list page: http://rail.ally.net.cn/html/lujuzixun/
-        $('.left .hynewsO h2 a').toArray(),
+        $('.left .hynewsO h2 a').get(),
         // multi-sub-topic page: http://rail.ally.net.cn/html/hyzix/
-        $('.left .list_content_c').find('.new_hy_focus_con_tit a, .new_hy_list_name a').toArray(),
+        $('.left .list_content_c').find('.new_hy_focus_con_tit a, .new_hy_list_name a').get(),
         // multi-sub-topic page 2: http://rail.ally.net.cn/html/foster/
-        $('.left').find('.nnewslistpic a, .nnewslistinfo dd a').toArray(),
+        $('.left').find('.nnewslistpic a, .nnewslistinfo dd a').get(),
         // data list page: http://rail.ally.net.cn/html/tongjigongbao/
-        $('.left .list_con .datacountTit a').toArray(),
+        $('.left .list_con .datacountTit a').get(),
         // home page: http://rail.ally.net.cn
-        $('.container_left').find('dd a, h1 a, ul.slideshow li a').toArray(),
+        $('.container_left').find('dd a, h1 a, ul.slideshow li a').get(),
     ].flat();
     if (!links.length) {
         // try aggressively sniffing links, e.g. http://rail.ally.net.cn/html/InviteTen/
-        links = $('.left a, .container_left a').toArray();
+        links = $('.left a, .container_left a').get();
     }
 
     let items = links
@@ -79,14 +77,10 @@ async function handler(ctx) {
                 pubDate: timezone(parseDate(`${urlMatch[1]}${urlMatch[2]}`), 8),
             };
         })
-        .filter(Boolean);
-    const uniqueItems: DataItem[] = [];
-    for (const item of items) {
-        if (!uniqueItems.some((uniqueItem) => uniqueItem.link === item?.link)) {
-            uniqueItems.push(item!);
-        }
-    }
-    items = uniqueItems.sort((a, b) => b.pubDate - a.pubDate).slice(0, ctx.req.query('limit') || 20);
+        .filter(Boolean)
+        .reduce((prev, curr) => (prev.length && prev.at(-1).link === curr.link ? prev : [...prev, curr]), [])
+        .sort((a, b) => b.pubDate - a.pubDate)
+        .slice(0, ctx.req.query('limit') || 20);
 
     items = await Promise.all(
         items.map((item) =>

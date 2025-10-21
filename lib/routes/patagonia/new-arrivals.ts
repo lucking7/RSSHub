@@ -53,27 +53,32 @@ async function handler(ctx) {
 
     const $ = load(data);
     const list = $('.product')
-        .toArray()
-        .map((element) => {
+        .map(function () {
             const data = {};
-            data.title = $(element).find('.product-tile').data('tealium').product_name[0];
-            let imgUrl = new URL($(element).find('[itemprop="image"]').attr('content'));
+            data.title = $(this).find('.product-tile').data('tealium').product_name[0];
+            let imgUrl = new URL($(this).find('[itemprop="image"]').attr('content'));
             imgUrl = extractSfrmUrl(imgUrl);
 
-            const price = $(element).find('[itemprop="price"]').eq(0).text();
-            data.link = host + '/' + $(element).find('[itemprop="url"]').attr('href');
+            const price = $(this).find('[itemprop="price"]').eq(0).text();
+            data.link = host + '/' + $(this).find('[itemprop="url"]').attr('href');
             data.description =
                 price +
                 art(path.join(__dirname, 'templates/product-description.art'), {
                     imgUrl,
                 });
-            data.category = $(element).find('[itemprop="category"]').attr('content');
+            data.category = $(this).find('[itemprop="category"]').attr('content');
             return data;
-        });
+        })
+        .get();
     return {
         title: `Patagonia - New Arrivals - ${category.toUpperCase()}`,
         link: `${host}/shop/${categoryMap[category][1]}`,
         description: `Patagonia - New Arrivals - ${category.toUpperCase()}`,
-        item: list,
+        item: list.map((item) => ({
+            title: item.title,
+            description: item.description,
+            link: item.link,
+            category: item.category,
+        })),
     };
 }

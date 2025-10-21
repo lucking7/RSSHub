@@ -7,7 +7,7 @@ import timezone from '@/utils/timezone';
 
 export const route: Route = {
     path: '/apod',
-    categories: ['picture'],
+    categories: ['picture', 'popular'],
     view: ViewType.Pictures,
     example: '/nasa/apod',
     parameters: {},
@@ -41,11 +41,11 @@ async function handler(ctx) {
 
     const list = $('body > b > a')
         .slice(0, limit)
-        .toArray()
-        .map((el) => ({
+        .map((_, el) => ({
             title: $(el).text(),
             link: `https://apod.nasa.gov/apod/${$(el).attr('href')}`,
-        }));
+        }))
+        .get();
 
     const items = await Promise.all(
         list.map((item) =>

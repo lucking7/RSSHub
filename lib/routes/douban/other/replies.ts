@@ -30,8 +30,7 @@ async function handler(ctx) {
 
     const $ = load(response.data);
     const list = $('div.recent-replies-mod ul.comment-list li')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
             const p = item.find('p');
             const match = p
@@ -44,7 +43,8 @@ async function handler(ctx) {
             return {
                 link: `https://www.douban.com/note/${nid}/#${cid}`,
             };
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         list.map((item) =>

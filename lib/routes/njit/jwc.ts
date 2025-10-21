@@ -41,17 +41,18 @@ async function handler(ctx) {
 
     const urlList = $('body')
         .find('ul li span a')
-        .map((e) => $(e).attr('href'));
+        .map((i, e) => $(e).attr('href'))
+        .get();
 
     const titleList = $('body')
         .find('ul li span a')
-        .toArray()
-        .map((e) => $(e).attr('title'));
+        .map((i, e) => $(e).attr('title'))
+        .get();
 
     const dateList = $('body')
         .find('span.date')
-        .toArray()
-        .map((e) => $(e).text());
+        .map((i, e) => $(e).text())
+        .get();
 
     const out = await Promise.all(
         urlList.map((itemUrl, index) => {

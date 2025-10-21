@@ -4,7 +4,7 @@ import { load } from 'cheerio';
 import dayjs from 'dayjs';
 import got from '@/utils/got';
 import { art } from '@/utils/render';
-import path from 'node:path';
+import path from 'path';
 
 interface TableData {
     key: string;

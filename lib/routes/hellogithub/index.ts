@@ -66,7 +66,7 @@ async function handler(ctx) {
         link: `${rootUrl}/repository/${item.item_id}`,
         pubDate: parseDate(item.updated_at),
         name: `${item.author}/${item.name}`,
-        description: item.summary,
+        summary: item.summary,
         language: item.primary_lang,
     }));
 

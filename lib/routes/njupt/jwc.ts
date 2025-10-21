@@ -47,20 +47,20 @@ async function handler(ctx) {
     const urlList = $('.content')
         .find('a')
         .slice(0, 10)
-        .toArray()
-        .map((e) => $(e).attr('href'));
+        .map((i, e) => $(e).attr('href'))
+        .get();
 
     const titleList = $('.content')
         .find('a')
         .slice(0, 10)
-        .toArray()
-        .map((e) => $(e).attr('title'));
+        .map((i, e) => $(e).attr('title'))
+        .get();
 
     const dateList = $('.content tr')
         .find('div')
         .slice(0, 10)
-        .toArray()
-        .map((e) => $(e).text().replace('发布时间：', ''));
+        .map((i, e) => $(e).text().replace('发布时间：', ''))
+        .get();
 
     const out = await Promise.all(
         urlList.map((itemUrl, index) => {

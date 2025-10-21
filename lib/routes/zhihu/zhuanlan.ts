@@ -10,12 +10,7 @@ export const route: Route = {
     example: '/zhihu/zhuanlan/googledevelopers',
     parameters: { id: '专栏 id，可在专栏主页 URL 中找到' },
     features: {
-        requireConfig: [
-            {
-                name: 'ZHIHU_COOKIES',
-                description: '',
-            },
-        ],
+        requireConfig: false,
         requirePuppeteer: false,
         antiCrawler: true,
         supportBT: false,
@@ -52,7 +47,7 @@ async function handler(ctx) {
 
     const pinnedRes = await got({
         method: 'get',
-        url: `https://www.zhihu.com/api/v4/columns/${id}/pinned-items/v2`,
+        url: `https://www.zhihu.com/api/v4/columns/${id}/pinned-items`,
         headers: {
             ...header,
             ...signedHeader,

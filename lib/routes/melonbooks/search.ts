@@ -3,7 +3,7 @@ import ofetch from '@/utils/ofetch';
 import { load } from 'cheerio';
 import { parseItems } from './parser';
 import { Context } from 'hono';
-import querystring from 'node:querystring';
+import querystring from 'querystring';
 
 export const handler = async (ctx: Context): Promise<Data | null> => {
     const baseUrl = 'https://www.melonbooks.co.jp';
@@ -34,7 +34,6 @@ export const route: Route = {
         supportBT: false,
         supportPodcast: false,
         supportScihub: false,
-        nsfw: true,
     },
     name: '搜索结果',
     maintainers: ['cokemine'],

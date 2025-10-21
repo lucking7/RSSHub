@@ -50,8 +50,7 @@ async function handler() {
 
     const $ = load(response.data);
     const list = $('div.maincontent > ul > li')
-        .toArray()
-        .map((item) => {
+        .map((_index, item) => {
             const href = $(item).find('a').attr('href');
             const type = pageType(href);
             return {
@@ -60,7 +59,8 @@ async function handler() {
                 pubDate: parseDate($(item).find('span').first().text(), 'YYYY-MM-DD'),
                 type,
             };
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         list.map((item) => {

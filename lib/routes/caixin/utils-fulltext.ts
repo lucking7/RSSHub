@@ -1,4 +1,4 @@
-import crypto from 'node:crypto';
+import crypto from 'crypto';
 import { hextob64, KJUR } from 'jsrsasign';
 import ofetch from '@/utils/ofetch';
 import { config } from '@/config';

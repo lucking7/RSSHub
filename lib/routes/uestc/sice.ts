@@ -32,7 +32,7 @@ export const route: Route = {
 };
 
 async function handler() {
-    const browser = await puppeteer();
+    const browser = await puppeteer({ stealth: true });
     const page = await browser.newPage();
     await page.setRequestInterception(true);
     page.on('request', (request) => {
@@ -47,8 +47,7 @@ async function handler() {
     const $ = load(content);
 
     const out = $('.notice p')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
             const now = dayjs();
             let date = dayjs(now.year() + '-' + item.find('a.date').text());
@@ -61,7 +60,8 @@ async function handler() {
                 link: host + item.find('a[href]').attr('href'),
                 pubDate: parseDate(date),
             };
-        });
+        })
+        .get();
 
     return {
         title: '信通学院通知',

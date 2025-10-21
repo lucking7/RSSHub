@@ -49,8 +49,7 @@ async function handler(ctx) {
 
     const $ = load(data);
     const list = $('.articleList ul li')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
             // 单篇文章块的信息，其中文字部分是标题，属性是文章链接
             const a = item.find('a');
@@ -66,7 +65,8 @@ async function handler(ctx) {
                 link: url,
                 pubDate,
             };
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         list.map(async (item) => {

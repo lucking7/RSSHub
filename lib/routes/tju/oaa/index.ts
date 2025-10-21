@@ -89,8 +89,7 @@ async function handler(ctx) {
     } else {
         const $ = load(response.data);
         const list = $('.notice_l > ul > li > dl > dt')
-            .toArray()
-            .map((item) => {
+            .map((_index, item) => {
                 const href = $('a', item).attr('href');
                 const type = pageType(href);
                 return {
@@ -99,7 +98,8 @@ async function handler(ctx) {
                     pubDate: timezone(parseDate($('.fl_01_r_time', item).text(), 'DDYYYY-MM'), +8),
                     type,
                 };
-            });
+            })
+            .get();
 
         const items = await Promise.all(
             list.map((item) => {

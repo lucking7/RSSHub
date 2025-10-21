@@ -58,10 +58,8 @@ async function handler(ctx: Context): Promise<Data> {
                     const description = $('.widget-episodeBody').html();
                     return {
                         title: item.title,
-                        link: episodeUrl,
                         description,
                         pubDate: parseDate(item.publishedAt),
-                        guid: item.id,
                     };
                 });
             })
@@ -69,7 +67,6 @@ async function handler(ctx: Context): Promise<Data> {
 
     return {
         title,
-        link: url,
         description: catchphrase,
         item: items,
     };

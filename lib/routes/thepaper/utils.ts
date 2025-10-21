@@ -1,6 +1,6 @@
 import cache from '@/utils/cache';
 import { load } from 'cheerio';
-import { parseDate, parseRelativeDate } from '@/utils/parse-date';
+import { parseDate } from '@/utils/parse-date';
 import got from '@/utils/got';
 import { art } from '@/utils/render';
 import path from 'node:path';
@@ -24,7 +24,7 @@ export default {
             // external link
             return defaultRssItem(item);
         }
-        const itemUrl = `https://m.thepaper.cn/${item.cornerLabelDesc && item.cornerLabelDesc === '短剧' ? 'series' : 'detail'}/${item.contId}`;
+        const itemUrl = `https://m.thepaper.cn/detail/${item.contId}`;
         return cache.tryGet(`${itemUrl}${useOldMode ? ':old' : ''}`, async () => {
             const res = await got(itemUrl);
             const data = JSON.parse(load(res.data)('#__NEXT_DATA__').html());
@@ -55,17 +55,12 @@ export default {
                 }
             }
 
-            let pubDate = parseDate(item.pubTimeLong || contentDetail.publishTime);
-            if (Number.isNaN(pubDate)) {
-                pubDate = parseRelativeDate(contentDetail.pubTime);
-            }
-
             const rss_item = {
                 title: contentDetail.name || contentDetail.shareName,
                 link: itemUrl,
                 description,
                 category: [...(contentDetail.tagList?.map((t) => t.tag) ?? []), contentDetail?.nodeInfo?.name ?? []],
-                pubDate,
+                pubDate: parseDate(item.pubTimeLong || contentDetail.pubTime || contentDetail.publishTime),
                 author: contentDetail.author || '',
                 media: {
                     content: {

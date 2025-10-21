@@ -41,8 +41,7 @@ async function handler(ctx) {
     $('table').remove();
 
     const items = $('div[data-content-name]')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
 
             return {
@@ -51,7 +50,8 @@ async function handler(ctx) {
                 description: `<p>${item.find('.mb-3').text()}</p>`,
                 link: `${rootUrl}/login?redirect=/redirect/alink/${item.attr('data-content-id')}`,
             };
-        });
+        })
+        .get();
 
     return {
         title: `${$('h1').text()} - ShopBack`,

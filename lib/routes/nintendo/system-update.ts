@@ -43,8 +43,10 @@ async function handler() {
             const matched_date = /(\d+)年(\d+)月(\d+)日/.exec(heading);
             const update_info = update.nextUntil('.c-heading-lv3');
             const update_infos = update_info
-                .toArray()
-                .map((element) => $(element).html())
+                .map(function () {
+                    return $(this).html();
+                })
+                .get()
                 .join('\n');
             const matched_version = /(\d\.)+\d/.exec(heading);
 

@@ -29,8 +29,7 @@ async function handler(ctx) {
     const $ = load(iconv.decode(response.data, 'gbk'));
 
     const list = $('tbody[id^="normalthread_"]')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
             const xst = item.find('a.s.xst');
             const author = item.find('td.by cite a').eq(0).text();
@@ -39,7 +38,8 @@ async function handler(ctx) {
                 link: xst.attr('href'),
                 author,
             };
-        });
+        })
+        .get();
     // console.log(list);
     const items = await Promise.all(
         list.map((item) =>

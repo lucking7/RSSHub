@@ -1,5 +1,5 @@
 import { Route } from '@/types';
-import ofetch from '@/utils/ofetch';
+import got from '@/utils/got';
 
 export const route: Route = {
     path: '/keyword/:keyword',
@@ -15,27 +15,22 @@ export const route: Route = {
         supportScihub: false,
     },
     name: 'Keywords',
-    maintainers: ['untitaker', 'DIYgod'],
+    maintainers: ['untitaker'],
     handler,
 };
 
 async function handler(ctx) {
     const keyword = ctx.req.param('keyword');
+    const apiLink = `https://search.bsky.social/search/posts?q=${encodeURIComponent(keyword)}`;
 
-    const data = await ofetch(`https://api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=${encodeURIComponent(keyword)}&limit=25&sort=latest`);
+    const { data } = await got(apiLink);
 
-    const items = data.posts.map((post) => ({
-        title: post.record.text,
-        link: `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`,
-        description: post.record.text,
-        pubDate: new Date(post.record.createdAt),
-        author: [
-            {
-                name: post.author.displayName,
-                url: `https://bsky.app/profile/${post.author.handle}`,
-                avatar: post.author.avatar,
-            },
-        ],
+    const items = data.map((item) => ({
+        title: item.post.text,
+        link: `https://bsky.app/profile/${item.user.handle}/post/${item.tid.split('/')[1]}`,
+        description: item.post.text,
+        pubDate: new Date(item.post.createdAt / 1_000_000),
+        author: item.user.handle,
     }));
 
     return {

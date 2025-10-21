@@ -11,9 +11,6 @@ export const route: Route = {
     path: '/:what?/:id?/:needTorrents?/:needImages?',
     name: 'Unknown',
     maintainers: [],
-    features: {
-        nsfw: true,
-    },
     handler,
 };
 

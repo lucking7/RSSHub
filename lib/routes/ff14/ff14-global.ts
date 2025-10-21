@@ -21,7 +21,7 @@ export const route: Route = {
         supportScihub: false,
     },
     name: 'FINAL FANTASY XIV (The Lodestone)',
-    maintainers: ['kmod-midori'],
+    maintainers: ['chengyuhui'],
     handler,
     description: `Region
 

@@ -26,7 +26,7 @@ async function handler() {
     const html = await cache.tryGet(
         targetUrl,
         async () => {
-            const browser = await puppeteer();
+            const browser = await puppeteer({ stealth: true });
             const page = await browser.newPage();
             await page.setRequestInterception(true);
             page.on('request', (request) => {
@@ -48,7 +48,7 @@ async function handler() {
     const $ = load(html);
 
     const list = $('#newsListUl li')
-        .toArray()
+        .get()
         .map((elem) => {
             const $elem = $(elem);
             return {

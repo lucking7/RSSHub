@@ -34,7 +34,7 @@ export const route: Route = {
 | en | English |
 | jp | 日本語 |
     `,
-    maintainers: ['Cedaric'],
+    maintainers: ['FYLSen'],
     handler,
 };
 

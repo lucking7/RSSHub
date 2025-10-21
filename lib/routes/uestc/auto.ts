@@ -31,7 +31,7 @@ export const route: Route = {
 };
 
 async function handler() {
-    const browser = await puppeteer();
+    const browser = await puppeteer({ stealth: true });
     const page = await browser.newPage();
     await page.setRequestInterception(true);
     page.on('request', (request) => {
@@ -48,8 +48,7 @@ async function handler() {
     const items = $('dl.clearfix');
 
     const out = $(items)
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
             const newsTitle = item.find('a').text();
             const newsLink = host + item.find('a[href]').attr('href').slice(3);
@@ -60,7 +59,8 @@ async function handler() {
                 link: newsLink,
                 pubDate: newsPubDate,
             };
-        });
+        })
+        .get();
 
     return {
         title: '电子科技大学自动化学院通知',

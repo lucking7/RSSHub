@@ -11,7 +11,7 @@ const STATUS_MAP = {
 
 export const route: Route = {
     path: '/gushitong/index',
-    categories: ['finance'],
+    categories: ['finance', 'popular'],
     view: ViewType.Notifications,
     example: '/baidu/gushitong/index',
     parameters: {},

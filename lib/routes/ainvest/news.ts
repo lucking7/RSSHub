@@ -5,7 +5,7 @@ import { getHeaders, randomString, decryptAES } from './utils';
 
 export const route: Route = {
     path: '/news',
-    categories: ['finance'],
+    categories: ['finance', 'popular'],
     example: '/ainvest/news',
     parameters: {},
     view: ViewType.Articles,

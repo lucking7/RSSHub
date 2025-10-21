@@ -12,7 +12,7 @@ export const route: Route = {
         },
     ],
     name: '首页',
-    categories: ['finance'],
+    categories: ['finance', 'popular'],
     view: ViewType.Articles,
     maintainers: ['nczitzk'],
     handler,

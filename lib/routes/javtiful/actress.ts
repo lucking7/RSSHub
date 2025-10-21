@@ -17,9 +17,6 @@ export const route: Route = {
             target: '/actress/:id',
         },
     ],
-    features: {
-        nsfw: true,
-    },
 };
 
 async function handler(ctx): Promise<Data> {

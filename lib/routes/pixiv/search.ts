@@ -10,7 +10,7 @@ import ConfigNotFoundError from '@/errors/types/config-not-found';
 
 export const route: Route = {
     path: '/search/:keyword/:order?/:mode?/:include_ai?',
-    categories: ['social-media'],
+    categories: ['social-media', 'popular'],
     view: ViewType.Pictures,
     example: '/pixiv/search/Nezuko/popular',
     parameters: {

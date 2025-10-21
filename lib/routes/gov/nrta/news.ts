@@ -52,13 +52,13 @@ async function handler(ctx) {
     });
 
     const list = $('a', 'record')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
             return {
                 link: item.attr('href'),
             };
-        });
+        })
+        .get();
     const items = await Promise.all(
         list.map((item) =>
             cache.tryGet(item.link, async () => {

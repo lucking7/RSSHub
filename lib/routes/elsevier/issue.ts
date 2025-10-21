@@ -34,8 +34,7 @@ async function handler(ctx) {
     const $ = load(response.data);
     const jrnlName = $('.anchor.js-title-link').text();
     const list = $('.js-article')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             const title = $(item).find('.js-article-title').text();
             const authors = $(item).find('.js-article__item__authors').text();
             const link = $(item).find('.article-content-title').attr('href');
@@ -47,7 +46,8 @@ async function handler(ctx) {
                 authors,
                 issue,
             };
-        });
+        })
+        .get();
 
     const renderDesc = (item) =>
         art(path.join(__dirname, 'templates/description.art'), {

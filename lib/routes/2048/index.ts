@@ -20,7 +20,6 @@ export const route: Route = {
         supportBT: true,
         supportPodcast: false,
         supportScihub: false,
-        nsfw: true,
     },
     name: '论坛',
     maintainers: ['nczitzk'],

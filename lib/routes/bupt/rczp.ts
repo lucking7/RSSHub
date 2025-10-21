@@ -41,15 +41,15 @@ async function handler() {
     const $ = load(response.data);
 
     const list = $('.date-block')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
 
             return {
                 title: item.next().text(),
                 link: `${rootUrl}/${item.next().attr('href')}`,
             };
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         list.map((item) =>

@@ -48,6 +48,7 @@ async function processItem({ link: articleLink, date }) {
             category: tags,
             image: `${rootUrl}${image}`,
             banner: `${rootUrl}${image}`,
+            language: 'en-us',
         } as DataItem;
     });
 }

@@ -29,8 +29,7 @@ async function handler() {
 
     const $ = load(data);
     const list = $('span#resources li')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
             const url = `http://${domain}` + item.find('a').attr('href');
             const title = item.find('a').text();
@@ -41,7 +40,8 @@ async function handler() {
                 author: '福州地铁',
                 pubtime: publishTime,
             };
-        });
+        })
+        .get();
 
     return {
         title: '福州地铁通知公告',

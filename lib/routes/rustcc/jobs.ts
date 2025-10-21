@@ -41,7 +41,7 @@ async function handler() {
     });
 
     const $ = load(response.data);
-    const list = $('.article-list li').toArray();
+    const list = $('.article-list li').get();
 
     return {
         title: 'Rust语言中文社区 | 招聘',

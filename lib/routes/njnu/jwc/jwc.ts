@@ -53,7 +53,7 @@ async function handler(ctx) {
 
     const $ = load(response.data);
 
-    const list = $('.list_txt a').toArray();
+    const list = $('.list_txt a').get();
 
     const result = await ProcessFeed(list, cache);
 

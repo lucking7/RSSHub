@@ -48,8 +48,7 @@ async function handler(ctx) {
     const response = await got({ method: 'get', url });
     const $ = load(response.data);
     const list = $('ul > li.notice-li')
-        .toArray()
-        .map((e) => {
+        .map((i, e) => {
             const element = $(e);
             const title = element.find('a').text().trim();
             const link = 'https://help.aliyun.com' + element.find('a').attr('href').trim();
@@ -61,7 +60,8 @@ async function handler(ctx) {
                 link,
                 pubDate,
             };
-        });
+        })
+        .get();
 
     const result = await Promise.all(
         list.map((item) =>

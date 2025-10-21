@@ -50,16 +50,15 @@ async function handler(ctx) {
     const $2 = load(response2.data);
     const issue = $2('h2.app-journal-latest-issue__heading').text();
     const list = $2('ol.u-list-reset > li')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             const title = $(item).find('h3.app-card-open__heading').find('a').text().trim();
             const link = $(item).find('h3.app-card-open__heading').find('a').attr('href');
             const doi = link.replace('https://link.springer.com/article/', '');
             const img = $(item).find('img').attr('src');
             const authors = $(item)
                 .find('li')
-                .toArray()
-                .map((item) => $(item).text().trim())
+                .map((_, item) => $(item).text().trim())
+                .get()
                 .join('; ');
             return {
                 title,
@@ -69,7 +68,8 @@ async function handler(ctx) {
                 img,
                 authors,
             };
-        });
+        })
+        .get();
 
     const renderDesc = (item) =>
         art(path.join(__dirname, 'templates/description.art'), {

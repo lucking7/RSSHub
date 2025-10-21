@@ -82,8 +82,7 @@ async function dealChannel(suburl, selectors) {
     const channelTitle = channelTitleText ?? $(channelTitleSelector).text();
 
     const pageInfos = $(listSelector)
-        .toArray()
-        .map((e) => {
+        .map((i, e) => {
             const element = $(e);
             const titleElement = element.find(titleSelector);
 
@@ -100,7 +99,8 @@ async function dealChannel(suburl, selectors) {
                 // 如果是公示文章或者站外文章的话只能用这个保底了
                 pubDate: parseRelativeDate(dateraw),
             };
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         pageInfos.map(async (item) => {

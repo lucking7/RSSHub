@@ -62,15 +62,15 @@ async function handler(ctx) {
 
     const list = $('.pro_title')
         .slice(0, 12)
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item).parent();
 
             return {
                 title: item.text(),
                 link: item.attr('href'),
             };
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         list.map((item) =>

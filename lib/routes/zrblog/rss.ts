@@ -24,8 +24,7 @@ async function handler() {
     const $ = load(response.data);
 
     const list = $('div.art_img_box')
-        .toArray()
-        .map((e) => {
+        .map((i, e) => {
             const element = $(e);
             const title = element.find('h2 > a').attr('title');
             const link = element.find('h2 > a').attr('href');
@@ -38,7 +37,8 @@ async function handler() {
                 link,
                 pubDate: parseDate(dateraw, '发布日期：YYYY年MM月DD日'),
             };
-        });
+        })
+        .get();
 
     return {
         title: '赵容部落',

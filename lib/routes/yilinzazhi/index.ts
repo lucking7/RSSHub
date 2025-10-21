@@ -5,7 +5,7 @@ import { load } from 'cheerio';
 
 export const route: Route = {
     path: '/',
-    categories: ['reading'],
+    categories: ['reading', 'popular'],
     view: ViewType.Articles,
     example: '/yilinzazhi',
     radar: [

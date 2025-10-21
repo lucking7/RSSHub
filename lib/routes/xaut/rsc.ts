@@ -49,8 +49,7 @@ async function handler(ctx) {
 
     // 这个列表指通知公告详情列表
     const list = $('.vsb-space.n_right .list .cleafix')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
             // 工作动态栏目里有一些是外链，这里做个判断
             const a = item.find('.list_wen a').eq(0).attr('href');
@@ -61,7 +60,8 @@ async function handler(ctx) {
                 title,
                 link,
             };
-        });
+        })
+        .get();
     return {
         // 源标题
         title: '西安理工大学人事处-' + dic_title[category],

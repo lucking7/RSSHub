@@ -3,7 +3,7 @@ import ConfigNotFoundError from '@/errors/types/config-not-found';
 import { Route, ViewType } from '@/types';
 import got from '@/utils/got';
 import { queryToBoolean } from '@/utils/readable-social';
-import querystring from 'node:querystring';
+import querystring from 'querystring';
 import utils from './utils';
 
 export const route: Route = {

@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 
 export const route: Route = {
     path: '/express',
-    categories: ['finance'],
+    categories: ['finance', 'popular'],
     view: ViewType.Articles,
     example: '/techflowpost/express',
     radar: [

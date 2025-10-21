@@ -41,14 +41,14 @@ async function handler(ctx) {
 
     const list = $('#newsrightlist a')
         .slice(0, 10)
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
             return {
                 title: item.text(),
                 link: `${rootUrl}${item.attr('href').replace('..', '')}`,
             };
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         list.map((item) =>

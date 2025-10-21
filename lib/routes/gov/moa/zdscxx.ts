@@ -17,7 +17,7 @@ export const handler = async (ctx) => {
     const currentUrl = new URL('nyb/pc/messageList.jsp', rootUrl).href;
     const frameUrl = new URL('iframe/top_sj/', rootFrameUrl).href;
 
-    const filterForm = {};
+    let filterForm = {};
 
     if (category) {
         const apiFilterUrl = new URL('nyb/getMessageFilters', rootUrl).href;
@@ -29,19 +29,17 @@ export const handler = async (ctx) => {
             },
         });
 
-        const filters: Record<string, string[]> = {};
-        for (const f of filterResponse.result) {
+        const filters = filterResponse.result.reduce((filters, f) => {
             filters[f.name.trim()] = f.data.map((d) => d.name.trim());
-        }
+            return filters;
+        }, {});
 
-        const categories = category.split(/\//);
-        for (const c of categories) {
-            for (const key of Object.keys(filters)) {
-                if (filters[key].includes(c)) {
-                    filterForm[key] = c;
-                }
+        filterForm = category.split(/\//).reduce((form, c) => {
+            for (const key of Object.keys(filters).filter((key) => filters[key].includes(c))) {
+                form[key] = c;
             }
-        }
+            return form;
+        }, {});
     }
 
     const { data: response } = await got.post(apiUrl, {
@@ -110,7 +108,7 @@ export const route: Route = {
     parameters: { category: '分类，默认为全部，见下表' },
     description: `::: tip
   若订阅 [中华人民共和国农业农村部数据](http://zdscxx.moa.gov.cn:8080/nyb/pc/messageList.jsp) 的 \`价格指数\` 报告主题。此时路由为 [\`/gov/moa/zdscxx/价格指数\`](https://rsshub.app/gov/moa/zdscxx/价格指数)。
-
+  
   若订阅 \`央视网\` 报告来源 的 \`蔬菜生产\` 报告主题。此时路由为 [\`/gov/moa/zdscxx/央视网/蔬菜生产\`](https://rsshub.app/gov/moa/zdscxx/央视网/蔬菜生产)。
 :::
 

@@ -68,7 +68,7 @@ const categoryMap = [
  */
 export const route: Route = {
     path: '/search/:category?/:order?/:time?/:query?',
-    categories: ['design'],
+    categories: ['design', 'popular'],
     view: ViewType.Pictures,
     example: '/notefolio/search/1/pick/all/life',
     parameters: {

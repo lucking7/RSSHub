@@ -1,7 +1,7 @@
 import { parseDate } from '@/utils/parse-date';
 
-const generateDescription = (target, description = '') => {
-    for (const item of target.content) {
+const generateDescription = (target, init) =>
+    target.content.reduce((description, item) => {
         switch (item.type) {
             case 'text':
                 description += `<div>${item.content}</div>`;
@@ -38,9 +38,9 @@ const generateDescription = (target, description = '') => {
             default:
                 description += '未知类型，请点击<a href="https://github.com/DIYgod/RSSHub/issues">链接</a>提交issue';
         }
-    }
-    return description;
-};
+
+        return description;
+    }, init);
 
 const generateData = (data) =>
     data.map((item) => {

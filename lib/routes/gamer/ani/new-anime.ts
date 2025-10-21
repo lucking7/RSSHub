@@ -5,7 +5,7 @@ import timezone from '@/utils/timezone';
 
 export const route: Route = {
     path: '/ani/new_anime',
-    categories: ['anime'],
+    categories: ['anime', 'popular'],
     view: ViewType.Videos,
     example: '/gamer/ani/new_anime',
     parameters: {},

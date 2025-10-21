@@ -7,7 +7,7 @@ import { processContent } from './utils';
 
 export const route: Route = {
     path: '/:lang/:category?',
-    categories: ['anime'],
+    categories: ['anime', 'popular'],
     view: ViewType.Articles,
     example: '/pixivision/zh-tw',
     parameters: { lang: 'Language', category: 'Category' },

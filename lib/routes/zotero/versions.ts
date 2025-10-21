@@ -36,18 +36,22 @@ async function handler() {
     return {
         title: 'Zotero - Version History',
         link: url,
-        item: list.toArray().map((item) => {
-            item = $(item);
-            let date = $(item)
-                .text()
-                .match(/\((.*)\)/);
-            date = Array.isArray(date) ? date[1] : null;
-            return {
-                title: item.text().trim(),
-                description: $('<div/>').append(item.nextUntil('h2').clone()).html(),
-                pubDate: date,
-                link: url + '#' + item.attr('id'),
-            };
-        }),
+        item:
+            list &&
+            list
+                .map((index, item) => {
+                    item = $(item);
+                    let date = $(item)
+                        .text()
+                        .match(/\((.*)\)/);
+                    date = Array.isArray(date) ? date[1] : null;
+                    return {
+                        title: item.text().trim(),
+                        description: $('<div/>').append(item.nextUntil('h2').clone()).html(),
+                        pubDate: date,
+                        link: url + '#' + item.attr('id'),
+                    };
+                })
+                .get(),
     };
 }

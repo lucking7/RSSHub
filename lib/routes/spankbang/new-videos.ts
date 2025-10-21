@@ -78,7 +78,6 @@ export const route: Route = {
     features: {
         antiCrawler: true,
         requirePuppeteer: true,
-        nsfw: true,
     },
     radar: [
         {

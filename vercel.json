@@ -1,5 +1,18 @@
 {
+    "$schema": "https://openapi.vercel.sh/vercel.json",
+    "buildCommand": "pnpm build:vercel",
+    "installCommand": "pnpm install",
+    "outputDirectory": "assets",
     "framework": null,
-    "github": { "silent": true },
-    "routes": [{ "src": "/.*", "dest": "/api/vercel.ts" }]
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/api/vercel.js"
+        }
+    ],
+    "functions": {
+        "api/vercel.js": {
+            "includeFiles": "dist/**/*"
+        }
+    }
 }

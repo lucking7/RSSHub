@@ -44,8 +44,7 @@ async function handler(ctx) {
     const feed_title = $('h2.category').text();
 
     const list = $('div#articleList-body div.item.clearfix')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
             const a = item.find('a');
             const date = parseDate(item.find('div.item-date').text());
@@ -54,7 +53,8 @@ async function handler(ctx) {
                 link: new URL(a.attr('href'), baseUrl).href,
                 pubDate: date,
             };
-        });
+        })
+        .get();
 
     const sorted = list.sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime()).slice(0, 10);
 

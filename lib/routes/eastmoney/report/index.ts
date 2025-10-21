@@ -9,7 +9,7 @@ import { getRatingChangeStr, getEpsOrPeStr } from '../utils';
 
 export const route: Route = {
     path: '/report/:category',
-    categories: ['finance'],
+    categories: ['finance', 'popular'],
     view: ViewType.Articles,
     example: '/eastmoney/report/strategyreport',
     parameters: {

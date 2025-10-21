@@ -38,14 +38,15 @@ async function handler(ctx) {
     const $ = load(response.data);
 
     let item = $('#page_list li a')
-        .toArray()
-        .map((e) => {
+        .slice(0, 1)
+        .map((_, e) => {
             e = $(e);
             return {
                 title: e.attr('title'),
                 link: e.attr('href'),
             };
-        });
+        })
+        .get();
 
     item = await Promise.all(
         item

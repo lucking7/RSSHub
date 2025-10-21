@@ -1,8 +1,7 @@
 import { Route } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
-import { load, type CheerioAPI } from 'cheerio';
-import type { Element } from 'domhandler';
+import { load, type CheerioAPI, type Element } from 'cheerio';
 import { art } from '@/utils/render';
 import path from 'node:path';
 import { config } from '@/config';
@@ -12,7 +11,7 @@ const userAgent = 'PugpigBolt v4.1.8 (iPhone, iOS 18.2.1) on phone (model iPhone
 
 export const route: Route = {
     path: '/app/:category?',
-    categories: ['new-media'],
+    categories: ['new-media', 'popular'],
     example: '/theinitium/app',
     parameters: {
         category: 'Category, see below, latest_sc by default',
@@ -101,7 +100,6 @@ async function fetchAppPage(url: URL) {
     });
     const article = $('.pp-article__body');
     article.find('.block-related-articles').remove();
-    article.find('.copyright').wrapInner('<small></small>').wrapInner('<figure></figure>');
     article.find('figure.wp-block-pullquote').children().unwrap();
     article.find('div.block-explanation-note').wrapInner('<blockquote></blockquote>');
     article.find('div.wp-block-tcc-author-note').wrapInner('<em></em>').after('<hr>');
@@ -111,6 +109,7 @@ async function fetchAppPage(url: URL) {
         coverImage: $('.pp-media__image').attr('src'),
         coverCaption: $('.pp-media__caption').html(),
         article: article.html(),
+        copyright: $('.copyright').html(),
     });
 }
 
@@ -119,8 +118,6 @@ async function fetchWebPage(url: URL) {
     const $ = load(response.data);
     const article = $('.entry-content');
     article.find('.block-related-articles').remove();
-    article.find('.cta-subscription').remove();
-    article.find('.entry-copyright').wrapInner('<small></small>').wrapInner('<figure></figure>');
     article.find('figure.wp-block-pullquote').children().unwrap();
     article.find('div.block-explanation-note').wrapInner('<blockquote></blockquote>');
     article.find('div.wp-block-tcc-author-note').wrapInner('<em></em>').after('<hr>');
@@ -130,6 +127,7 @@ async function fetchWebPage(url: URL) {
         coverImage: $('.wp-post-image').attr('src'),
         coverCaption: $('.image-caption').html(),
         article: article.html(),
+        copyright: $('.entry-copyright').html(),
     });
 }
 

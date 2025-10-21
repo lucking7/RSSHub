@@ -1,4 +1,4 @@
-export const categories = {
+const categories = {
     // https://www.mckinsey.com.cn/wp-json/wp/v2/categories?parent=25&per_page=100
     2: {
         name: '汽车',
@@ -13,7 +13,7 @@ export const categories = {
         slug: 'consumers',
     },
     5: {
-        name: '医药与医疗',
+        name: '医药',
         slug: 'healthcare-pharmaceuticals',
     },
     7: {
@@ -24,13 +24,17 @@ export const categories = {
         name: '制造业',
         slug: 'manufacturing',
     },
+    9: {
+        name: '私募',
+        slug: 'private-equity',
+    },
     10: {
         name: '技术，媒体与通信',
         slug: 'technology-media-and-telecom',
     },
     12: {
         name: '城市化与可持续发展',
-        slug: 'urbanization-sustainability',
+        slug: 'urbanization-sustainability-insights',
     },
     13: {
         name: '创新',
@@ -52,20 +56,22 @@ export const categories = {
         name: '洞见',
         slug: 'insights',
     },
+    37: {
+        name: '麦肯锡季刊',
+        slug: 'mckinsey-season-publication',
+    },
     41: {
         name: '资本项目和基础设施',
         slug: 'capital-projects-infrastructure',
     },
     42: {
         name: '旅游、运输和物流',
-        slug: '交通运输与物流',
-    },
-    19139: {
-        name: '出海与国际化、转型',
-        slug: '出海与国际化、转型',
+        slug: 'transport-logistics',
     },
     45: {
         name: '全球基础材料',
-        slug: '全球基础材料',
+        slug: 'global-basic-material',
     },
 };
+
+export { categories };

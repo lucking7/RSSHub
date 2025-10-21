@@ -51,15 +51,15 @@ async function handler(ctx) {
     const $ = load(response.data);
 
     const list = $('.link_title')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
 
             return {
                 title: item.text(),
                 link: item.attr('href'),
             };
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         list.map((item) =>

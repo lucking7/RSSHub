@@ -43,15 +43,15 @@ async function handler(ctx) {
     const title = $('div.z > a').last().text();
     const list = $('tbody > tr')
         .slice(0, 25)
-        .toArray()
-        .map((item) => ({
+        .map((_, item) => ({
             title: $(item).find('td.title2').text(),
             link: new URL($(item).find('td.title2 > a').attr('href'), rootUrl).href,
             author: $(item).find('td.author').text(),
             pubDate: timezone(parseDate($(item).find('td.dateline').text(), 'YYYY-M-D HH:mm'), +8),
             category: $(item).find('td.forum').text(),
         }))
-        .filter((item) => item.title);
+        .filter((_, item) => item.title)
+        .get();
 
     const items = await Promise.all(
         list.map((item) =>
@@ -62,8 +62,7 @@ async function handler(ctx) {
                 const content = load(iconv.decode(detailResponse.data, 'gbk'));
 
                 item.description = content('div.c_table')
-                    .toArray()
-                    .map((item) =>
+                    .map((_, item) =>
                         art(path.join(__dirname, 'templates/fornumtopic.art'), {
                             content: content(item)
                                 .find('td.t_f')
@@ -81,6 +80,7 @@ async function handler(ctx) {
                             author: content(item).find('a.xw1').text().trim(),
                         })
                     )
+                    .get()
                     .join('\n');
 
                 return item;

@@ -1,6 +1,5 @@
-const noFound = 'auto: route no found';
-const criticalFailure = 'auto: DO NOT merge';
-const routeTestFailed = 'auto: not ready to review';
+const noFound = 'Auto: Route No Found';
+const testFailed = 'Auto: Route Test Failed';
 const allowedUser = new Set(['dependabot[bot]', 'pull[bot]']); // dependabot and downstream PR requested by pull[bot]
 
 export default async function identify({ github, context, core }, body, number, sender) {
@@ -82,16 +81,15 @@ export default async function identify({ github, context, core }, body, number, 
         if (issue.state === 'closed') {
             await updatePrState('open');
         }
-        if (issue.labels.some((e) => e.name === criticalFailure) || issue.labels.some((e) => e.name === routeTestFailed)) {
-            await removeLabel(criticalFailure);
-            await removeLabel(routeTestFailed);
+        if (issue.labels.some((e) => e.name === testFailed)) {
+            await removeLabel(testFailed);
         }
     }
 
     if (allowedUser.has(sender)) {
         core.info('PR created by a allowed user, passing');
         await removeLabel();
-        await addLabels(['auto: ready to merge']);
+        await addLabels(['Auto: allowed']);
         return;
     } else {
         core.debug('PR created by ' + sender);
@@ -104,7 +102,7 @@ export default async function identify({ github, context, core }, body, number, 
         if (routes.length && routes[0] === 'NOROUTE') {
             core.info('PR stated no route, passing');
             await removeLabel();
-            await addLabels(['auto: route test bypassed']);
+            await addLabels(['Auto: Route Test Skipped']);
 
             return;
         } else if (routes.length) {

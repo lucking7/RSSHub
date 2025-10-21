@@ -54,8 +54,7 @@ async function handler() {
 
     $ = load(newBookPage.data);
     const resultItem = $('.doulist-item')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             const $item = $(item);
 
             return {
@@ -64,7 +63,8 @@ async function handler() {
                 description: `<img src="${$item.find('.post img').attr('src')}" /><br>${$item.find('.abstract').html()}`,
                 pubDate: new Date($item.find('.time > span').attr('title')).toUTCString(),
             };
-        });
+        })
+        .get();
 
     return {
         title: `商务印书馆-${title}`,

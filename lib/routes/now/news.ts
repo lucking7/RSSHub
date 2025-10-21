@@ -1,17 +1,8 @@
 import { Route } from '@/types';
 import cache from '@/utils/cache';
-import ofetch from '@/utils/ofetch';
+import got from '@/utils/got';
 import { load } from 'cheerio';
 import { parseDate } from '@/utils/parse-date';
-
-const mainCategories = {
-    local: 119,
-    international: 120,
-    entertainment: 500,
-    life: 501,
-    technology: 502,
-    finance: 121,
-};
 
 const categories = {
     tracker: 123,
@@ -34,8 +25,7 @@ export const route: Route = {
     },
     radar: [
         {
-            source: ['news.now.com/home/:category?', 'news.now.com/'],
-            target: '/news/:category?',
+            source: ['news.now.com/'],
         },
     ],
     name: '新聞',
@@ -62,94 +52,44 @@ export const route: Route = {
 };
 
 async function handler(ctx) {
-    const { category = '', id = '' } = ctx.req.param();
-    const limit = Number.parseInt(ctx.req.query('limit') || '20', 10);
-    const hasTopicId = id && Object.hasOwn(categories, category);
+    const category = ctx.req.param('category') || '';
+    const id = ctx.req.param('id') || '';
 
     const rootUrl = 'https://news.now.com';
 
-    const pageUrl = hasTopicId ? `${rootUrl}/home/${category}/detail?catCode=${categories[category]}&topicId=${id}` : `${rootUrl}/home${category ? `/${category}` : ''}`;
+    const currentUrl = Object.hasOwn(categories, category) ? `${rootUrl}/home/${category}/detail?catCode=${categories[category]}&topicId=${id}` : `${rootUrl}/home${category ? `/${category}` : ''}`;
 
-    let apiUrl;
-    if (hasTopicId) {
-        apiUrl = pageUrl;
-    } else if (category === 'sports') {
-        apiUrl = `https://sportsapi.now.com/api/getNewsList?pageSize=${limit}&pageNo=1&searchTagsKey=allSportsSearchTags`;
-    } else if (category) {
-        apiUrl = `https://d3sli7vh0lsda4.cloudfront.net/api/getNewsList?category=${mainCategories[category]}&pageNo=1&pageSize=${limit}`;
-    } else {
-        apiUrl = pageUrl;
-    }
+    const response = await got({
+        method: 'get',
+        url: currentUrl,
+    });
 
-    const response = await ofetch(apiUrl);
-    const isApi = typeof response === 'object' && Array.isArray(response);
-    const $ = load(response);
+    const $ = load(response.data);
 
-    let list;
-    if (isApi) {
-        list =
-            category === 'sports'
-                ? response.map((item) => {
-                      const image = item.newsPhotos
-                          ?.filter((p) => p.sizeType === '3')
-                          ?.map((p) => `<img src="${p.imageFileUrl}">`)
-                          .join('');
-                      return {
-                          title: item.headlineChi,
-                          description: image,
-                          link: `https://news.now.com/home/${category}/player?newsId=${item.newsId}`,
-                          pubDate: parseDate(item.publishDate, 'x'),
-                          category: [...item.sportTypes.map((t) => t.sportTypeNameChi), ...item.players.map((p) => p.playerFullNameChi), ...item.teams.map((t) => t.teamCodeChi)],
-                          image: item.newsPhotos?.filter((p) => p.sizeType === '3')?.[0]?.imageUrl,
-                          newsId: item.newsId,
-                      };
-                  })
-                : response.map((item) => {
-                      const image = item.image2Url ?? item.imageUrl ?? item.image3Url;
-                      return {
-                          title: item.title,
-                          description: (image ? `<img src="${image}">` : '') + item.leading + item.summary,
-                          link: `https://news.now.com/home/${category}/player?newsId=${item.newsId}`,
-                          pubDate: parseDate(item.publishDate, 'x'),
-                          updated: parseDate(item.lastModifyDate, 'x'),
-                          category: item.newsTags.map((t) => t.tag),
-                          image,
-                      };
-                  });
-    } else {
-        list = $(`${category === '' ? '.homeFeaturedNews ' : '.newsCategoryColLeft '}.newsTitle`)
-            .toArray()
-            .slice(0, limit)
-            .map((item) => {
-                item = $(item);
+    const list = $(`${category === '' ? '.homeFeaturedNews ' : '.newsCategoryColLeft '}.newsTitle`)
+        .map((_, item) => {
+            item = $(item);
 
-                return {
-                    title: item.text(),
-                    link: `${rootUrl}${item.parent().parent().attr('href')}`,
-                };
-            });
-    }
+            return {
+                title: item.text(),
+                link: `${rootUrl}${item.parent().parent().attr('href')}`,
+            };
+        })
+        .get();
 
     const items = await Promise.all(
         list.map((item) =>
             cache.tryGet(item.link, async () => {
-                if (!item.pubDate || item.newsId) {
-                    const detailResponse = await ofetch(item.link);
-                    const $ = load(detailResponse);
+                const detailResponse = await got({
+                    method: 'get',
+                    url: item.link,
+                });
+                const content = load(detailResponse.data);
 
-                    const newsData = JSON.parse(
-                        $('script:contains("var newsData")')
-                            .text()
-                            .match(/var newsData = (.*?);/)?.[1] || '{}'
-                    );
+                const images = detailResponse.data.match(/"imageUrl":"(.*?)","image2Url":/);
 
-                    const images = newsData.imageList ? newsData.imageList.map((img) => `<img src="${img.image2Url}">`).join('') : '';
-
-                    item.description = item.description ? item.description + ($('.img_caption').prop('outerHTML') ?? '') + $('.newsLeading').html() : images + $('.newsLeading').html();
-                    item.pubDate ||= parseDate(newsData.publishDate, 'x');
-                    item.updated ||= parseDate(newsData.lastModifyDate, 'x');
-                    item.category ||= [...new Set([newsData.categoryName, ...newsData.newsTags.map((t) => t.tag), ...newsData.newsTopics.map((t) => t.topicName)])];
-                }
+                item.pubDate = parseDate(content('.published').attr('datetime'));
+                item.description = (images ? `<img src="${images[1]}">` : '') + content('.newsLeading').html();
 
                 return item;
             })
@@ -157,8 +97,8 @@ async function handler(ctx) {
     );
 
     return {
-        title: Object.hasOwn(categories, category) ? $('title').text() : ($('.smallSpace.active').text() || '首頁') + ' | Now 新聞',
-        link: pageUrl,
+        title: String(Object.hasOwn(categories, category) ? $('title').text() : ($('.smallSpace.active').text() || '首頁') + ' | Now 新聞'),
+        link: currentUrl,
         item: items,
     };
 }

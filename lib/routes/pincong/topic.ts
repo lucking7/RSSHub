@@ -28,10 +28,12 @@ async function handler(ctx) {
     return {
         title: `品葱 - ${ctx.req.param('topic')}`,
         link: url,
-        item: list.toArray().map((item) => ({
-            title: $(item).find('h4 a').text().trim(),
-            link: baseUrl + $(item).find('h4 a').attr('href'),
-            pubDate: parseDate($(item).attr('data-created-at') * 1000),
-        })),
+        item: list
+            .map((_, item) => ({
+                title: $(item).find('h4 a').text().trim(),
+                link: baseUrl + $(item).find('h4 a').attr('href'),
+                pubDate: parseDate($(item).attr('data-created-at') * 1000),
+            }))
+            .get(),
     };
 }

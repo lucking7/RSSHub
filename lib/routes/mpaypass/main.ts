@@ -38,20 +38,20 @@ async function handler(ctx) {
 
     const title_cn = type ? $(`a[href="http://www.mpaypass.com.cn/${type}.html"]`).text() : '最新文章';
     const list = $('.newslist')
-        .toArray()
-        .map((item) => {
+        .map(function () {
             const info = {
-                title: $(item).find('#title').text(),
-                link: $(item).find('#title').find('a').attr('href'),
-                time: $(item).find('#time').text(),
-                category: $(item)
+                title: $(this).find('#title').text(),
+                link: $(this).find('#title').find('a').attr('href'),
+                time: $(this).find('#time').text(),
+                category: $(this)
                     .find('#keywords')
                     .find('a')
                     .toArray()
                     .map((e) => $(e).text().trim()),
             };
             return info;
-        });
+        })
+        .get();
 
     const out = await Promise.all(
         list.map((info) =>

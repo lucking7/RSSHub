@@ -42,17 +42,17 @@ async function handler() {
     const $ = load(response);
 
     const list = $('a.list-group-item')
-        .toArray()
-        .filter((e) => $(e).find('h4.media-heading i').length === 0)
-        .map((item) => {
+        .filter((i, e) => $(e).find('h4.media-heading i').length === 0)
+        .map(function () {
             const info = {
-                title: $(item).find('h4.media-heading').text().trim(),
-                author: $(item).find('.text-500').text(),
-                link: new URL($(item).attr('href'), host).href,
-                pubDate: $(item).find('p.pull-right.media-date strong').text().trim(),
+                title: $(this).find('h4.media-heading').text().trim(),
+                author: $(this).find('.text-500').text(),
+                link: new URL($(this).attr('href'), host).href,
+                pubDate: $(this).find('p.pull-right.media-date strong').text().trim(),
             };
             return info;
-        });
+        })
+        .get();
 
     const out = await Promise.all(
         list.map((info) =>

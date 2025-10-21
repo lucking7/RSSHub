@@ -2,7 +2,7 @@ import { Route } from '@/types';
 
 import cache from '@/utils/cache';
 import { load } from 'cheerio';
-import ofetch from '@/utils/ofetch';
+import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import { art } from '@/utils/render';
 import path from 'node:path';
@@ -48,11 +48,11 @@ async function handler(ctx) {
             do {
                 bHasNextPage = false;
                 // eslint-disable-next-line no-await-in-loop
-                const data = await ofetch(strBaseUrl, {
+                const { data } = await got(strBaseUrl, {
                     headers: {
-                        platform: '',
+                        platform: 1,
                     },
-                    query: {
+                    searchParams: {
                         limit: iReqLimit,
                         offset: iReqOffSet,
                     },
@@ -92,7 +92,7 @@ async function handler(ctx) {
 
     // 获取漫画标题、介绍
     const { bookTitle, bookIntro } = await cache.tryGet(`${baseUrl}/comic/${id}`, async () => {
-        const data = await ofetch(`${baseUrl}/comic/${id}`);
+        const { data } = await got(`${baseUrl}/comic/${id}`);
         const $ = load(data);
         return {
             bookTitle: $('.comicParticulars-title-right > ul > li > h6').text(),
@@ -101,9 +101,11 @@ async function handler(ctx) {
     });
 
     const genResult = async (chapter) => {
-        const { code, results } = await ofetch(`${apiBaseUrl}/api/v3/comic/${id}/chapter/${chapter.uuid}`, {
+        const {
+            data: { code, results },
+        } = await got(`${apiBaseUrl}/api/v3/comic/${id}/chapter/${chapter.uuid}`, {
             headers: {
-                webp: '1',
+                webp: 1,
             },
         });
 

@@ -37,8 +37,7 @@ async function handler(ctx) {
     const $ = load(response.data);
 
     let item = $('.article_list li')
-        .toArray()
-        .map((e) => {
+        .map((_, e) => {
             e = $(e);
             const a = e.find('a');
             return {
@@ -46,7 +45,8 @@ async function handler(ctx) {
                 link: a.attr('href'),
                 pubDate: parseDate(e.find('.date').text(), 'YYYY/MM/DD'),
             };
-        });
+        })
+        .get();
 
     item = await Promise.all(
         item

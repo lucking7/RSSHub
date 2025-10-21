@@ -1,7 +1,5 @@
 import { Route } from '@/types';
 import got from '@/utils/got';
-import path from 'node:path';
-import { art } from '@/utils/render';
 
 export const route: Route = {
     path: '/exam',
@@ -17,12 +15,6 @@ export const route: Route = {
     },
     name: '考试信息',
     maintainers: ['admxj'],
-    radar: [
-        {
-            source: ['www.crac.org.cn/*'],
-            target: '/exam',
-        },
-    ],
     handler,
 };
 
@@ -49,9 +41,13 @@ async function handler() {
             startDate: item.exam.signUpStartDate,
             category: [item.examType],
             image: item.weixin,
-            description: art(path.join(__dirname, 'templates/exam.art'), { item }),
+            content: {
+                html: item.content,
+            },
+            description: item.exam.signUpStartDate,
         };
     });
+
     return {
         title: '考试信息-中国无线电协会业余无线电分会',
         link: 'http://82.157.138.16:8091/CRAC/crac/pages/list_examMsg.html',

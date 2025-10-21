@@ -36,11 +36,11 @@ async function handler() {
     const response = await got(currentUrl);
     const $ = load(response.data);
     const list = $('ul#list li')
-        .toArray()
-        .map((item) => ({
+        .map((_, item) => ({
             title: $(item).find('a').text(),
             link: new URL($(item).find('a').attr('href'), rootUrl).href,
-        }));
+        }))
+        .get();
 
     const items = await Promise.all(
         list.map((item) =>

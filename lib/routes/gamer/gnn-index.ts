@@ -7,7 +7,7 @@ import timezone from '@/utils/timezone';
 
 export const route: Route = {
     path: '/gnn/:category?',
-    categories: ['anime'],
+    categories: ['anime', 'popular'],
     view: ViewType.Articles,
     example: '/gamer/gnn/1',
     parameters: {
@@ -95,8 +95,7 @@ async function handler(ctx) {
         .children()
         .not('p,a,img,span')
         .slice(0, limit)
-        .toArray()
-        .map((item) => {
+        .map((index, item) => {
             item = $(item);
             let aLabelNode;
             let tag;
@@ -114,7 +113,8 @@ async function handler(ctx) {
                 title: '[' + tag + ']' + aLabelNode.text(),
                 link: aLabelNode.attr('href').replace('//', 'https://'),
             };
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         list.map(async (item) => {

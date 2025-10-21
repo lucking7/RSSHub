@@ -6,7 +6,7 @@ import { isValidHost } from '@/utils/valid-host';
 
 export const route: Route = {
     path: '/user/:name?',
-    categories: ['social-media'],
+    categories: ['social-media', 'popular'],
     example: '/lofter/user/i',
     view: ViewType.Articles,
     parameters: { name: 'Lofter user name, can be found in the URL' },

@@ -41,8 +41,7 @@ async function handler(ctx) {
     const $ = load(listResponse.data);
 
     const list = $('#l-container .news_list > li.news')
-        .toArray()
-        .map((item) => {
+        .map((index, item) => {
             item = $(item);
             const title = item.find('a').text();
             const link = item.find('a').attr('href');
@@ -55,7 +54,8 @@ async function handler(ctx) {
                 pubDate: parseDate(date),
                 link,
             };
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         list.map((item) => {

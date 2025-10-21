@@ -15,21 +15,23 @@ const parseAuthorNewsList = async (slug) => {
     }
     const $ = load(resp.html);
     const articles = $('article.story-list-story');
-    return articles.toArray().map((item) => {
-        item = $(item);
-        const headline = item.find('a.story-list-story__info__headline-link');
-        return {
-            title: headline.text(),
-            pubDate: item.attr('data-updated-at'),
-            guid: `bloomberg:${item.attr('data-id')}`,
-            link: new URL(headline.attr('href'), baseURL).href,
-        };
-    });
+    return articles
+        .map((index, item) => {
+            item = $(item);
+            const headline = item.find('a.story-list-story__info__headline-link');
+            return {
+                title: headline.text(),
+                pubDate: item.attr('data-updated-at'),
+                guid: `bloomberg:${item.attr('data-id')}`,
+                link: new URL(headline.attr('href'), baseURL).href,
+            };
+        })
+        .get();
 };
 
 export const route: Route = {
     path: '/authors/:id/:slug/:source?',
-    categories: ['finance'],
+    categories: ['finance', 'popular'],
     view: ViewType.Articles,
     example: '/bloomberg/authors/ARbTQlRLRjE/matthew-s-levine',
     parameters: { id: 'Author ID, can be found in URL', slug: 'Author Slug, can be found in URL', source: 'Data source, either `api` or `rss`,`api` by default' },

@@ -29,19 +29,6 @@ export const route: Route = {
     description: `See the [official RSS page](https://www.scmp.com/rss) to get the ID of each category. This route provides fulltext that the offical feed doesn't.`,
 };
 
-const getAttribs = (attribs?: { [key: string]: string }) => {
-    if (!attribs) {
-        return;
-    }
-    const obj: { [key: string]: string } = {};
-    for (const key in attribs) {
-        if (Object.hasOwn(attribs, key)) {
-            obj[key] = attribs[key];
-        }
-    }
-    return obj;
-};
-
 async function handler(ctx) {
     const categoryId = ctx.req.param('category_id');
     const rssUrl = `https://www.scmp.com/rss/${categoryId}/feed`;
@@ -67,8 +54,16 @@ async function handler(ctx) {
                 enclosure_length: enclosure?.attr('length'),
                 enclosure_type: enclosure?.attr('type'),
                 media: {
-                    content: mediaContent ? getAttribs(mediaContent.attribs) : {},
-                    thumbnail: thumbnail?.attribs ? getAttribs(thumbnail.attribs) : undefined,
+                    content: Object.keys(mediaContent.attribs).reduce((data, key) => {
+                        data[key] = mediaContent.attribs[key];
+                        return data;
+                    }, {}),
+                    thumbnail: thumbnail?.attribs
+                        ? Object.keys(thumbnail.attribs).reduce((data, attr) => {
+                              data[attr] = thumbnail.attribs[attr];
+                              return data;
+                          }, {})
+                        : undefined,
                 },
             };
         });

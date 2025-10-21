@@ -11,12 +11,11 @@ export const camelcaseKeys = <T = any>(obj: any): T => {
     }
 
     if (isPlainObject(obj)) {
-        const result: any = {};
-        for (const key of Object.keys(obj)) {
+        return Object.keys(obj).reduce((result: any, key) => {
             const nextKey = isMongoId(key) ? key : camelcase(key);
             result[nextKey] = camelcaseKeys(obj[key]);
-        }
-        return result as any;
+            return result;
+        }, {}) as any;
     }
 
     return obj;

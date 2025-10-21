@@ -38,17 +38,17 @@ async function handler(ctx) {
         return e.search('redirect') === -1 ? e : link;
     }
     const list = $('#wp_news_w7 ul.news li')
-        .toArray()
-        .map((element) => {
+        .map(function () {
             const info = {
-                title: $(element).find('a').attr('title'),
-                link: sortUrl($(element).find('a').attr('href')),
-                date: $(element)
+                title: $(this).find('a').attr('title'),
+                link: sortUrl($(this).find('a').attr('href')),
+                date: $(this)
                     .text()
                     .match(/\d{4}-\d{2}-\d{2}/)[0],
             };
             return info;
-        });
+        })
+        .get();
 
     const out = await Promise.all(
         list.map((info) => {

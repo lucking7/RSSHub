@@ -5,7 +5,7 @@ import timezone from '@/utils/timezone';
 
 export const route: Route = {
     path: '/news',
-    categories: ['anime'],
+    categories: ['anime', 'popular'],
     view: ViewType.Articles,
     example: '/idolypride/news',
     parameters: {},

@@ -49,8 +49,7 @@ async function handler(ctx) {
 
     const list = $('.main_conRCb a')
         .slice(0, 20)
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             item = $(item);
             const link = item
                 .attr('href')
@@ -61,7 +60,8 @@ async function handler(ctx) {
                 link,
                 pubDate: parseDate(item.find('span').text()),
             };
-        });
+        })
+        .get();
 
     return {
         // 源标题

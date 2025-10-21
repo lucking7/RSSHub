@@ -5,8 +5,7 @@ import cache from '@/utils/cache';
 import ofetch from '@/utils/ofetch';
 import { parseDate } from '@/utils/parse-date';
 
-import { type CheerioAPI, type Cheerio, load } from 'cheerio';
-import type { Element } from 'domhandler';
+import { type CheerioAPI, type Cheerio, type Element, load } from 'cheerio';
 import { type Context } from 'hono';
 import path from 'node:path';
 
@@ -110,29 +109,30 @@ export const handler = async (ctx: Context): Promise<Data> => {
                     };
 
                     const mediaEls: Element[] = $$('div.pics').first().find('img').toArray();
-                    const medias: Record<string, Record<string, string>> = {};
-                    let imageCount = 1;
-                    for (const mediaEl of mediaEls) {
+                    const medias: Record<string, Record<string, string>> = mediaEls.reduce((acc: Record<string, Record<string, string>>, mediaEl) => {
                         const $$mediaEl: Cheerio<Element> = $$(mediaEl);
                         const url: string | undefined = $$mediaEl.attr('src') ? new URL($$mediaEl.attr('src') as string, baseUrl).href : undefined;
 
                         if (!url) {
-                            continue;
+                            return acc;
                         }
 
                         const medium: string = 'image';
-                        const key: string = `${medium}${imageCount++}`;
+                        const count: number = Object.values(acc).filter((m) => m.medium === medium).length + 1;
+                        const key: string = `${medium}${count}`;
 
-                        medias[key] = {
+                        acc[key] = {
                             url,
                             medium,
                             title: $$mediaEl.attr('alt') || title,
                             description: $$mediaEl.attr('alt') || title,
                             thumbnail: url,
                         };
-                    }
 
-                    if (Object.keys(medias).length > 0) {
+                        return acc;
+                    }, {});
+
+                    if (medias) {
                         processedItem = {
                             ...processedItem,
                             media: medias,

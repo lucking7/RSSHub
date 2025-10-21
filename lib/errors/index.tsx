@@ -1,5 +1,4 @@
 import { type NotFoundHandler, type ErrorHandler } from 'hono';
-import { routePath } from 'hono/route';
 import { getDebugInfo, setDebugInfo } from '@/utils/debug-info';
 import { config } from '@/config';
 import * as Sentry from '@sentry/node';
@@ -12,7 +11,7 @@ import { requestMetric } from '@/utils/otel';
 
 export const errorHandler: ErrorHandler = (error, ctx) => {
     const requestPath = ctx.req.path;
-    const matchedRoute = routePath(ctx);
+    const matchedRoute = ctx.req.routePath;
     const hasMatchedRoute = matchedRoute !== '/*';
 
     const debug = getDebugInfo();

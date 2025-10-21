@@ -51,7 +51,6 @@ describe('index', () => {
                 title: `$('a').text() + ' - %title%'`,
                 link: `$('a').attr('href')`,
                 description: `$('.description').html()`,
-                pubDate: `timezone(parseDate($('.date').text(), 'YYYY-MM-DD'), 0)`,
             },
         });
 
@@ -63,14 +62,14 @@ describe('index', () => {
                     description: 'RSSHub1',
                     guid: undefined,
                     link: '/1',
-                    pubDate: new Date('2025-01-01T00:00:00Z'),
+                    pubDate: undefined,
                     title: '1 - buildData',
                 },
                 {
                     description: 'RSSHub2',
                     guid: undefined,
                     link: '/2',
-                    pubDate: new Date('2025-01-02T00:00:00Z'),
+                    pubDate: undefined,
                     title: '2 - buildData',
                 },
             ],

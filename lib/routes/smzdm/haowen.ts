@@ -4,9 +4,6 @@ import ofetch from '@/utils/ofetch';
 import { load } from 'cheerio';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
-import { getHeaders } from './utils';
-import ConfigNotFoundError from '@/errors/types/config-not-found';
-import { config } from '@/config';
 
 export const route: Route = {
     path: '/haowen/:day?',
@@ -24,12 +21,7 @@ export const route: Route = {
         },
     },
     features: {
-        requireConfig: [
-            {
-                name: 'SMZDM_COOKIE',
-                description: '什么值得买登录后的 Cookie 值',
-            },
-        ],
+        requireConfig: false,
         requirePuppeteer: false,
         antiCrawler: false,
         supportBT: false,
@@ -42,16 +34,10 @@ export const route: Route = {
 };
 
 async function handler(ctx) {
-    if (!config.smzdm.cookie) {
-        throw new ConfigNotFoundError('什么值得买排行榜 is disabled due to the lack of SMZDM_COOKIE');
-    }
-
     const day = ctx.req.param('day') ?? '1';
     const link = `https://post.smzdm.com/hot_${day}/`;
 
-    const response = await ofetch(link, {
-        headers: getHeaders(),
-    });
+    const response = await ofetch(link);
     const $ = load(response);
     const title = $('li.filter-tab.active').text();
 
@@ -69,9 +55,7 @@ async function handler(ctx) {
     const out = await Promise.all(
         list.map((item) =>
             cache.tryGet(item.link ?? '', async () => {
-                const response = await ofetch(item.link ?? '', {
-                    headers: getHeaders(),
-                });
+                const response = await ofetch(item.link ?? '');
                 const $ = load(response);
                 const content = $('#articleId');
                 content.find('.item-name').remove();

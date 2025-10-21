@@ -42,8 +42,7 @@ async function handler(ctx) {
         const description = $('section')
             .slice(2, -2)
             .find('.elementor-widget-text-editor>div,.elementor-widget-image>div>img')
-            .toArray()
-            .map((el) => {
+            .map((_, el) => {
                 if (el.tagName === 'img') {
                     return `<img src=${el.attribs.src} />`;
                 } else if (el.firstChild.tagName === 'p') {
@@ -52,6 +51,7 @@ async function handler(ctx) {
                     return `<p>${$(el).html()}</p>`;
                 }
             })
+            .get()
             .join('');
 
         return {

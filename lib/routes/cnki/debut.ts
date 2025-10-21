@@ -51,12 +51,12 @@ async function handler(ctx) {
     });
     const $ = load(response.data);
     const list = $('dd')
-        .toArray()
-        .map((item) => ({
+        .map((_, item) => ({
             title: $(item).find('span.name > a').text().trim(),
             link: `${rootUrl}/kcms/detail/${new URLSearchParams(new URL(`${rootUrl}/${$(item).find('span.name > a').attr('href')}`).search).get('url')}.html`,
             pubDate: parseDate($(item).find('span.company').text(), 'YYYY-MM-DD HH:mm:ss'),
-        }));
+        }))
+        .get();
 
     const items = await Promise.all(
         list.map((item) =>
@@ -65,12 +65,12 @@ async function handler(ctx) {
                 const $ = load(detailResponse.data);
                 item.description = art(path.join(__dirname, 'templates/desc.art'), {
                     author: $('h3.author > span')
-                        .toArray()
-                        .map((item) => $(item).text())
+                        .map((_, item) => $(item).text())
+                        .get()
                         .join(' '),
                     company: $('a.author')
-                        .toArray()
-                        .map((item) => $(item).text())
+                        .map((_, item) => $(item).text())
+                        .get()
                         .join(' '),
                     content: $('div.row > span.abstract-text').parent().text(),
                 });

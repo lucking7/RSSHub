@@ -47,18 +47,20 @@ export const route: Route = {
 
 async function handler(ctx) {
     const id = ctx.req.param('id') ?? '3892';
-    const targetUrl = rootUrl + `/channel_${id}`;
+    const targetUrl = rootUrl.concat(`/channel_${id}`);
     const resp = await got({
         method: 'get',
         url: targetUrl,
     });
     const $ = load(resp.data);
     const list = $('a.link-to-article')
-        .toArray()
-        .filter((item) => $(item).attr('href').startsWith('/'))
-        .map((item) => ({
-            link: rootUrl + $(item).attr('href'),
-        }));
+        .filter(function () {
+            return $(this).attr('href').startsWith('/');
+        })
+        .map((_, item) => ({
+            link: rootUrl.concat($(item).attr('href')),
+        }))
+        .get();
     const items = await Promise.all(
         list.map((item) =>
             cache.tryGet(item.link, async () => {

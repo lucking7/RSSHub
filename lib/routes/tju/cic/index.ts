@@ -86,8 +86,7 @@ async function handler(ctx) {
     } else {
         const $ = load(response.data);
         const list = $('.wenzi_list_ul > li')
-            .toArray()
-            .map((item) => {
+            .map((_index, item) => {
                 const href = $('a', item).attr('href');
                 const type = pageType(href);
                 return {
@@ -95,7 +94,8 @@ async function handler(ctx) {
                     link: type === 'in-site' ? cic_base_url + href : href,
                     type,
                 };
-            });
+            })
+            .get();
 
         const items = await Promise.all(
             list.map((item) => {

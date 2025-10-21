@@ -30,8 +30,7 @@ async function handler(ctx) {
         .replaceAll(/[\n\r ]/g, '');
 
     const list = $('li.txt-elise')
-        .toArray()
-        .map((item) => {
+        .map((_, item) => {
             let link = $(item).find('a').attr('href');
             if (link.includes('info') && id !== '') {
                 link = new URL(link, rootUrl).href;
@@ -44,7 +43,8 @@ async function handler(ctx) {
                 pubDate: parseDate($(item).find('span').text()),
                 link,
             };
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         list.map((item) =>

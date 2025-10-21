@@ -42,8 +42,7 @@ async function handler(ctx) {
     const $ = load(content.data);
 
     const items = $('.lczj_box tbody tr')
-        .toArray()
-        .map((e, i) => {
+        .map((i, e) => {
             if (i < 2) {
                 return null;
             }
@@ -56,10 +55,11 @@ async function handler(ctx) {
                     exrt: c('td:nth-child(4)').text(),
                     mc: c('td:nth-child(5)').text(),
                 }),
-                pubDate: timezone(parseDate($('#t_id span').text().slice(5), 'YYYY-MM-DD HH:mm', true), 8),
-                guid: md5(c('td:nth-child(1)').text() + $('#t_id span').text().slice(5)),
+                pubDate: timezone(parseDate($('#t_id span').text().substring(5), 'YYYY-MM-DD HH:mm', true), 8),
+                guid: md5(c('td:nth-child(1)').text() + $('#t_id span').text().substring(5)),
             };
-        });
+        })
+        .get();
 
     const ret = {
         title: '中国光大银行',
@@ -70,7 +70,7 @@ async function handler(ctx) {
 
     ctx.set('json', {
         ...ret,
-        pubDate: timezone(parseDate($('#t_id span').text().slice(5), 'YYYY-MM-DD HH:mm', true), 0),
+        pubDate: timezone(parseDate($('#t_id span').text().substring(5), 'YYYY-MM-DD HH:mm', true), 0),
     });
     return ret;
 }

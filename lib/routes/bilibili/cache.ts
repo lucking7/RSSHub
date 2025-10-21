@@ -4,11 +4,13 @@ import utils from './utils';
 import { load } from 'cheerio';
 import { config } from '@/config';
 import logger from '@/utils/logger';
-import { getPuppeteerPage } from '@/utils/puppeteer';
+import puppeteer from '@/utils/puppeteer';
 import { JSDOM } from 'jsdom';
 
-const getCookie = (disableConfig = false) => {
-    if (Object.keys(config.bilibili.cookies).length > 0 && !disableConfig) {
+const disableConfigCookie = false;
+
+const getCookie = () => {
+    if (!disableConfigCookie && Object.keys(config.bilibili.cookies).length > 0) {
         // Update b_lsid in cookies
         for (const key of Object.keys(config.bilibili.cookies)) {
             const cookie = config.bilibili.cookies[key];
@@ -22,26 +24,25 @@ const getCookie = (disableConfig = false) => {
     }
     const key = 'bili-cookie';
     return cache.tryGet(key, async () => {
-        let waitForRequest: Promise<string> = new Promise((resolve) => {
-            resolve('');
+        const browser = await puppeteer({
+            stealth: true,
         });
-        const { destory } = await getPuppeteerPage('https://space.bilibili.com/1/dynamic', {
-            onBeforeLoad: (page) => {
-                waitForRequest = new Promise<string>((resolve) => {
-                    page.on('requestfinished', async (request) => {
-                        if (request.url() === 'https://api.bilibili.com/x/internal/gaia-gateway/ExClimbWuzhi') {
-                            const cookies = await page.cookies();
-                            let cookieString = cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join('; ');
-                            cookieString = cookieString.replace(/b_lsid=[0-9A-F]+_[0-9A-F]+/, `b_lsid=${utils.lsid()}`);
-                            resolve(cookieString);
-                        }
-                    });
-                });
-            },
+        const page = await browser.newPage();
+        const waitForRequest = new Promise<string>((resolve) => {
+            page.on('requestfinished', async (request) => {
+                if (request.url() === 'https://api.bilibili.com/x/internal/gaia-gateway/ExClimbWuzhi') {
+                    const cookies = await page.cookies();
+                    let cookieString = cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join('; ');
+
+                    cookieString = cookieString.replace(/b_lsid=[0-9A-F]+_[0-9A-F]+/, `b_lsid=${utils.lsid()}`);
+                    resolve(cookieString);
+                }
+            });
         });
+        await page.goto('https://space.bilibili.com/1/dynamic');
         const cookieString = await waitForRequest;
         logger.debug(`Got bilibili cookie: ${cookieString}`);
-        await destory();
+        await browser.close();
         return cookieString;
     });
 };

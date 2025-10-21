@@ -68,14 +68,16 @@ async function handler(ctx) {
             pubDate: parseDate(item.PublicationDateAndTime),
         }));
     } else {
-        list = list.toArray().map((item) => {
-            item = $(item);
-            const link = item.attr('href');
+        list = list
+            .map((_, item) => {
+                item = $(item);
+                const link = item.attr('href');
 
-            return {
-                link: `${link.indexOf('http') === 0 ? '' : rootUrl}${item.attr('href')}`,
-            };
-        });
+                return {
+                    link: `${link.indexOf('http') === 0 ? '' : rootUrl}${item.attr('href')}`,
+                };
+            })
+            .get();
     }
 
     const items = await Promise.all(

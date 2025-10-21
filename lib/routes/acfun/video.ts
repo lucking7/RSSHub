@@ -15,7 +15,7 @@ export const route: Route = {
     parameters: {
         uid: '用户 UID',
     },
-    categories: ['anime'],
+    categories: ['anime', 'popular'],
     example: '/acfun/user/video/6102',
     view: ViewType.Videos,
     maintainers: ['wdssmq'],
@@ -36,7 +36,7 @@ async function handler(ctx) {
     const $ = load(data);
     const title = $('title').text();
     const description = $('.signature .complete').text();
-    const list = $('#ac-space-video-list a').toArray();
+    const list = $('#ac-space-video-list a').get();
     const image = $('head style')
         .text()
         .match(/.user-photo{\n\s*background:url\((.*)\) 0% 0% \/ 100% no-repeat;/)[1];

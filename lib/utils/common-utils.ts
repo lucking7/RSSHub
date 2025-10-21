@@ -1,6 +1,6 @@
 import { parseDate } from '@/utils/parse-date';
 import title from 'title';
-import os from 'node:os';
+import os from 'os';
 
 // convert a string into title case
 const toTitleCase = (str: string) => title(str);

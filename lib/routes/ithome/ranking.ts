@@ -54,14 +54,14 @@ async function handler(ctx) {
     }
 
     const list = $(`#${id} > li`)
-        .toArray()
-        .map((item) => {
+        .map(function () {
             const info = {
-                title: $(item).find('a').text(),
-                link: $(item).find('a').attr('href'),
+                title: $(this).find('a').text(),
+                link: $(this).find('a').attr('href'),
             };
             return info;
-        });
+        })
+        .get();
 
     const items = await Promise.all(
         list.map((item) =>

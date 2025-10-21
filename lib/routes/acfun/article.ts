@@ -37,7 +37,7 @@ const timeRangeEnum = new Set(['all', 'oneDay', 'threeDay', 'oneWeek', 'oneMonth
 
 export const route: Route = {
     path: '/article/:categoryId/:sortType?/:timeRange?',
-    categories: ['anime'],
+    categories: ['anime', 'popular'],
     view: ViewType.Articles,
     example: '/acfun/article/110',
     parameters: {

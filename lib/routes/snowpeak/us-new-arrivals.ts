@@ -39,10 +39,9 @@ async function handler() {
 
     const $ = load(data);
     const list = $('.element.product-tile')
-        .toArray()
-        .map((element) => {
+        .map(function () {
             const data = {};
-            const product = $(element).find('.product-data').data('product');
+            const product = $(this).find('.product-data').data('product');
             data.title = product.title;
             data.link = `${host}/products/${product.handle}`;
             data.pubDate = new Date(product.published_at).toUTCString();
@@ -55,7 +54,8 @@ async function handler() {
                 });
 
             return data;
-        });
+        })
+        .get();
     return {
         title: 'Snow Peak - New Arrivals',
         link: `${host}/new-arrivals`,
