@@ -16,7 +16,7 @@ export const route: Route = {
     maintainers: ['Rjnishant530'],
     handler,
     url: 'insider.finology.in/tag',
-    description: `::: info Topic
+    description: `:::note Topic
 | Topic                    | Link                     |
 | ------------------------ | ------------------------ |
 | Investment Decisions     | investment-decisions     |

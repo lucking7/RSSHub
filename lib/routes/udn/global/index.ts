@@ -20,22 +20,25 @@ export const route: Route = {
     },
     radar: [
         {
-            source: ['global.udn.com/global_vision/index', 'global.udn.com/'],
+            source: ['global.udn.com/global_vision/index/:category', 'global.udn.com/'],
         },
     ],
     name: '轉角國際 - 首頁',
     maintainers: ['nczitzk'],
     handler,
-    description: `| 首頁 | 編輯精選 | 熱門文章 |
+    description: `| 首頁 | 最新文章 | 熱門文章 |
 | ---- | -------- | -------- |
-|      | editor   | hot      |`,
+|      | new      | hot      |`,
 };
 
 async function handler(ctx) {
-    const category = ctx.req.param('category');
+    const category = ctx.req.param('category') ?? '';
+
+    const start = category === 'hot' ? 6 : 0;
+    const end = category === 'new' ? 6 : 12;
 
     const rootUrl = 'https://global.udn.com';
-    const currentUrl = `${rootUrl}/global_vision/index`;
+    const currentUrl = `${rootUrl}/global_vision/index${category ? `/${category}` : ''}`;
 
     const response = await got({
         method: 'get',
@@ -44,43 +47,18 @@ async function handler(ctx) {
 
     const $ = load(response.data);
 
-    const categoriesConf = {
-        hot: {
-            articleSelector: '.carousel__list .carousel__item',
-            titleExtractor: (e) => e.attr('title').trim(),
-        },
-        editor: {
-            articleSelector: '.list-container--featured .list-vertical__item',
-            titleExtractor: (e) => e.find('.list-vertical__title').text().trim(),
-        },
-        default: {
-            articleSelector: '.list-container--index .list-vertical__item',
-            titleExtractor: (e) => e.find('.list-vertical__title').text().trim(),
-        },
-    };
-    const getItems = (config) =>
-        $(config.articleSelector)
-            .toArray()
-            .map((item) => {
-                const a = $(item);
-                const rawLink = a.attr('href').split('?')[0];
-                return {
-                    title: config.titleExtractor(a),
-                    link: rawLink.startsWith('http') ? rawLink : `${rootUrl}${rawLink}`,
-                };
-            });
+    $('.topic').remove();
 
-    let items;
-    if (category) {
-        const conf = categoriesConf[category];
-        items = getItems(conf);
-    } else {
-        const defaultItems = getItems(categoriesConf.default);
-        const hotItems = getItems(categoriesConf.hot);
+    let items = [...$('.news_cards ul li a').toArray().slice(start, end), ...(category === '' ? $('.last24, h2').find('a').toArray() : [])].map((item) => {
+        item = $(item);
 
-        const combinedItems = [...hotItems, ...defaultItems];
-        items = [...new Map(combinedItems.map((item) => [item.link, item])).values()];
-    }
+        const link = item.attr('href');
+
+        return {
+            title: item.find('h3').text() || item.text(),
+            link: link.startsWith('http') ? link : `${rootUrl}${item.attr('href')}`,
+        };
+    });
 
     items = await Promise.all(
         items.map((item) =>
@@ -92,17 +70,12 @@ async function handler(ctx) {
 
                 const content = load(detailResponse.data);
 
-                item.author = content('.article-content__authors-name').first().text().trim();
-                item.pubDate = timezone(parseDate(content('meta[property="article:published_time"]').attr('content')), +8);
+                content('#story_art_title, #story_bady_info, #story_also').remove();
+                content('.social_bar, .photo_pop, .only_mobile, .area').remove();
 
-                const mainImage = content('.article-content__focus').html();
-                const articleBodyHtml = content('.article-content__editor')
-                    .find('p, figure, h2, .video-container')
-                    .toArray()
-                    .map((e) => content.html(e))
-                    .join('');
-
-                item.description = mainImage + articleBodyHtml;
+                item.description = content('#tags').prev().html();
+                item.author = content('#story_author_name').text();
+                item.pubDate = timezone(parseDate(content('meta[name="date"]').attr('content')), +8);
                 item.category = content('meta[name="news_keywords"]').attr('content').split(',');
 
                 return item;

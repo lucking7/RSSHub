@@ -130,7 +130,7 @@ async function handler(ctx) {
         return {
             title: `${appName} ${item.versionDisplay} for ${p}`,
             link: currentUrl,
-            description: item.releaseNotes?.replaceAll('\n', '<br>'),
+            description: item.releaseNotes?.replace(/\n/g, '<br>'),
             category: [p],
             guid: `apple/apps/${country}/${id}/${pid}#${item.versionDisplay}`,
             pubDate: parseDate(item.releaseTimestamp),
@@ -147,7 +147,7 @@ async function handler(ctx) {
         item: items,
         title: `${title} - Apple App Store`,
         link: currentUrl,
-        description: description?.replaceAll('\n', ' '),
+        description: description?.replace(/\n/g, ' '),
         language: $('html').prop('lang'),
         image: $('meta[property="og:image"]').prop('content'),
         icon,

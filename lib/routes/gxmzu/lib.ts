@@ -33,7 +33,7 @@ export const route: Route = {
 };
 
 async function handler() {
-    const response = await ofetch(url);
+    const response = await ofetch(url).catch(() => null);
     if (!response) {
         return;
     }
@@ -58,7 +58,7 @@ async function handler() {
                     return item;
                 }
 
-                const response = await ofetch(item.link);
+                const response = await ofetch(item.link).catch(() => null);
                 if (!response || (response.status >= 300 && response.status < 400)) {
                     item.description = '该通知无法直接预览，请点击原文链接↑查看';
                 } else {

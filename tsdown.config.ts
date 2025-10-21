@@ -7,5 +7,4 @@ export default defineConfig({
     shims: true,
     clean: true,
     plugins: [artTemplatesPlugin()],
-    copy: ['lib/assets'],
 });

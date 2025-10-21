@@ -128,7 +128,7 @@ async function handler(ctx) {
                         .text()
                         .match(/contentData = (.*)/)?.[1]
             )
-            .toSorted((a: any, b: any) => b.length - a.length)[0] || '{}'
+            .sort((a: any, b: any) => b.length - a.length)[0] || '{}'
     );
     const blockRenderData = JSON.parse(
         $('script:contains("column_2_text")')

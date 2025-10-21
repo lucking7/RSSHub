@@ -13,7 +13,4 @@ export const route: Route = {
     ],
     handler,
     url: 'wnacg.com/albums.html',
-    features: {
-        nsfw: true,
-    },
 };

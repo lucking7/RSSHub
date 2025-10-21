@@ -14,7 +14,6 @@ export const route: Route = {
         supportBT: false,
         supportPodcast: false,
         supportScihub: false,
-        nsfw: true,
     },
     radar: [
         {
@@ -63,7 +62,7 @@ async function handler(ctx) {
         },
     });
 
-    const sortedChapters = chapterData.data.chaptersByComicId.toSorted((a, b) => Date.parse(b.dateUpdated) - Date.parse(a.dateUpdated));
+    const sortedChapters = chapterData.data.chaptersByComicId.sort((a, b) => Date.parse(b.dateUpdated) - Date.parse(a.dateUpdated));
 
     const chapterLimit = Number(limit) || sortedChapters.length;
     const filteredChapters = sortedChapters.slice(0, chapterLimit);

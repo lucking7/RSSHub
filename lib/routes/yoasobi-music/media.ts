@@ -42,7 +42,7 @@ async function handler() {
 
     const data = Object.values(parseJSONP(response.data).items)
         .flat()
-        .toSorted((a, b) => new Date(b.date) - new Date(a.date))
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
         .map((item) => ({
             date: item.date,
             weekDay: item.youbi,

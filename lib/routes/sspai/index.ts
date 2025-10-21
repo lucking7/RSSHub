@@ -23,7 +23,7 @@ export const route: Route = {
         },
     ],
     name: '首页',
-    maintainers: ['HenryQW', 'cscnk52'],
+    maintainers: ['HenryQW'],
     handler,
     url: 'sspai.com/index',
 };
@@ -48,10 +48,6 @@ async function handler() {
                     description = `<img src="${banner}" alt="Article Cover Image" style="display: block; margin: 0 auto;"><br>`;
                 }
                 description += articleData.body;
-
-                if (articleData.body_extends) {
-                    description += articleData.body_extends.map((bodyExtendsItem) => `<h2>${bodyExtendsItem.title}</h2>${bodyExtendsItem.body}`).join('');
-                }
 
                 return {
                     title: item.title.trim(),

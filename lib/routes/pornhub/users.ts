@@ -2,7 +2,7 @@ import { Route, Data } from '@/types';
 import got from '@/utils/got';
 import { load } from 'cheerio';
 import { isValidHost } from '@/utils/valid-host';
-import { headers, parseItems, getRadarDomin } from './utils';
+import { headers, parseItems } from './utils';
 import InvalidParameterError from '@/errors/types/invalid-parameter';
 
 export const route: Route = {
@@ -17,9 +17,13 @@ export const route: Route = {
         supportBT: false,
         supportPodcast: false,
         supportScihub: false,
-        nsfw: true,
     },
-    radar: getRadarDomin('/users/:username'),
+    radar: [
+        {
+            source: ['pornhub.com/users/:username/*'],
+            target: '/users/:username',
+        },
+    ],
     name: 'Users',
     maintainers: ['I2IMk', 'queensferryme'],
     handler,

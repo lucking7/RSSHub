@@ -62,7 +62,7 @@ const post = async (requestPath: string, accessToken = md5(Date.now().toString()
 };
 
 function sortBy(items: any[], key: string) {
-    return items.toSorted((a, b) => {
+    return items.sort((a, b) => {
         if (a[key] < b[key]) {
             return -1;
         }

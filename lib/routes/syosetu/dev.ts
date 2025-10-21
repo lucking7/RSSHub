@@ -49,7 +49,7 @@ async function handler(): Promise<Data> {
     const updates = dates
         .map((date, index) => ({
             date,
-            content: contents[index]?.replaceAll('\n', '<br>') ?? '',
+            content: contents[index]?.replace(/\n/g, '<br>') ?? '',
         }))
         .filter((update) => update.content);
 

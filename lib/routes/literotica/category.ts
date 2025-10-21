@@ -14,9 +14,6 @@ export const route: Route = {
     name: 'Unknown',
     maintainers: ['nczitzk'],
     handler,
-    features: {
-        nsfw: true,
-    },
 };
 
 async function handler(ctx) {

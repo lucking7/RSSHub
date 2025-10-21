@@ -2,45 +2,45 @@ export interface Profile {
     id: string;
     url_token: string;
     name: string;
-    useDefaultAvatar: boolean;
-    avatarUrl: string;
-    avatarUrlTemplate: string;
-    isOrg: boolean;
+    use_default_avatar: boolean;
+    avatar_url: string;
+    avatar_url_template: string;
+    is_org: boolean;
     type: string;
     url: string;
-    userType: string;
+    user_type: string;
     headline: string;
-    headlineRender: string;
+    headline_render: string;
     gender: number;
-    isAdvertiser: boolean;
-    ipInfo: string;
-    vipInfo: {
-        isVip: boolean;
-        vipType: number;
-        renameDays: string;
-        entranceV2: null;
-        renameFrequency: number;
-        renameAwaitDays: number;
+    is_advertiser: boolean;
+    ip_info: string;
+    vip_info: {
+        is_vip: boolean;
+        vip_type: number;
+        rename_days: string;
+        entrance_v2: null;
+        rename_frequency: number;
+        rename_await_days: number;
     };
     badge: any[];
-    badgeV2: {
+    badge_v2: {
         title: string;
-        mergedBadges: any[];
-        detailBadges: any[];
+        merged_badges: any[];
+        detail_badges: any[];
         icon: string;
-        nightIcon: string;
+        night_icon: string;
     };
-    allowMessage: boolean;
-    isFollowing: boolean;
-    isFollowed: boolean;
-    isBlocking: boolean;
-    followerCount: number;
-    answerCount: number;
-    articlesCount: number;
-    availableMedalsCount: number;
+    allow_message: boolean;
+    is_following: boolean;
+    is_followed: boolean;
+    is_blocking: boolean;
+    follower_count: number;
+    answer_count: number;
+    articles_count: number;
+    available_medals_count: number;
     employments: any[];
-    isRealname: boolean;
-    hasApplyingColumn: boolean;
+    is_realname: boolean;
+    has_applying_column: boolean;
 }
 
 interface Article {

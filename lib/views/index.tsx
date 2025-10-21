@@ -78,7 +78,7 @@ const Index: FC<{ debugQuery: string | undefined }> = ({ debugQuery }) => {
             {
                 name: 'Hot Routes',
                 value: Object.keys(debug.routes)
-                    .toSorted((a, b) => debug.routes[b] - debug.routes[a])
+                    .sort((a, b) => debug.routes[b] - debug.routes[a])
                     .slice(0, 30)
                     .map((route) => (
                         <>
@@ -90,7 +90,7 @@ const Index: FC<{ debugQuery: string | undefined }> = ({ debugQuery }) => {
             {
                 name: 'Hot Paths',
                 value: Object.keys(debug.paths)
-                    .toSorted((a, b) => debug.paths[b] - debug.paths[a])
+                    .sort((a, b) => debug.paths[b] - debug.paths[a])
                     .slice(0, 30)
                     .map((path) => (
                         <>
@@ -102,7 +102,7 @@ const Index: FC<{ debugQuery: string | undefined }> = ({ debugQuery }) => {
             {
                 name: 'Hot Error Routes',
                 value: Object.keys(debug.errorRoutes)
-                    .toSorted((a, b) => debug.errorRoutes[b] - debug.errorRoutes[a])
+                    .sort((a, b) => debug.errorRoutes[b] - debug.errorRoutes[a])
                     .slice(0, 30)
                     .map((route) => (
                         <>
@@ -114,7 +114,7 @@ const Index: FC<{ debugQuery: string | undefined }> = ({ debugQuery }) => {
             {
                 name: 'Hot Error Paths',
                 value: Object.keys(debug.errorPaths)
-                    .toSorted((a, b) => debug.errorPaths[b] - debug.errorPaths[a])
+                    .sort((a, b) => debug.errorPaths[b] - debug.errorPaths[a])
                     .slice(0, 30)
                     .map((path) => (
                         <>

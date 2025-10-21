@@ -9,13 +9,7 @@ export const route: Route = {
     example: '/zhihu/people/answers/diygod',
     parameters: { id: '作者 id，可在用户主页 URL 中找到' },
     features: {
-        requireConfig: [
-            {
-                name: 'ZHIHU_COOKIES',
-                description: '',
-                optional: true,
-            },
-        ],
+        requireConfig: false,
         requirePuppeteer: false,
         antiCrawler: true,
         supportBT: false,

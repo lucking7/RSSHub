@@ -26,7 +26,6 @@ export const route: Route = {
         supportBT: false,
         supportPodcast: false,
         supportScihub: false,
-        nsfw: true,
     },
     name: '作者文章',
     maintainers: ['JamYiz'],

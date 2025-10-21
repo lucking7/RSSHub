@@ -87,7 +87,7 @@ async function handler(ctx) {
     const items = response.activities
         .map((activity) => processActivity(activity, issueId))
         .filter((item) => item !== null)
-        .toSorted((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
+        .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
         .slice(0, limit);
 
     return {

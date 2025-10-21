@@ -4,7 +4,6 @@ import got from '@/utils/got';
 import { load } from 'cheerio';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
-import pMap from 'p-map';
 
 export const route: Route = {
     path: '/gnn/:category?',
@@ -95,8 +94,6 @@ async function handler(ctx) {
     const list = $('div.BH-lbox.GN-lbox2')
         .children()
         .not('p,a,img,span')
-        // <div data-news-id="291265" id="291265"></div>
-        .not('[data-news-id]')
         .slice(0, limit)
         .toArray()
         .map((item) => {
@@ -119,9 +116,8 @@ async function handler(ctx) {
             };
         });
 
-    const items = await pMap(
-        list,
-        async (item) => {
+    const items = await Promise.all(
+        list.map(async (item) => {
             item.description = await cache.tryGet(item.link, async () => {
                 const response = await got.get(item.link);
                 let component = '';
@@ -167,8 +163,7 @@ async function handler(ctx) {
                 return component;
             });
             return item;
-        },
-        { concurrency: 5 }
+        })
     );
 
     return {

@@ -102,7 +102,6 @@ export type Config = {
         cookies: Record<string, string | undefined>;
         dmImgList?: string;
         dmImgInter?: string;
-        excludeSubtitles?: boolean;
     };
     bitbucket: {
         username?: string;
@@ -187,7 +186,6 @@ export type Config = {
     };
     hefeng: {
         key?: string;
-        apiHost?: string;
     };
     infzm: {
         cookie?: string;
@@ -325,10 +323,6 @@ export type Config = {
     };
     scihub: {
         host?: string;
-    };
-    sdo: {
-        ff14risingstones?: string;
-        ua?: string;
     };
     sis001: {
         baseUrl?: string;
@@ -579,7 +573,6 @@ const calculateValue = () => {
             cookies: bilibili_cookies,
             dmImgList: envs.BILIBILI_DM_IMG_LIST,
             dmImgInter: envs.BILIBILI_DM_IMG_INTER,
-            excludeSubtitles: toBoolean(envs.BILIBILI_EXCLUDE_SUBTITLES, false),
         },
         bitbucket: {
             username: envs.BITBUCKET_USERNAME,
@@ -664,7 +657,6 @@ const calculateValue = () => {
         },
         hefeng: {
             key: envs.HEFENG_KEY,
-            apiHost: envs.HEFENG_API_HOST,
         },
         infzm: {
             cookie: envs.INFZM_COOKIE,
@@ -802,10 +794,6 @@ const calculateValue = () => {
         },
         scihub: {
             host: envs.SCIHUB_HOST || 'https://sci-hub.se/',
-        },
-        sdo: {
-            ff14risingstones: envs.SDO_FF14RISINGSTONES,
-            ua: envs.SDO_UA,
         },
         sis001: {
             baseUrl: envs.SIS001_BASE_URL || 'https://sis001.com',

@@ -6,8 +6,6 @@ import { parseDate } from '@/utils/parse-date';
 import { art } from '@/utils/render';
 import path from 'node:path';
 
-const headers = { Accept: 'text/css' };
-
 export const route: Route = {
     path: '/:source?/:id?',
     categories: ['multimedia'],
@@ -55,7 +53,11 @@ async function handler(ctx) {
 
     const rootUrl = 'https://coomer.st';
     const apiUrl = `${rootUrl}/api/v1`;
-    const currentUrl = isPosts ? `${apiUrl}/posts` : `${apiUrl}/${source}/user/${id}/posts`;
+    const currentUrl = isPosts ? `${apiUrl}/posts` : `${apiUrl}/${source}/user/${id}`;
+
+    const headers = {
+        cookie: '__ddg2=sBQ4uaaGecmfEUk7',
+    };
 
     const response = await got({
         method: 'get',
@@ -64,7 +66,7 @@ async function handler(ctx) {
     });
     const responseData = isPosts ? response.data.posts : response.data;
 
-    const author = isPosts ? '' : await getAuthor(`${apiUrl}/${source}/user/${id}`);
+    const author = isPosts ? '' : await getAuthor(currentUrl, headers);
     const title = isPosts ? 'Coomer Posts' : `Posts of ${author} from ${source} | Coomer`;
     const image = isPosts ? `${rootUrl}/favicon.ico` : `https://img.coomer.st/icons/${source}/${id}`;
     const items = responseData
@@ -149,7 +151,7 @@ async function handler(ctx) {
     };
 }
 
-async function getAuthor(currentUrl) {
+async function getAuthor(currentUrl, headers) {
     const profileResponse = await got({
         method: 'get',
         url: `${currentUrl}/profile`,

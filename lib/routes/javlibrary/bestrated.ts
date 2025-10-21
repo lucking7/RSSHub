@@ -10,9 +10,6 @@ export const route: Route = {
     description: `| Last Month | All Time |
 | ---------- | -------- |
 | 1          | 2        |`,
-    features: {
-        nsfw: true,
-    },
 };
 
 async function handler(ctx) {

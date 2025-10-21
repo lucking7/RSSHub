@@ -9,9 +9,6 @@ export const route: Route = {
     name: 'Characters',
     maintainers: ['flameleaf'],
     handler,
-    features: {
-        nsfw: true,
-    },
 };
 
 async function handler() {

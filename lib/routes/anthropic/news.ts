@@ -1,7 +1,7 @@
 import ofetch from '@/utils/ofetch';
 import { load } from 'cheerio';
 import cache from '@/utils/cache';
-import { DataItem, Route } from '@/types';
+import { Route } from '@/types';
 import pMap from 'p-map';
 
 export const route: Route = {
@@ -15,25 +15,23 @@ export const route: Route = {
         },
     ],
     name: 'News',
-    maintainers: ['etShaw-zh', 'goestav'],
+    maintainers: ['etShaw-zh'],
     handler,
     url: 'www.anthropic.com/news',
 };
 
-async function handler(ctx) {
+async function handler() {
     const link = 'https://www.anthropic.com/news';
     const response = await ofetch(link);
     const $ = load(response);
-    const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit'), 10) : 20;
 
-    const list: DataItem[] = $('.contentFadeUp a')
+    const list = $('.contentFadeUp a')
         .toArray()
-        .slice(0, limit)
-        .map((el) => {
-            const $el = $(el);
-            const title = $el.find('h3').text().trim();
-            const href = $el.attr('href') ?? '';
-            const pubDate = $el.find('p.detail-m.agate').text().trim() || $el.find('div[class^="PostList_post-date__"]').text().trim(); // legacy selector used roughly before Jan 2025
+        .map((e) => {
+            e = $(e);
+            const title = e.find('h3[class^="PostCard_post-heading__"]').text().trim();
+            const href = e.attr('href');
+            const pubDate = e.find('div[class^="PostList_post-date__"]').text().trim();
             const fullLink = href.startsWith('http') ? href : `https://www.anthropic.com${href}`;
             return {
                 title,
@@ -45,22 +43,13 @@ async function handler(ctx) {
     const out = await pMap(
         list,
         (item) =>
-            cache.tryGet(item.link!, async () => {
-                const response = await ofetch(item.link!);
+            cache.tryGet(item.link, async () => {
+                const response = await ofetch(item.link);
                 const $ = load(response);
 
-                const content = $('#main-content');
+                $('div[class^="PostDetail_b-social-share"]').remove();
 
-                // Remove meaningless information (heading, sidebar, quote carousel, footer and codeblock controls)
-                $(`
-                    [class^="PostDetail_post-heading"],
-                    [class^="ArticleDetail_sidebar-container"],
-                    [class^="QuoteCarousel_carousel-controls"],
-                    [class^="PostDetail_b-social-share"],
-                    [class^="LandingPageSection_root"],
-                    [class^="CodeBlock_controls"]
-                `).remove();
-
+                const content = $('div[class*="PostDetail_post-detail__"]');
                 content.find('img').each((_, e) => {
                     const $e = $(e);
                     $e.removeAttr('style srcset');
@@ -72,7 +61,7 @@ async function handler(ctx) {
                     }
                 });
 
-                item.description = content.html() ?? undefined;
+                item.description = content.html();
 
                 return item;
             }),

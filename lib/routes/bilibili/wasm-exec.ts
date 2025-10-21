@@ -595,7 +595,7 @@
             }
             argvPtrs.push(0);
 
-            const keys = Object.keys(this.env).toSorted();
+            const keys = Object.keys(this.env).sort();
             for (const key of keys) {
                 argvPtrs.push(strPtr(`${key}=${this.env[key]}`));
             }

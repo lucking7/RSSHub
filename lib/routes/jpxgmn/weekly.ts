@@ -18,9 +18,6 @@ export const route: Route = {
     name: '本周热门',
     maintainers: ['Urabartin'],
     handler,
-    features: {
-        nsfw: true,
-    },
 };
 
 async function handler() {

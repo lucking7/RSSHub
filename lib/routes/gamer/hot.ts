@@ -19,13 +19,13 @@ export const route: Route = {
         supportPodcast: false,
         supportScihub: false,
     },
-    name: '本板推薦',
-    maintainers: ['nczitzk', 'TonyRL', 'kennyfong19931'],
+    name: '熱門推薦',
+    maintainers: ['nczitzk', 'TonyRL'],
     handler,
 };
 
 async function handler(ctx) {
-    const rootUrl = `https://forum.gamer.com.tw/B.php?bsn=${ctx.req.param('bsn')}`;
+    const rootUrl = `https://forum.gamer.com.tw/A.php?bsn=${ctx.req.param('bsn')}`;
     const response = await got({
         url: rootUrl,
         headers: {
@@ -34,12 +34,12 @@ async function handler(ctx) {
     });
 
     const $ = load(response.data);
-    const list = $('div.popular__card-list div.popular__card-img a')
+    const list = $('div.FM-abox2A a.FM-abox2B')
         .toArray()
         .map((item) => {
             item = $(item);
             return {
-                link: item.attr('href'),
+                link: `https:${item.attr('href')}`,
             };
         });
 

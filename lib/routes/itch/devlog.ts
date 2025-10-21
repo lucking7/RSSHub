@@ -36,7 +36,6 @@ export const route: Route = {
 async function handler(ctx) {
     const user = ctx.req.param('user') ?? '';
     const id = ctx.req.param('id') ?? '';
-    const limit = Number.parseInt(ctx.req.query('limit')) || 20;
     if (!isValidHost(user)) {
         throw new InvalidParameterError('Invalid user');
     }
@@ -52,7 +51,6 @@ async function handler(ctx) {
 
     let items = $('.title')
         .toArray()
-        .slice(0, limit)
         .map((item) => {
             item = $(item);
 
@@ -73,14 +71,12 @@ async function handler(ctx) {
 
                 const content = load(detailResponse.data);
 
-                const infoJson = content('script[type="application/ld+json"]:contains("@type":"BlogPosting")');
-                const info = JSON.parse(content(infoJson).text());
-                item.author = info.author.name;
-                item.pubDate = info.datePublished;
+                item.author = detailResponse.data.match(/"author":{".*?","name":"(.*?)"/)[1];
+                item.pubDate = parseDate(detailResponse.data.match(/"datePublished":"(.*?)"/)[1]);
                 item.description = art(path.join(__dirname, 'templates/description.art'), {
                     images: content('.post_image')
                         .toArray()
-                        .map((e) => content(e).attr('src')),
+                        .map((i) => content(i).attr('src')),
                     description: content('.post_body').html(),
                 });
 

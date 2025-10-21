@@ -137,7 +137,7 @@ async function handler(ctx) {
                     ? $(script)
                           .text()
                           ?.match(/\$\('#lower'\)\.prepend\('(.*)'\);/)?.[1]
-                          ?.replaceAll(String.raw`\"`, '"')
+                          ?.replaceAll(/\\"/g, '"')
                     : '';
                 if (lowerContent) {
                     const $ = cheerio.load(lowerContent, null, false);

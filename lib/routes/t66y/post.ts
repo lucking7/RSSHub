@@ -42,7 +42,6 @@ export const route: Route = {
         supportBT: false,
         supportPodcast: false,
         supportScihub: false,
-        nsfw: true,
     },
     name: '帖子跟踪',
     maintainers: ['cnzgray'],

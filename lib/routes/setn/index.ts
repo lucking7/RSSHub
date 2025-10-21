@@ -2,7 +2,6 @@ import { Route } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { load } from 'cheerio';
-import timezone from '@/utils/timezone';
 import { parseDate } from '@/utils/parse-date';
 
 const defaultRootUrl = 'https://www.setn.com';
@@ -119,19 +118,11 @@ async function handler(ctx) {
 
                 const content = load(detailResponse.data);
 
-                let head = {};
-                try {
-                    head = JSON.parse(content('script[type="application/ld+json"]').first().text());
-                } catch {
-                    head = {};
-                }
-
                 content('#gad_setn_innity_oop_1x1').remove();
 
-                item.title = content('h1').text();
-                item.author = head?.author?.name || content('meta[name="author"]').attr('content');
+                item.author = content('meta[property="author"]').attr('content');
                 item.category = [content('meta[property="article:section"]').attr('content'), ...content('meta[name="news_keywords"]').attr('content').split(',')];
-                item.pubDate = timezone(parseDate(content('meta[property="article:published_time"]').attr('content')), +8);
+                item.pubDate = parseDate(content('meta[property="article:published_time"]').attr('content'));
                 item.description = content('article, .content-p').html();
 
                 return item;

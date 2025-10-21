@@ -21,7 +21,6 @@ export const route: Route = {
         supportBT: false,
         supportPodcast: false,
         supportScihub: false,
-        nsfw: true,
     },
     name: '漫画更新',
     maintainers: ['btdwv', 'marvolo666'],
@@ -83,7 +82,7 @@ async function handler(ctx) {
                     ordered,
                     // index,
                 }))
-                .toSorted((a, b) => b.ordered - a.ordered);
+                .sort((a, b) => b.ordered - a.ordered);
 
             return chapters;
         },

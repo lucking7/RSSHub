@@ -9,13 +9,7 @@ export const route: Route = {
     example: '/zhihu/question/59895982',
     parameters: { questionId: '问题 id', sortBy: '排序方式：`default`, `created`, `updated`。默认为 `default`' },
     features: {
-        requireConfig: [
-            {
-                name: 'ZHIHU_COOKIES',
-                description: '',
-                optional: true,
-            },
-        ],
+        requireConfig: false,
         requirePuppeteer: false,
         antiCrawler: true,
         supportBT: false,

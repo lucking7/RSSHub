@@ -171,11 +171,7 @@ const getList = async (id: string, params?: Record<string, any>) =>
 
 const getUser = async (id: string) => {
     const userData: any = await getUserData(id);
-    return {
-        profile_image_url: userData.data?.user?.result?.avatar?.image_url,
-        ...userData.data?.user?.result?.core,
-        ...(userData.data?.user || userData.data?.user_result)?.result?.legacy,
-    };
+    return (userData.data?.user || userData.data?.user_result)?.result?.legacy;
 };
 
 const getHomeTimeline = async (id: string, params?: Record<string, any>) =>

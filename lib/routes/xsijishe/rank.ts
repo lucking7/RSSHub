@@ -38,7 +38,6 @@ export const route: Route = {
         supportBT: false,
         supportPodcast: false,
         supportScihub: false,
-        nsfw: true,
     },
     name: '排行榜',
     maintainers: ['akynazh', 'AiraNadih'],

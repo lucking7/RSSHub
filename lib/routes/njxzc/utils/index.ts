@@ -5,7 +5,7 @@ import timezone from '@/utils/timezone';
 import ofetch from '@/utils/ofetch'; // 使用默认导出的方式导入ofetch
 
 async function getNoticeList(ctx, url, host, titleSelector, dateSelector, contentSelector, listSelector) {
-    const response = await ofetch(url);
+    const response = await ofetch(url).catch(() => null);
     if (!response) {
         return [];
     }
@@ -25,7 +25,7 @@ async function getNoticeList(ctx, url, host, titleSelector, dateSelector, conten
     const out = await Promise.all(
         list.map((item) =>
             cache.tryGet(item.link, async () => {
-                const response = await ofetch(item.link);
+                const response = await ofetch(item.link).catch(() => null);
                 if (!response || (response.status >= 300 && response.status < 400)) {
                     return {
                         ...item,

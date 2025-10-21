@@ -1,11 +1,43 @@
-import { Data } from '@/types';
+import { getSubtitles } from 'youtube-caption-extractor';
 import cache from '@/utils/cache';
-import { parseRelativeDate } from '@/utils/parse-date';
 import { Innertube } from 'youtubei.js';
 import utils, { getVideoUrl } from '../utils';
-import { getSrtAttachmentBatch } from './subtitles';
+import { Data } from '@/types';
+import { parseRelativeDate } from '@/utils/parse-date';
 
 const innertubePromise = Innertube.create();
+
+function pad(n: number, width: number = 2) {
+    return String(n).padStart(width, '0');
+}
+
+function toSrtTime(seconds: number): string {
+    const totalMs = Math.floor(seconds * 1000);
+    const hours = Math.floor(totalMs / 3_600_000);
+    const minutes = Math.floor((totalMs % 3_600_000) / 60000);
+    const secs = Math.floor((totalMs % 60000) / 1000);
+    const millis = totalMs % 1000;
+    return `${pad(hours)}:${pad(minutes)}:${pad(secs)},${pad(millis, 3)}`;
+}
+
+type Subtitle = {
+    start: string;
+    dur: string;
+    text: string;
+};
+
+function convertToSrt(segments: Subtitle[]): string {
+    return segments
+        .map((seg, index) => {
+            const start = Number.parseFloat(seg.start);
+            const end = start + Number.parseFloat(seg.dur);
+            return `${index + 1}
+${toSrtTime(start)} --> ${toSrtTime(end)}
+${seg.text}
+`;
+        })
+        .join('\n');
+}
 
 export const getChannelIdByUsername = (username: string) =>
     cache.tryGet(`youtube:getChannelIdByUsername:${username}`, async () => {
@@ -23,7 +55,6 @@ export const getDataByChannelId = async ({ channelId, embed }: { channelId: stri
     const innertube = await innertubePromise;
     const channel = await innertube.getChannel(channelId);
     const videos = await channel.getVideos();
-    const videoSubtitles = await getSrtAttachmentBatch(videos.videos.filter((video) => 'video_id' in video).map((video) => video.video_id));
 
     return {
         title: `${channel.metadata.title || channelId} - YouTube`,
@@ -34,15 +65,18 @@ export const getDataByChannelId = async ({ channelId, embed }: { channelId: stri
         item: await Promise.all(
             videos.videos
                 .filter((video) => 'video_id' in video)
-                .map((video) => {
-                    const srtAttachments = videoSubtitles[video.video_id] || [];
-                    const img = 'best_thumbnail' in video ? video.best_thumbnail?.url : 'thumbnails' in video ? video.thumbnails?.[0]?.url : undefined;
+                .map(async (video) => {
+                    const subtitles = await getSubtitles({ videoID: video.video_id });
+                    const srt = convertToSrt(subtitles);
+                    const dataUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(srt)}`;
+
+                    const img = 'best_thumbnail' in video ? video.best_thumbnail?.url : ('thumbnails' in video ? video.thumbnails?.[0]?.url : undefined);
 
                     return {
                         title: video.title.text || `YouTube Video ${video.video_id}`,
                         description: 'description_snippet' in video ? utils.renderDescription(embed, video.video_id, img, utils.formatDescription(video.description_snippet?.toHTML())) : null,
                         link: `https://www.youtube.com/watch?v=${video.video_id}`,
-                        author: typeof video.author === 'string' ? video.author : video.author.name === 'N/A' ? undefined : video.author.name,
+                        author: typeof video.author === 'string' ? video.author : (video.author.name === 'N/A' ? undefined : video.author.name),
                         image: img,
                         pubDate: 'published' in video && video.published?.text ? parseRelativeDate(video.published.text) : undefined,
                         attachments: [
@@ -51,7 +85,11 @@ export const getDataByChannelId = async ({ channelId, embed }: { channelId: stri
                                 mime_type: 'text/html',
                                 duration_in_seconds: video.duration && 'seconds' in video.duration ? video.duration.seconds : undefined,
                             },
-                            ...srtAttachments,
+                            {
+                                url: dataUrl,
+                                mime_type: 'text/srt',
+                                title: 'Subtitles',
+                            },
                         ],
                     };
                 })

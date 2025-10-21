@@ -3,7 +3,7 @@ import winston from 'winston';
 import { config } from '@/config';
 
 let transports: (typeof winston.transports.File)[] = [];
-if (!config.noLogfiles && !process.env.VERCEL) {
+if (!config.noLogfiles) {
     transports = [
         new winston.transports.File({
             filename: path.resolve('logs/error.log'),

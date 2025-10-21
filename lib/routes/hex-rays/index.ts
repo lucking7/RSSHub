@@ -52,7 +52,7 @@ async function handler(/* ctx*/): Promise<Data> {
                 item.category = content('.div.topics > a')
                     .toArray()
                     .map((ele) => content(ele).text());
-                item.description = content('.post-body').html();
+                item.description = content('.post-body').toString();
                 return item;
             })
         ) as Promise<DataItem>[]

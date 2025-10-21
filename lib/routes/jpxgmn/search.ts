@@ -13,9 +13,6 @@ export const route: Route = {
     name: '搜索',
     maintainers: ['Urabartin'],
     handler,
-    features: {
-        nsfw: true,
-    },
 };
 
 async function handler(ctx) {

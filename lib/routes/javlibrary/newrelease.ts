@@ -10,9 +10,6 @@ export const route: Route = {
     description: `| videos with comments (by date) | everything (by date) |
 | ------------------------------ | -------------------- |
 | 1                              | 2                    |`,
-    features: {
-        nsfw: true,
-    },
 };
 
 async function handler(ctx) {

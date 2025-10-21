@@ -1,6 +1,6 @@
 import { Route } from '@/types';
 import cache from '@/utils/cache';
-import ofetch from '@/utils/ofetch';
+import got from '@/utils/got';
 import { load } from 'cheerio';
 import { parseDate } from '@/utils/parse-date';
 import { baseUrl, headers, fixImages, parseReviews } from './utils';
@@ -8,7 +8,7 @@ import { baseUrl, headers, fixImages, parseReviews } from './utils';
 export const route: Route = {
     path: '/review/:keyword?',
     categories: ['new-media'],
-    example: '/techpowerup/review/amd',
+    example: '/techpowerup/review/4090',
     parameters: { keyword: 'Search Keyword' },
     features: {
         requireConfig: false,
@@ -20,14 +20,14 @@ export const route: Route = {
     },
     radar: [
         {
-            source: ['techpowerup.com/review/search', 'techpowerup.com/review'],
+            source: ['techpowerup.com/'],
             target: '',
         },
     ],
     name: 'Reviews',
     maintainers: ['TonyRL'],
     handler,
-    url: 'www.techpowerup.com/review/',
+    url: 'techpowerup.com/',
 };
 
 async function handler(ctx) {
@@ -36,10 +36,10 @@ async function handler(ctx) {
     const url = new URL(`${baseUrl}/review/${keyword ? 'search/' : ''}`);
     if (keyword) {
         url.searchParams.set('q', keyword);
-        url.searchParams.set('_', Date.now().toString());
+        url.searchParams.set('_', Date.now());
     }
 
-    const response = await ofetch(url.href, {
+    const { data: response } = await got(url, {
         headers,
     });
 
@@ -48,19 +48,19 @@ async function handler(ctx) {
     const list = $('.reviewlist-bit')
         .toArray()
         .map((item) => {
-            const $item = $(item);
-            const a = $item.find('.title a');
+            item = $(item);
+            const a = item.find('.title a');
             return {
                 title: a.text(),
                 link: baseUrl + a.attr('href'),
-                pubDate: parseDate($item.find('.date time').attr('datetime')), // 2023-05-21T16:05:14+00:00
-                author: $item
+                pubDate: parseDate(item.find('.date time').attr('datetime')), // 2023-05-21T16:05:14+00:00
+                author: item
                     .find('.author')
                     .contents()
                     .filter((_, c) => c.type === 'text')
                     .text()
                     .trim(),
-                category: $item
+                category: item
                     .find('.category')
                     .contents()
                     .filter((_, c) => c.type === 'text')
@@ -72,7 +72,7 @@ async function handler(ctx) {
     const items = await Promise.all(
         list.map((item) =>
             cache.tryGet(item.link, async () => {
-                const response = await ofetch(item.link, {
+                const { data: response } = await got(item.link, {
                     headers,
                 });
                 const $ = load(response);

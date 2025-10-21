@@ -1,12 +1,12 @@
 import crypto from 'node:crypto';
 import { Buffer } from 'node:buffer';
 import ofetch from '@/utils/ofetch';
+import { v4 as uuidv4 } from 'uuid';
 import { SearchResponse, ItemDetail, ShopItemDetail } from './types';
 import { parseDate } from '@/utils/parse-date';
 import { art } from '@/utils/render';
 import path from 'node:path';
 import { DataItem } from '@/types';
-import logger from '@/utils/logger';
 
 const rootURL = 'https://api.mercari.jp/';
 const rootProductURL = 'https://jp.mercari.com/item/';
@@ -14,7 +14,6 @@ const rootShopProductURL = 'https://jp.mercari.com/shops/product/';
 const searchURL = `${rootURL}v2/entities:search`;
 const itemInfoURL = `${rootURL}items/get`;
 const shopItemInfoURL = `${rootURL}v1/marketplaces/shops/products/`;
-const uuidv4 = () => crypto.randomUUID();
 
 const MercariStatus = {
     default: '',
@@ -193,21 +192,7 @@ const pageToPageToken = (page: number): string => {
     return `v1:${page}`;
 };
 
-interface SearchOptions {
-    categoryId?: number[];
-    brandId?: number[];
-    priceMin?: number;
-    priceMax?: number;
-    itemConditionId?: number[];
-    excludeKeyword?: string;
-    itemTypes?: string[];
-    attributes?: Array<{
-        id: string;
-        values: string[];
-    }>;
-}
-
-const fetchSearchItems = async (sort: string, order: string, status: string[], keyword: string, options: SearchOptions = {}): Promise<SearchResponse> => {
+const fetchSearchItems = async (sort: string, order: string, status: string, keyword: string): Promise<SearchResponse> => {
     const data = {
         userId: `MERCARI_BOT_${uuidv4()}`,
         pageSize: 120,
@@ -217,24 +202,24 @@ const fetchSearchItems = async (sort: string, order: string, status: string[], k
         thumbnailTypes: [],
         searchCondition: {
             keyword,
-            excludeKeyword: options.excludeKeyword || '',
+            excludeKeyword: '',
             sort,
             order,
-            status: status || [],
+            status: [],
             sizeId: [],
-            categoryId: options.categoryId || [],
-            brandId: options.brandId || [],
+            categoryId: [],
+            brandId: [],
             sellerId: [],
-            priceMin: options.priceMin || 0,
-            priceMax: options.priceMax || 0,
-            itemConditionId: options.itemConditionId || [],
+            priceMin: 0,
+            priceMax: 0,
+            itemConditionId: [],
             shippingPayerId: [],
             shippingFromArea: [],
             shippingMethod: [],
             colorId: [],
             hasCoupon: false,
-            attributes: options.attributes || [],
-            itemTypes: options.itemTypes || [],
+            attributes: [],
+            itemTypes: [],
             skuIds: [],
             shopIds: [],
             excludeShippingMethodIds: [],
@@ -255,7 +240,6 @@ const fetchSearchItems = async (sort: string, order: string, status: string[], k
         withAuction: true,
     };
 
-    logger.debug(JSON.stringify(data));
     return await fetchFromMercari<SearchResponse>(searchURL, data, 'POST');
 };
 
