@@ -195,6 +195,25 @@ async function handler(ctx) {
             description += `</small></div>`;
         }
 
+        // 构建分类信息：板块 + 相关个股（含涨跌幅）
+        const categories: string[] = [];
+
+        // 添加板块名称
+        if (item.PlateName) {
+            categories.push(item.PlateName);
+        }
+
+        // 添加相关个股（最多前10只，含涨跌幅）
+        if (item.Stock && item.Stock.length > 0) {
+            const stockCategories = item.Stock.slice(0, 10).map((stock) => {
+                const [code, name, change] = stock;
+                // 格式：股票名称 (代码) ±涨跌幅%
+                const changeStr = change >= 0 ? `+${change.toFixed(2)}` : change.toFixed(2);
+                return `${name} (${code}) ${changeStr}%`;
+            });
+            categories.push(...stockCategories);
+        }
+
         return {
             title,
             description,
@@ -202,7 +221,7 @@ async function handler(ctx) {
             link: 'https://www.longhuvip.com/',
             guid: `kaipanla:zhibo:${item.ID}`,
             author: item.UserName || '开盘啦',
-            category: item.PlateName ? [item.PlateName] : [],
+            category: categories,
             image: item.Image && item.Image.trim() !== '' ? item.Image : undefined,
         };
     });

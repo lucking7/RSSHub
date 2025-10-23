@@ -3,6 +3,8 @@ import { Route, ViewType } from '@/types';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import { load } from 'cheerio';
+import iconv from 'iconv-lite';
+import cache from '@/utils/cache';
 
 const ROOT_URL = 'https://zhibo.sina.com.cn';
 
@@ -58,6 +60,71 @@ interface ZhiboFeedItem {
     ext?: string; // JSON string containing docurl, docid, etc.
 }
 
+// 批量查询股票实时行情并计算涨跌幅
+async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: string; key: string }>) {
+    if (!stockInfoList || stockInfoList.length === 0) {
+        return {};
+    }
+
+    try {
+        // 批量查询所有股票（用逗号分隔）
+        const symbols = stockInfoList.map((s) => s.symbol).join(',');
+        const cacheKey = `sina:stock:quotes:${symbols}`;
+
+        return await cache.tryGet(
+            cacheKey,
+            async () => {
+                const response = await got(`https://hq.sinajs.cn/list=${symbols}`, {
+                    headers: {
+                        Referer: 'https://finance.sina.com.cn/',
+                    },
+                    responseType: 'buffer',
+                });
+
+                // 新浪行情API返回GBK编码，需要转UTF-8
+                const gbkData = iconv.decode(response.data, 'gbk');
+                const lines = gbkData.trim().split('\n');
+                const quotes: Record<string, { name: string; change: number }> = {};
+
+                for (const line of lines) {
+                    if (!line.includes('hq_str_')) {
+                        continue;
+                    }
+
+                    // 解析格式：var hq_str_sz300785="值得买,32.510,32.920,32.890,..."
+                    const symbolMatch = line.match(/hq_str_(\w+)=/);
+                    const dataMatch = line.match(/"([^"]+)"/);
+
+                    if (symbolMatch && dataMatch) {
+                        const symbol = symbolMatch[1];
+                        const data = dataMatch[1].split(',');
+
+                        if (data.length >= 4) {
+                            const name = data[0];
+                            const prevClose = Number.parseFloat(data[2]);
+                            const currentPrice = Number.parseFloat(data[3]);
+
+                            if (prevClose > 0) {
+                                const changePercent = ((currentPrice - prevClose) / prevClose) * 100;
+                                quotes[symbol] = {
+                                    name,
+                                    change: changePercent,
+                                };
+                            }
+                        }
+                    }
+                }
+
+                return quotes;
+            },
+            5 * 60 // 缓存5分钟
+        );
+    } catch {
+        // 查询失败时返回空对象，降级为无涨跌幅格式
+        return {};
+    }
+}
+
 async function handler(ctx) {
     const zhiboId = ctx.req.param('zhibo_id') ?? '152';
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 20;
@@ -110,6 +177,26 @@ async function handler(ctx) {
     }
 
     filteredData = filteredData.slice(0, limit);
+
+    // 收集所有股票信息用于批量查询行情（仅A股）
+    const allStocks: Array<{ market: string; symbol: string; key: string }> = [];
+    for (const item of filteredData) {
+        if (item.ext) {
+            try {
+                const extData = JSON.parse(item.ext);
+                if (extData.stocks && Array.isArray(extData.stocks)) {
+                    // 只添加中国A股（market为cn或symbol以sh/sz开头）
+                    const cnStocks = extData.stocks.filter((s: { market: string; symbol: string; key: string }) => s.market === 'cn' || s.symbol.toLowerCase().startsWith('sh') || s.symbol.toLowerCase().startsWith('sz'));
+                    allStocks.push(...cnStocks);
+                }
+            } catch {
+                // 解析失败时忽略
+            }
+        }
+    }
+
+    // 批量查询所有A股的实时行情
+    const stockQuotes = await fetchStockQuotes(allStocks);
 
     const items = await Promise.all(
         filteredData.map(async (it) => {
@@ -214,8 +301,19 @@ async function handler(ctx) {
             // 生成完整HTML内容，不包含【…】前缀
             const contentHtml = `${richBodyHtml}<br>${images.map((img) => `<img src="${img}" referrerpolicy="no-referrer" />`).join('<br>')}<br>`;
 
-            // 构建分类信息：标签 + 股票关键词
-            const categories = [...(it.tag?.map((t) => t.name) || []), ...stockInfo.map((s) => s.key)];
+            // 构建分类信息：标签 + 股票（含涨跌幅）
+            const tagCategories = it.tag?.map((t) => t.name) || [];
+            const stockCategories = stockInfo.map((s) => {
+                const quote = stockQuotes[s.symbol];
+                if (quote && quote.change !== undefined) {
+                    // 格式：股票名称 (代码) ±涨跌幅%
+                    const changeStr = quote.change >= 0 ? `+${quote.change.toFixed(2)}` : quote.change.toFixed(2);
+                    return `${s.key} (${s.symbol.toUpperCase()}) ${changeStr}%`;
+                }
+                // 降级方案：仅显示名称和代码
+                return `${s.key} (${s.symbol.toUpperCase()})`;
+            });
+            const categories = [...tagCategories, ...stockCategories];
             const uniqueCategories = [...new Set(categories)].filter(Boolean);
 
             return {
