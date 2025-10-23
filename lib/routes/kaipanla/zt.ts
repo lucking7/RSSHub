@@ -1,8 +1,11 @@
 import { Route } from '@/types';
 import cache from '@/utils/cache';
-import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import { config } from '@/config';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 export const route: Route = {
     path: '/zt',
@@ -28,21 +31,20 @@ async function handler() {
     const apiUrl = 'https://apphq.longhuvip.com/w1/api/index.php';
 
     const response = await cache.tryGet(
-        'kaipanla:zt-expression',
+        'kaipanla:zt-expression:v2',
         async () => {
-            const { data } = await got(apiUrl, {
-                searchParams: {
-                    a: 'ZhangTingExpression',
-                    apiv: 'w21',
-                    c: 'HomeDingPan',
-                    PhoneOSNew: '1',
-                },
-                headers: {
-                    'User-Agent': 'lhb/5.9.3 (com.kaipanla.www; build:0; iOS 15.4.0) Alamofire/5.9.3',
-                    Accept: '*/*',
-                },
-            });
-            return data;
+            const params = {
+                a: 'ZhangTingExpression',
+                apiv: 'w21',
+                c: 'HomeDingPan',
+                PhoneOSNew: '1',
+            };
+            // 注意：API 服务器对 Node.js HTTP 客户端（got/ofetch/fetch）返回错误数据
+            // 必须使用 curl 命令行工具才能获取正确响应
+            const fullUrl = `${apiUrl}?${new URLSearchParams(params).toString()}`;
+            const curlCmd = `curl -s "${fullUrl}" -H "User-Agent: lhb/5.9.3 (com.kaipanla.www; build:0; iOS 15.4.0) Alamofire/5.9.3" -H "Accept: */*"`;
+            const { stdout } = await execAsync(curlCmd);
+            return JSON.parse(stdout);
         },
         config.cache.routeExpire,
         false
