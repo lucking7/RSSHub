@@ -84,11 +84,11 @@ interface ZhiboFeedItem {
 
 async function handler(ctx) {
     const zhiboIdParam = ctx.req.param('zhibo_id') ?? '152';
-    
+
     // 检查是否为焦点新闻专属路径
     const isFocusOnly = zhiboIdParam === 'focus';
     const zhiboId = isFocusOnly ? '152' : zhiboIdParam; // focus默认使用财经频道
-    
+
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 20;
     const pagesizeQuery = ctx.req.query('pagesize');
     const tagFilter = ctx.req.query('tag'); // 用户输入的标签名或ID
@@ -130,12 +130,12 @@ async function handler(ctx) {
 
     // 客户端过滤
     let filteredData = collected;
-    
+
     // 1. 焦点新闻过滤（优先级最高）
     if (isFocusOnly) {
         filteredData = collected.filter((item) => item.is_focus === 1);
     }
-    
+
     // 2. 标签过滤
     if (tagFilter) {
         filteredData = filteredData.filter((item) => {
@@ -150,7 +150,7 @@ async function handler(ctx) {
 
     const items = await Promise.all(
         filteredData.map(async (it) => {
-            const plain = it.rich_text?.replace(/<[^>]+>/g, '').trim() ?? '';
+            const plain = it.rich_text?.replaceAll(/<[^>]+>/g, '').trim() ?? '';
             // 优先使用「【…】」内的文字作为标题，避免把正文混入标题
             const bracketMatch = plain.match(/^【([^】]+)】/);
             let titleText;
@@ -221,9 +221,13 @@ async function handler(ctx) {
             }
 
             // 若目前仍无图片，兜底抓取详情页图片（参考同花顺做法）
-            if (images.length === 0 && detailLink) {
+            // 注意：在 Vercel 等 Serverless 环境下跳过详情页抓取，避免超时
+            const isVercel = process.env.VERCEL === '1' || process.env.NOW_REGION;
+            if (images.length === 0 && detailLink && !isVercel) {
                 try {
-                    const detailResp = await got(detailLink);
+                    const detailResp = await got(detailLink, {
+                        timeout: { request: 3000 }, // 单个请求最多 3 秒
+                    });
                     const $ = load(detailResp.data);
                     const ogImage = $('meta[property="og:image"]').attr('content');
                     const twitterImage = $('meta[name="twitter:image"], meta[name="twitter:image:src"]').attr('content');
@@ -242,7 +246,7 @@ async function handler(ctx) {
                     });
                     images.push(...pageImages);
                 } catch {
-                    // 详情页不可达时忽略
+                    // 详情页不可达或超时时忽略
                 }
             }
 
@@ -437,12 +441,12 @@ async function handler(ctx) {
     feedDescription += `\n• 新闻条数：${filteredData.length}条`;
 
     if (stats.totalTags.size > 0) {
-        const topTags = Array.from(stats.totalTags).slice(0, 8);
+        const topTags = [...stats.totalTags].slice(0, 8);
         feedDescription += `\n• 涉及标签：${stats.totalTags.size}个 (${topTags.join('、')}${stats.totalTags.size > 8 ? '...' : ''})`;
     }
 
     if (stats.totalStocks.size > 0) {
-        const topStocks = Array.from(stats.totalStocks).slice(0, 5);
+        const topStocks = [...stats.totalStocks].slice(0, 5);
         feedDescription += `\n• 相关个股：${stats.totalStocks.size}只 (${topStocks.join('、')}${stats.totalStocks.size > 5 ? '...' : ''})`;
     }
 
