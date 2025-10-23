@@ -56,7 +56,7 @@ async function handler(ctx) {
     const type = typeMap[typeParam] || '0';
     const apiUrl = 'https://apparticle.longhuvip.com/w1/api/index.php';
 
-    const { data: response } = await cache.tryGet(
+    const response = await cache.tryGet(
         `kaipanla:news:${type}`,
         async () => {
             const { data } = await got(apiUrl, {
@@ -103,8 +103,8 @@ async function handler(ctx) {
                 const [code, name, changeStr] = stock;
                 // 解析涨跌幅字符串（如"0.95%"）
                 const change = changeStr ? Number.parseFloat(changeStr.replace('%', '')) : 0;
-                const emoji = change > 0 ? '🔴' : change < 0 ? '🟢' : '⚪';
-                const color = change > 0 ? '#ff4d4f' : change < 0 ? '#52c41a' : '#666';
+                const emoji = change > 0 ? '🔴' : (change < 0 ? '🟢' : '⚪');
+                const color = change > 0 ? '#ff4d4f' : (change < 0 ? '#52c41a' : '#666');
 
                 description += `<div style="display: inline-block; padding: 6px 12px; background: #f5f5f5; border-radius: 4px; margin: 4px; font-size: 13px;">`;
                 description += `${emoji} <strong>${name}</strong> (${code}) `;

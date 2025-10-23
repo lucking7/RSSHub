@@ -27,7 +27,7 @@ export const route: Route = {
 async function handler() {
     const apiUrl = 'https://apphq.longhuvip.com/w1/api/index.php';
 
-    const { data: response } = await cache.tryGet(
+    const response = await cache.tryGet(
         'kaipanla:review',
         async () => {
             const { data } = await got(apiUrl, {

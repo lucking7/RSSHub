@@ -46,7 +46,7 @@ async function handler(ctx) {
     const category = ctx.req.param('category') || '全部';
     const apiUrl = 'https://apphwhq.longhuvip.com/w1/api/index.php';
 
-    const { data: response } = await cache.tryGet(
+    const response = await cache.tryGet(
         'kaipanla:zhibo:classified',
         async () => {
             const { data } = await got(apiUrl, {
@@ -121,7 +121,7 @@ async function handler(ctx) {
         // 3. 板块信息（充分利用PlateZDF字段）
         if (item.PlateName && item.PlateName.trim() !== '') {
             const plateZdf = item.PlateZDF ? Number.parseFloat(item.PlateZDF) : null;
-            const plateColor = plateZdf !== null && plateZdf > 0 ? '#ff4d4f' : plateZdf !== null && plateZdf < 0 ? '#52c41a' : '#666';
+            const plateColor = plateZdf !== null && plateZdf > 0 ? '#ff4d4f' : (plateZdf !== null && plateZdf < 0 ? '#52c41a' : '#666');
 
             description += `<div style="margin-bottom: 10px;">`;
             description += `<strong>📂 板块：</strong>`;
@@ -147,8 +147,8 @@ async function handler(ctx) {
 
             for (const stock of item.Stock.slice(0, 15)) {
                 const [code, name, change] = stock;
-                const emoji = change > 0 ? '🔴' : change < 0 ? '🟢' : '⚪';
-                const color = change > 0 ? '#ff4d4f' : change < 0 ? '#52c41a' : '#666';
+                const emoji = change > 0 ? '🔴' : (change < 0 ? '🟢' : '⚪');
+                const color = change > 0 ? '#ff4d4f' : (change < 0 ? '#52c41a' : '#666');
 
                 description += `<div style="padding: 6px 10px; background: #f5f5f5; border-radius: 4px; font-size: 13px;">`;
                 description += `${emoji} <strong>${name}</strong> (${code})<br>`;
@@ -225,9 +225,9 @@ async function handler(ctx) {
     feedDescription += `<br><br>📊 <strong>直播统计</strong>：`;
     feedDescription += `<br>• 涉及板块：${stats.plates.size}个`;
     if (stats.plates.size > 0) {
-        feedDescription += ` (${Array.from(stats.plates).slice(0, 5).join('、')}${stats.plates.size > 5 ? '...' : ''})`;
+        feedDescription += ` (${[...stats.plates].slice(0, 5).join('、')}${stats.plates.size > 5 ? '...' : ''})`;
     }
-    feedDescription += `<br>• 分析师：${stats.authors.size}位 (${Array.from(stats.authors).join('、')})`;
+    feedDescription += `<br>• 分析师：${stats.authors.size}位 (${[...stats.authors].join('、')})`;
     feedDescription += `<br>• 关联个股：${stats.stockCount}条直播 (${((stats.stockCount / (response.List?.length || 1)) * 100).toFixed(1)}%)`;
 
     return {
