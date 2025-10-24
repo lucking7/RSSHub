@@ -60,16 +60,39 @@ interface ZhiboFeedItem {
     ext?: string; // JSON string containing docurl, docid, etc.
 }
 
-// 批量查询股票实时行情并计算涨跌幅
+// 批量查询股票实时行情并计算涨跌幅（支持A股、美股、港股）
 async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: string; key: string }>) {
     if (!stockInfoList || stockInfoList.length === 0) {
         return {};
     }
 
     try {
-        // 批量查询所有股票（用逗号分隔）
-        const symbols = stockInfoList.map((s) => s.symbol).join(',');
-        const cacheKey = `sina:stock:quotes:${symbols}`;
+        // 转换股票代码为新浪API格式，并建立映射关系
+        const symbolMap = new Map<string, string>(); // API代码 -> 原始代码
+        const apiSymbols = stockInfoList.map((s) => {
+            let apiSymbol = s.symbol.toLowerCase();
+
+            // 根据市场类型转换代码格式
+            if (s.market === 'us' || s.market === 'USA') {
+                // 美股：添加 gb_ 前缀
+                apiSymbol = `gb_${s.symbol.toLowerCase()}`;
+            } else if (s.market === 'hk' || s.market === 'HK') {
+                // 港股：添加 hk 前缀
+                apiSymbol = `hk${s.symbol.toLowerCase().replace(/^hk/, '')}`;
+            } else if (s.market === 'cn' || s.market === 'CN' || apiSymbol.startsWith('sh') || apiSymbol.startsWith('sz')) {
+                // A股：保持原样（sh/sz前缀）
+                apiSymbol = s.symbol.toLowerCase();
+            } else {
+                // 其他市场：尝试原样查询
+                apiSymbol = s.symbol.toLowerCase();
+            }
+
+            symbolMap.set(apiSymbol, s.symbol);
+            return apiSymbol;
+        });
+
+        const symbols = apiSymbols.join(',');
+        const cacheKey = `sina:stock:quotes:v2:${symbols}`;
 
         return await cache.tryGet(
             cacheKey,
@@ -91,26 +114,52 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
                         continue;
                     }
 
-                    // 解析格式：var hq_str_sz300785="值得买,32.510,32.920,32.890,..."
+                    // 解析格式：var hq_str_XXX="..."
                     const symbolMatch = line.match(/hq_str_(\w+)=/);
                     const dataMatch = line.match(/"([^"]+)"/);
 
                     if (symbolMatch && dataMatch) {
-                        const symbol = symbolMatch[1];
+                        const apiSymbol = symbolMatch[1];
                         const data = dataMatch[1].split(',');
+                        const originalSymbol = symbolMap.get(apiSymbol);
 
-                        if (data.length >= 4) {
-                            const name = data[0];
-                            const prevClose = Number.parseFloat(data[2]);
-                            const currentPrice = Number.parseFloat(data[3]);
+                        if (!originalSymbol || data.length < 2) {
+                            continue;
+                        }
 
-                            if (prevClose > 0) {
-                                const changePercent = ((currentPrice - prevClose) / prevClose) * 100;
-                                quotes[symbol] = {
-                                    name,
-                                    change: changePercent,
-                                };
+                        const name = data[0];
+                        let changePercent: number | undefined;
+
+                        // 根据代码前缀判断市场类型并解析对应字段
+                        if (apiSymbol.startsWith('gb_')) {
+                            // 美股：第2个字段（索引1）是涨跌幅百分比
+                            const change = Number.parseFloat(data[2]);
+                            if (!Number.isNaN(change)) {
+                                changePercent = change;
                             }
+                        } else if (apiSymbol.startsWith('hk')) {
+                            // 港股：第8个字段（索引7）是涨跌幅百分比
+                            if (data.length >= 9) {
+                                const change = Number.parseFloat(data[8]);
+                                if (!Number.isNaN(change)) {
+                                    changePercent = change;
+                                }
+                            }
+                        } else if ((apiSymbol.startsWith('sh') || apiSymbol.startsWith('sz')) && // A股：需要从昨收和现价计算涨跌幅
+                            data.length >= 4) {
+                                const prevClose = Number.parseFloat(data[2]);
+                                const currentPrice = Number.parseFloat(data[3]);
+                                if (prevClose > 0 && !Number.isNaN(currentPrice)) {
+                                    changePercent = ((currentPrice - prevClose) / prevClose) * 100;
+                                }
+                            }
+
+                        // 只有成功解析涨跌幅才添加到结果
+                        if (changePercent !== undefined) {
+                            quotes[originalSymbol] = {
+                                name,
+                                change: changePercent,
+                            };
                         }
                     }
                 }
@@ -178,16 +227,15 @@ async function handler(ctx) {
 
     filteredData = filteredData.slice(0, limit);
 
-    // 收集所有股票信息用于批量查询行情（仅A股）
+    // 收集所有股票信息用于批量查询行情（支持A股、美股、港股）
     const allStocks: Array<{ market: string; symbol: string; key: string }> = [];
     for (const item of filteredData) {
         if (item.ext) {
             try {
                 const extData = JSON.parse(item.ext);
                 if (extData.stocks && Array.isArray(extData.stocks)) {
-                    // 只添加中国A股（market为cn或symbol以sh/sz开头）
-                    const cnStocks = extData.stocks.filter((s: { market: string; symbol: string; key: string }) => s.market === 'cn' || s.symbol.toLowerCase().startsWith('sh') || s.symbol.toLowerCase().startsWith('sz'));
-                    allStocks.push(...cnStocks);
+                    // 添加所有市场的股票（A股、美股、港股等）
+                    allStocks.push(...extData.stocks);
                 }
             } catch {
                 // 解析失败时忽略
@@ -195,7 +243,7 @@ async function handler(ctx) {
         }
     }
 
-    // 批量查询所有A股的实时行情
+    // 批量查询所有股票的实时行情（A股、美股、港股）
     const stockQuotes = await fetchStockQuotes(allStocks);
 
     const items = await Promise.all(
