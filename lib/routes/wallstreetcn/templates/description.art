@@ -1,3 +1,31 @@
+{{ if global_channel_name }}
+<p><strong>📢 频道：</strong>{{ global_channel_name }}</p>
+{{ /if }}
+{{ if symbols && symbols.length > 0 }}
+<p><strong>📈 相关股票：</strong>
+{{ each symbols symbol }}
+<a href="{{ symbol.uri }}">{{ symbol.name }} ({{ symbol.code }})</a>{{ if $index < symbols.length - 1 }}、{{ /if }}
+{{ /each }}
+</p>
+{{ /if }}
+{{ if tags && tags.length > 0 }}
+<p><strong>🏷️ 标签：</strong>
+{{ each tags tag }}
+<span>{{ tag.name || tag }}</span>{{ if $index < tags.length - 1 }}、{{ /if }}
+{{ /each }}
+</p>
+{{ /if }}
+{{ if channels && channels.length > 0 }}
+<p><strong>📂 分类：</strong>
+{{ each channels channel }}
+<span>{{ channel.replace('-channel', '') }}</span>{{ if $index < channels.length - 1 }}、{{ /if }}
+{{ /each }}
+</p>
+{{ /if }}
+{{ if comment_count > 0 }}
+<p><strong>💬 评论数：</strong>{{ comment_count }}</p>
+{{ /if }}
+<hr/>
 {{ if description }}
 {{@ description }}
 {{ /if }}

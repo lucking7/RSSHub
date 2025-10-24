@@ -63,10 +63,24 @@ async function handler(ctx) {
             title: item.title || item.content_text,
             pubDate: parseDate(item.display_time * 1000),
             author: item.author?.display_name ?? '',
+            guid: `wallstreetcn-live-${item.id}`,
+            category: [
+                // 添加频道分类（去掉 -channel 后缀）
+                ...(item.channels || []).map((c) => c.replace('-channel', '')),
+                // 添加标签
+                ...(item.tags || []).map((t) => t.name || t),
+                // 添加相关主题
+                ...(item.related_themes || []).map((t) => t.name || t),
+            ].filter(Boolean),
             description: art(path.join(__dirname, 'templates/description.art'), {
                 description: item.content,
                 more: item.content_more,
-                images: item.images,
+                images: item.cover_images?.length > 0 ? item.cover_images : item.images,
+                symbols: item.symbols || [],
+                channels: item.channels || [],
+                tags: item.tags || [],
+                comment_count: item.comment_count || 0,
+                global_channel_name: item.global_channel_name || '',
             }),
         }));
 
