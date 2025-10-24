@@ -66,15 +66,29 @@ async function handler(ctx) {
         }),
     });
 
-    const items = response.data.data.roll_data.slice(0, limit).map((item) => ({
-        title: item.title || item.content,
-        link: item.shareurl,
-        description: art(path.join(__dirname, 'templates/telegraph.art'), {
-            item,
-        }),
-        pubDate: parseDate(item.ctime * 1000),
-        category: item.subjects?.map((s) => s.subject_name),
-    }));
+    const items = response.data.data.roll_data.slice(0, limit).map((item) => {
+        // 合并主题分类和股票分类（包含涨跌幅）
+        const stockCategories = (item.stock_list || []).map((stock) => {
+            const arrow = stock.RiseRange > 0 ? '↑' : (stock.RiseRange < 0 ? '↓' : '—');
+            return `${stock.name} ${arrow}${stock.RiseRange}%`;
+        });
+
+        const categories = [...(item.subjects?.map((s) => s.subject_name) || []), ...stockCategories];
+
+        return {
+            title: item.title || item.content,
+            link: item.shareurl,
+            description: art(path.join(__dirname, 'templates/telegraph.art'), {
+                item,
+                images: item.images || [],
+                author: item.author || '',
+                stock_list: item.stock_list || [],
+            }),
+            pubDate: parseDate(item.ctime * 1000),
+            category: categories,
+            author: item.author || '',
+        };
+    });
 
     return {
         title: `财联社 - 电报${category === '' ? '' : ` - ${categories[category]}`}`,
