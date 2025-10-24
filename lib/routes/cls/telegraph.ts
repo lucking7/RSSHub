@@ -64,6 +64,9 @@ async function handler(ctx) {
             category,
             hasFirstVipArticle: 1,
         }),
+        headers: {
+            Referer: 'https://www.cls.cn/telegraph',
+        },
     });
 
     const items = response.data.data.roll_data.slice(0, limit).map((item) => {
