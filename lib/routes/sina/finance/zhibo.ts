@@ -98,6 +98,19 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
             } else if (s.market === 'cn' || s.market === 'CN' || apiSymbol.startsWith('sh') || apiSymbol.startsWith('sz')) {
                 // A股：保持原样（sh/sz前缀）
                 apiSymbol = s.symbol.toLowerCase();
+            } else if (s.market === 'fund') {
+                // 基金/ETF：根据代码判断交易所，添加 sh/sz 前缀
+                const code = s.symbol.replace(/^(sh|sz)/i, ''); // 移除可能存在的前缀
+                if (code.startsWith('5') || code.startsWith('6')) {
+                    // 5/6 开头：上海交易所
+                    apiSymbol = `sh${code}`;
+                } else if (code.startsWith('0') || code.startsWith('3') || code.startsWith('1')) {
+                    // 0/1/3 开头：深圳交易所
+                    apiSymbol = `sz${code}`;
+                } else {
+                    // 其他：默认尝试上海
+                    apiSymbol = `sh${code}`;
+                }
             } else {
                 // 其他市场：尝试原样查询
                 apiSymbol = s.symbol.toLowerCase();
