@@ -119,8 +119,10 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
                 // 外汇：保持小写的 fx_ 前缀格式
                 apiSymbol = s.symbol.toLowerCase();
             } else if (s.symbol.toLowerCase().startsWith('nf_') || s.symbol.toLowerCase().startsWith('hf_')) {
-                // 期货：保持小写的 nf_ 或 hf_ 前缀格式
-                apiSymbol = s.symbol.toLowerCase();
+                // 期货：前缀小写(nf_/hf_)，代码大写(SC0/CL等)
+                const prefix = s.symbol.substring(0, 3).toLowerCase();
+                const code = s.symbol.substring(3).toUpperCase();
+                apiSymbol = prefix + code;
             } else if (s.symbol.toLowerCase().startsWith('si') || s.symbol.toLowerCase().startsWith('znb_')) {
                 // 指数：si 开头（国内指数）或 znb_ 开头（国际指数）
                 apiSymbol = s.symbol.toLowerCase();
@@ -213,14 +215,16 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
                                     changePercent = ((currentPrice - prevClose) / prevClose) * 100;
                                 }
                             }
-                        } else if ((apiSymbol.startsWith('si') || apiSymbol.startsWith('znb_')) && // 指数：字段[1]当前值，字段[2]昨收
-                            data.length >= 3) {
-                                const currentValue = Number.parseFloat(data[1]);
-                                const prevClose = Number.parseFloat(data[2]);
-                                if (prevClose > 0 && !Number.isNaN(currentValue)) {
-                                    changePercent = ((currentValue - prevClose) / prevClose) * 100;
-                                }
+                        } else if (
+                            (apiSymbol.startsWith('si') || apiSymbol.startsWith('znb_')) && // 指数：字段[1]当前值，字段[2]昨收
+                            data.length >= 3
+                        ) {
+                            const currentValue = Number.parseFloat(data[1]);
+                            const prevClose = Number.parseFloat(data[2]);
+                            if (prevClose > 0 && !Number.isNaN(currentValue)) {
+                                changePercent = ((currentValue - prevClose) / prevClose) * 100;
                             }
+                        }
 
                         // 只有成功解析涨跌幅才添加到结果
                         if (changePercent !== undefined) {
