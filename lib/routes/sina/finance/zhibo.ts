@@ -14,7 +14,7 @@ export const route: Route = {
     view: ViewType.Articles,
     example: '/sina/zhibo',
     parameters: {
-        zhibo_id: '直播频道 id，默认为 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业',
+        zhibo_id: '直播频道 id，默认为 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业。特殊值：focus（仅显示焦点新闻🔥）',
         limit: '返回条数，默认 20；接口单页最多 10 条，超过将自动分页抓取',
         pagesize: '单页条数（1-10），默认 10；超过仍按 10 处理',
         tag: '标签过滤，支持标签名或ID。如：市场、公司、A股、美股等，留空表示不过滤',
@@ -36,12 +36,19 @@ export const route: Route = {
     description:
         '对接新浪财经直播接口（zhibo）。\n\n' +
         '参数：\n' +
-        '- `zhibo_id`: 频道 ID，默认 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业\n' +
+        '- `zhibo_id`: 频道 ID，默认 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业。**特殊值：`focus`（仅显示焦点新闻🔥）**\n' +
         '- `limit`: 返回条数，默认 20。接口单页最多 10 条，超过会自动分页抓取\n' +
         '- `pagesize`: 单页条数（1-10），默认 10\n' +
         '- `tag`: 标签过滤，支持标签名或ID。如：市场、公司、A股、美股等，留空表示不过滤\n' +
         "- `dire`: 方向，'f'（默认）或 'b'\n" +
         '- `dpc`: 客户端标记，默认 1\n\n' +
+        '**焦点新闻功能：**\n' +
+        '- 使用 `/sina/zhibo/focus` 可仅获取焦点新闻（is_focus=1 的新闻）\n' +
+        '- 焦点新闻标题前会显示 🔥 标记\n' +
+        '- RSS feed标题将显示 "🔥 焦点新闻"\n\n' +
+        '**作者信息：**\n' +
+        '- 优先使用主播/主持人名称（anchor、compere_info）\n' +
+        '- 否则使用编辑账号（creator）\n\n' +
         '别名路径：`/sina/finance/zhibo/:zhibo_id?` 与 `/sina/zhibo/:zhibo_id?` 均可使用。',
 };
 
@@ -50,6 +57,7 @@ interface ZhiboFeedItem {
     zhibo_id: number;
     rich_text: string;
     create_time: string; // 'YYYY-MM-DD HH:mm:ss'
+    update_time?: string;
     creator?: string;
     docurl?: string;
     multimedia?: string;
@@ -58,6 +66,14 @@ interface ZhiboFeedItem {
         name: string;
     }>;
     ext?: string; // JSON string containing docurl, docid, etc.
+    is_focus?: number; // 焦点新闻标记：1=焦点，0=普通
+    anchor?: string; // 主播/作者名称
+    compere_info?: string; // 主持人信息
+    like_nums?: number; // 点赞数
+    comment_list?: {
+        total: number; // 评论总数
+        list?: unknown[];
+    };
 }
 
 // 批量查询股票实时行情并计算涨跌幅（支持A股、美股、港股）
@@ -145,14 +161,16 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
                                     changePercent = change;
                                 }
                             }
-                        } else if ((apiSymbol.startsWith('sh') || apiSymbol.startsWith('sz')) && // A股：需要从昨收和现价计算涨跌幅
-                            data.length >= 4) {
-                                const prevClose = Number.parseFloat(data[2]);
-                                const currentPrice = Number.parseFloat(data[3]);
-                                if (prevClose > 0 && !Number.isNaN(currentPrice)) {
-                                    changePercent = ((currentPrice - prevClose) / prevClose) * 100;
-                                }
+                        } else if (
+                            (apiSymbol.startsWith('sh') || apiSymbol.startsWith('sz')) && // A股：需要从昨收和现价计算涨跌幅
+                            data.length >= 4
+                        ) {
+                            const prevClose = Number.parseFloat(data[2]);
+                            const currentPrice = Number.parseFloat(data[3]);
+                            if (prevClose > 0 && !Number.isNaN(currentPrice)) {
+                                changePercent = ((currentPrice - prevClose) / prevClose) * 100;
                             }
+                        }
 
                         // 只有成功解析涨跌幅才添加到结果
                         if (changePercent !== undefined) {
@@ -175,12 +193,16 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
 }
 
 async function handler(ctx) {
-    const zhiboId = ctx.req.param('zhibo_id') ?? '152';
+    const zhiboIdParam = ctx.req.param('zhibo_id') ?? '152';
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 20;
     const pagesizeQuery = ctx.req.query('pagesize');
     const tagFilter = ctx.req.query('tag'); // 用户输入的标签名或ID
     const dire = ctx.req.query('dire') ?? 'f';
     const dpc = ctx.req.query('dpc') ?? '1';
+
+    // 支持 zhibo_id='focus' 来过滤焦点新闻
+    const isFocusMode = zhiboIdParam === 'focus';
+    const zhiboId = isFocusMode ? '152' : zhiboIdParam; // focus模式默认使用财经频道
 
     const apiUrl = `${ROOT_URL}/api/zhibo/feed`;
 
@@ -225,6 +247,11 @@ async function handler(ctx) {
         });
     }
 
+    // 焦点新闻过滤：当 zhibo_id='focus' 时，只返回 is_focus=1 的新闻
+    if (isFocusMode) {
+        filteredData = filteredData.filter((item) => item.is_focus === 1);
+    }
+
     filteredData = filteredData.slice(0, limit);
 
     // 收集所有股票信息用于批量查询行情（支持A股、美股、港股）
@@ -260,8 +287,9 @@ async function handler(ctx) {
             } else {
                 titleText = `直播快讯 #${it.id}`;
             }
-            // 标题保持纯文本，提高RSS阅读器兼容性（参考同花顺格式）
-            const title = titleText;
+            // 焦点新闻标记：is_focus=1时在标题前添加🔥
+            const isFocus = it.is_focus === 1;
+            const title = isFocus ? `🔥 ${titleText}` : titleText;
             // 去除正文中的【…】前缀，避免标题重复出现在正文
             const plainBody = plain.replace(/^【[^】]+】\s*/, '');
             const richBodyHtml = typeof it.rich_text === 'string' ? it.rich_text.replace(/^【[^】]+】\s*/, '') : '';
@@ -364,11 +392,21 @@ async function handler(ctx) {
             const categories = [...tagCategories, ...stockCategories];
             const uniqueCategories = [...new Set(categories)].filter(Boolean);
 
+            // 作者信息优先级：anchor > compere_info > creator（去除邮箱后缀）
+            let authorName = '新浪财经';
+            if (it.anchor && it.anchor.trim()) {
+                authorName = it.anchor.trim();
+            } else if (it.compere_info && it.compere_info.trim()) {
+                authorName = it.compere_info.trim();
+            } else if (it.creator) {
+                authorName = it.creator.replace('@staff.sina.com.cn', '').replace('@staff.sina.com', '');
+            }
+
             return {
                 title,
                 link: detailLink,
                 description,
-                author: it.creator?.replace('@staff.sina.com', '') ?? '新浪财经',
+                author: authorName,
                 pubDate: parseDate(it.create_time),
                 guid: `sina-finance-zhibo-${it.id}`,
                 category: uniqueCategories,
@@ -395,11 +433,12 @@ async function handler(ctx) {
 
     const channelTitle = CHANNELS[zhiboId] || '财经';
     const tagSuffix = tagFilter ? ` - ${tagFilter}` : '';
+    const focusSuffix = isFocusMode ? ' 🔥 焦点新闻' : '';
 
     return {
-        title: `新浪财经 - 7×24直播 - ${channelTitle}${tagSuffix}`,
+        title: `新浪财经 - 7×24直播 - ${channelTitle}${focusSuffix}${tagSuffix}`,
         link: 'https://finance.sina.com.cn/7x24/',
-        description: `新浪财经7×24小时财经直播 - ${channelTitle}频道${tagSuffix}`,
+        description: `新浪财经7×24小时财经直播 - ${channelTitle}频道${focusSuffix}${tagSuffix}`,
         item: items,
         author: '新浪财经',
         image: 'https://finance.sina.com.cn/favicon.ico',
