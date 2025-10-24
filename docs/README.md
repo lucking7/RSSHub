@@ -149,6 +149,9 @@ https://hq.sinajs.cn/list={symbols}
 | **A股** | sh{code} 或 sz{code} | sz300785 | 需计算：(现价-昨收)/昨收*100 |
 | **美股** | gb_{symbol} | gb_aapl | 字段2（直接） |
 | **港股** | hk{code} | hk00700 | 字段8（直接） |
+| **外汇** | fx_s{code} | fx_susdcny | 字段11*100（需乘100） |
+| **期货** | nf_{code} 或 hf_{code} | nf_al0, hf_cl | 需计算：(字段7-字段2)/字段2*100 |
+| **指数** | si{code} 或 znb_{code} | si931230, znb_dax | 需计算：(字段1-字段2)/字段2*100 |
 
 #### 批量查询
 
@@ -156,7 +159,7 @@ https://hq.sinajs.cn/list={symbols}
 
 ```bash
 curl -H "Referer: https://finance.sina.com.cn/" \
-  "https://hq.sinajs.cn/list=sz300785,gb_aapl,hk00700"
+  "https://hq.sinajs.cn/list=sz300785,gb_aapl,hk00700,fx_susdcny,si931230"
 ```
 
 #### 数据格式
@@ -187,9 +190,36 @@ var hq_str_hk00700="TENCENT,腾讯控股,639.000,633.000,641.500,633.500,637.500
 字段8: 涨跌幅百分比 ← 直接可用
 ```
 
+**外汇示例（fx_susdcny）**:
+```
+var hq_str_fx_susdcny="23:52:01,7.1204,...,在岸人民币,-0.0337,-0.0024,..."
+字段0: 更新时间
+字段9: 货币名称
+字段11: 涨跌幅（小数） ← 需乘100
+涨跌幅 = 字段11 * 100
+```
+
+**期货示例（nf_al0）**:
+```
+var hq_str_nf_al0="铝连续,233223,21150.000,21235.000,...,21225.000,..."
+字段0: 品种名称
+字段2: 昨收价
+字段7: 现价
+涨跌幅 = (字段7 - 字段2) / 字段2 * 100
+```
+
+**指数示例（si931230）**:
+```
+var hq_str_si931230="汽车零部件,1204.5356,1201.6696,..."
+字段0: 指数名称
+字段1: 当前值
+字段2: 昨收值
+涨跌幅 = (字段1 - 字段2) / 字段2 * 100
+```
+
 #### 实现细节
 
-代码自动处理三种市场：
+代码自动处理多种市场类型：
 
 ```typescript
 // 根据市场类型转换代码格式
@@ -197,6 +227,15 @@ if (s.market === 'us' || s.market === 'USA') {
     apiSymbol = `gb_${s.symbol.toLowerCase()}`;
 } else if (s.market === 'hk' || s.market === 'HK') {
     apiSymbol = `hk${s.symbol.toLowerCase().replace(/^hk/, '')}`;
+} else if (s.symbol.toLowerCase().startsWith('fx_')) {
+    // 外汇：保持小写的 fx_ 前缀格式
+    apiSymbol = s.symbol.toLowerCase();
+} else if (s.symbol.toLowerCase().startsWith('nf_') || s.symbol.toLowerCase().startsWith('hf_')) {
+    // 期货：保持小写的 nf_ 或 hf_ 前缀格式
+    apiSymbol = s.symbol.toLowerCase();
+} else if (s.symbol.toLowerCase().startsWith('si') || s.symbol.toLowerCase().startsWith('znb_')) {
+    // 指数：si 开头（国内指数）或 znb_ 开头（国际指数）
+    apiSymbol = s.symbol.toLowerCase();
 } else {
     // A股保持原样（sh/sz前缀）
     apiSymbol = s.symbol.toLowerCase();
@@ -343,8 +382,12 @@ return JSON.parse(stdout);
 
 ### 2025-10-24
 
+- ✅ **新增期货、外汇、指数涨跌幅支持**
+  - 支持外汇查询（fx_*格式，字段[11]*100）
+  - 支持期货查询（nf_*/hf_*格式）
+  - 支持指数查询（si*/znb_*格式）
 - ✅ 扩展支持美股和港股涨跌幅显示
-- ✅ 优化股票代码自动转换（A股/美股/港股）
+- ✅ 优化股票代码自动转换（A股/美股/港股/外汇/期货/指数）
 - ✅ 添加批量股票行情查询
 - ✅ 更新缓存策略为v2，5分钟缓存
 
