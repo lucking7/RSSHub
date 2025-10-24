@@ -60,7 +60,11 @@ interface ZhiboFeedItem {
     update_time?: string;
     creator?: string;
     docurl?: string;
-    multimedia?: string;
+    multimedia?: {
+        img_url?: string[];
+        video_url?: string[];
+        audio_url?: string[];
+    };
     tag?: Array<{
         id: string;
         name: string;
@@ -332,16 +336,22 @@ async function handler(ctx) {
 
             // 提取图片和多媒体内容
             const images: string[] = [];
-            if (it.multimedia && typeof it.multimedia === 'string') {
-                // 解析multimedia字段中的图片
-                const imgMatches = it.multimedia.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi);
-                if (imgMatches) {
-                    for (const imgTag of imgMatches) {
-                        const srcMatch = imgTag.match(/src=["']([^"']+)["']/);
-                        if (srcMatch) {
-                            images.push(srcMatch[1]);
-                        }
-                    }
+            const videos: string[] = [];
+            const audios: string[] = [];
+
+            // 从 multimedia 对象中提取媒体链接
+            if (it.multimedia && typeof it.multimedia === 'object') {
+                // 图片链接
+                if (it.multimedia.img_url && Array.isArray(it.multimedia.img_url)) {
+                    images.push(...it.multimedia.img_url);
+                }
+                // 视频链接
+                if (it.multimedia.video_url && Array.isArray(it.multimedia.video_url)) {
+                    videos.push(...it.multimedia.video_url);
+                }
+                // 音频链接
+                if (it.multimedia.audio_url && Array.isArray(it.multimedia.audio_url)) {
+                    audios.push(...it.multimedia.audio_url);
                 }
             }
 
@@ -387,8 +397,26 @@ async function handler(ctx) {
             // 生成完整描述（不限制字符长度），不包含【…】前缀
             const description = `${plainBody}<br>`;
 
+            // 构建多媒体HTML内容
+            const mediaHtml: string[] = [];
+
+            // 添加图片
+            if (images.length > 0) {
+                mediaHtml.push(...images.map((img) => `<img src="${img}" referrerpolicy="no-referrer" />`));
+            }
+
+            // 添加视频
+            if (videos.length > 0) {
+                mediaHtml.push(...videos.map((video) => `<video controls src="${video}" style="max-width: 100%;">您的浏览器不支持视频播放</video>`));
+            }
+
+            // 添加音频
+            if (audios.length > 0) {
+                mediaHtml.push(...audios.map((audio) => `<audio controls src="${audio}">您的浏览器不支持音频播放</audio>`));
+            }
+
             // 生成完整HTML内容，不包含【…】前缀
-            const contentHtml = `${richBodyHtml}<br>${images.map((img) => `<img src="${img}" referrerpolicy="no-referrer" />`).join('<br>')}<br>`;
+            const contentHtml = `${richBodyHtml}<br>${mediaHtml.join('<br>')}<br>`;
 
             // 构建分类信息：标签 + 股票（含涨跌幅）
             const tagCategories = it.tag?.map((t) => t.name) || [];
@@ -415,6 +443,25 @@ async function handler(ctx) {
                 authorName = it.creator.replace('@staff.sina.com.cn', '').replace('@staff.sina.com', '');
             }
 
+            // 构建 enclosure（优先使用视频，其次音频，最后图片）
+            let enclosure: { url: string; type: string } | undefined;
+            if (videos.length > 0) {
+                enclosure = {
+                    url: videos[0],
+                    type: 'video/mp4',
+                };
+            } else if (audios.length > 0) {
+                enclosure = {
+                    url: audios[0],
+                    type: 'audio/mpeg',
+                };
+            } else if (images.length > 0) {
+                enclosure = {
+                    url: images[0],
+                    type: 'image/jpeg',
+                };
+            }
+
             return {
                 title,
                 link: detailLink,
@@ -425,6 +472,7 @@ async function handler(ctx) {
                 category: uniqueCategories,
                 image: images[0], // 主图片
                 banner: images[0], // 横幅图片（与主图相同）
+                enclosure, // 媒体附件
                 content: {
                     html: contentHtml,
                     text: plainBody,
