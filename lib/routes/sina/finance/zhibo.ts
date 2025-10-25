@@ -441,8 +441,27 @@ async function handler(ctx) {
                 }
             }
 
-            // 生成完整描述（不限制字符长度），不包含【…】前缀
-            const description = `${plainBody}<br>`;
+            // 构建股票行情信息（需要在 description 之前生成）
+            const stockQuotesHtml: string[] = [];
+            const stockCategories = stockInfo.map((s) => {
+                const quote = stockQuotes?.[s.symbol];
+                if (quote && quote.change !== undefined) {
+                    // 格式：股票名称 (代码) ±涨跌幅%
+                    const changeStr = quote.change >= 0 ? `+${quote.change.toFixed(2)}` : quote.change.toFixed(2);
+                    const changeColor = quote.change >= 0 ? '#f5222d' : '#52c41a'; // 红涨绿跌
+                    // 为 description 构建行情HTML
+                    stockQuotesHtml.push(`<span style="color: ${changeColor};">• ${s.key} (${s.symbol.toUpperCase()}) ${changeStr}%</span>`);
+                    return `${s.key} (${s.symbol.toUpperCase()}) ${changeStr}%`;
+                }
+                // 降级方案：仅显示名称和代码
+                return `${s.key} (${s.symbol.toUpperCase()})`;
+            });
+
+            // 生成完整描述（不限制字符长度），包含行情卡片
+            let description = `${plainBody}<br>`;
+            if (stockQuotesHtml.length > 0) {
+                description += `<br><p style="color: #666; font-size: 0.9em;">📊 相关行情</p>${stockQuotesHtml.join('<br>')}<br>`;
+            }
 
             // 构建多媒体HTML内容
             const mediaHtml: string[] = [];
@@ -467,16 +486,6 @@ async function handler(ctx) {
 
             // 构建分类信息：标签 + 股票（含涨跌幅）
             const tagCategories = it.tag?.map((t) => t.name) || [];
-            const stockCategories = stockInfo.map((s) => {
-                const quote = stockQuotes[s.symbol];
-                if (quote && quote.change !== undefined) {
-                    // 格式：股票名称 (代码) ±涨跌幅%
-                    const changeStr = quote.change >= 0 ? `+${quote.change.toFixed(2)}` : quote.change.toFixed(2);
-                    return `${s.key} (${s.symbol.toUpperCase()}) ${changeStr}%`;
-                }
-                // 降级方案：仅显示名称和代码
-                return `${s.key} (${s.symbol.toUpperCase()})`;
-            });
             const categories = [...tagCategories, ...stockCategories];
             const uniqueCategories = [...new Set(categories)].filter(Boolean);
 
