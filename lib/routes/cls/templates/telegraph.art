@@ -1,3 +1,17 @@
+{{ if level === 'A' }}
+<div style="background: #fff1f0; border-left: 3px solid #ff4d4f; padding: 8px 12px; margin-bottom: 10px; border-radius: 3px;">
+    <strong style="color: #ff4d4f;">🔴 重要</strong>
+</div>
+{{ else if level === 'B' }}
+<div style="background: #fffbe6; border-left: 3px solid #faad14; padding: 8px 12px; margin-bottom: 10px; border-radius: 3px;">
+    <strong style="color: #faad14;">🟡 一般</strong>
+</div>
+{{ else if level === 'C' }}
+<div style="background: #f0f0f0; border-left: 3px solid #d9d9d9; padding: 8px 12px; margin-bottom: 10px; border-radius: 3px;">
+    <strong style="color: #8c8c8c;">⚪ 普通</strong>
+</div>
+{{ /if }}
+
 {{ if author }}
 <p><strong>作者：</strong>{{ author }}</p>
 {{ /if }}
@@ -32,5 +46,28 @@
 {{ each images img }}
 <img src="{{ img }}" style="max-width: 100%; height: auto;">
 {{ /each }}
+{{ /if }}
+
+{{ if audio_url && audio_url.length > 0 }}
+<div style="background: #e6f7ff; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0; border-radius: 4px;">
+    <strong style="color: #1890ff;">🎧 音频播报</strong>
+    <br>
+    {{ each audio_url url }}
+    <audio controls style="width: 100%; margin-top: 8px;">
+        <source src="{{ url }}" type="audio/mpeg">
+        您的浏览器不支持音频播放
+    </audio>
+    {{ /each }}
+</div>
+{{ /if }}
+
+{{ if assocArticleUrl }}
+<div style="background: #f6ffed; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0; border-radius: 4px;">
+    <strong style="color: #52c41a;">📄 相关公告</strong>
+    <br>
+    <a href="{{ assocArticleUrl }}" target="_blank" style="color: #1890ff; text-decoration: none;">
+        点击查看原始公告文档 →
+    </a>
+</div>
 {{ /if }}
 

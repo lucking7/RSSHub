@@ -78,19 +78,35 @@ async function handler(ctx) {
 
         const categories = [...(item.subjects?.map((s) => s.subject_name) || []), ...stockCategories];
 
-        return {
-            title: item.title || item.content,
+        // 根据 level 添加标题前缀
+        const levelPrefix = item.level === 'A' ? '🔴 ' : (item.level === 'B' ? '🟡 ' : '');
+        const title = levelPrefix + (item.title || item.content);
+
+        // 构建基础 RSS item
+        const rssItem = {
+            title,
             link: item.shareurl,
             description: art(path.join(__dirname, 'templates/telegraph.art'), {
                 item,
                 images: item.images || [],
                 author: item.author || '',
                 stock_list: item.stock_list || [],
+                level: item.level || '',
+                audio_url: item.audio_url || [],
+                assocArticleUrl: item.assocArticleUrl || '',
             }),
             pubDate: parseDate(item.ctime * 1000),
             category: categories,
             author: item.author || '',
         };
+
+        // 如果有音频，添加为 RSS enclosure（播客功能）
+        if (item.audio_url && item.audio_url.length > 0) {
+            rssItem.enclosure_url = item.audio_url[0];
+            rssItem.enclosure_type = 'audio/mpeg';
+        }
+
+        return rssItem;
     });
 
     return {
