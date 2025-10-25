@@ -82,12 +82,18 @@ async function handler(ctx) {
         const levelPrefix = item.level === 'A' ? '【重要】' : '';
         const title = levelPrefix + (item.title || item.content);
 
+        // 移除 content 中的【标题】重复部分
+        const processedItem = {
+            ...item,
+            content: item.content.replace(/^【[^】]+】/, '').trim(),
+        };
+
         // 构建基础 RSS item
         const rssItem = {
             title,
             link: item.shareurl,
             description: art(path.join(__dirname, 'templates/telegraph.art'), {
-                item,
+                item: processedItem,
                 images: item.images || [],
                 author: item.author || '',
                 stock_list: item.stock_list || [],
