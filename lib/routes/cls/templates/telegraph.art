@@ -48,19 +48,6 @@
 {{ /each }}
 {{ /if }}
 
-{{ if audio_url && audio_url.length > 0 }}
-<div style="background: #e6f7ff; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0; border-radius: 4px;">
-    <strong style="color: #1890ff;">🎧 音频播报</strong>
-    <br>
-    {{ each audio_url url }}
-    <audio controls style="width: 100%; margin-top: 8px;">
-        <source src="{{ url }}" type="audio/mpeg">
-        您的浏览器不支持音频播放
-    </audio>
-    {{ /each }}
-</div>
-{{ /if }}
-
 {{ if assocArticleUrl }}
 <div style="background: #f6ffed; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0; border-radius: 4px;">
     <strong style="color: #52c41a;">📄 相关公告</strong>

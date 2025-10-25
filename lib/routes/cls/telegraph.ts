@@ -78,8 +78,8 @@ async function handler(ctx) {
 
         const categories = [...(item.subjects?.map((s) => s.subject_name) || []), ...stockCategories];
 
-        // 根据 level 添加标题前缀
-        const levelPrefix = item.level === 'A' ? '【重要】' : (item.level === 'B' ? '【一般】' : '');
+        // 根据 level 添加标题前缀 (只显示重要级别)
+        const levelPrefix = item.level === 'A' ? '【重要】' : '';
         const title = levelPrefix + (item.title || item.content);
 
         // 构建基础 RSS item
@@ -92,7 +92,6 @@ async function handler(ctx) {
                 author: item.author || '',
                 stock_list: item.stock_list || [],
                 level: item.level || '',
-                audio_url: item.audio_url || [],
                 assocArticleUrl: item.assocArticleUrl || '',
             }),
             pubDate: parseDate(item.ctime * 1000),
