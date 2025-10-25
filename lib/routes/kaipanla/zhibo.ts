@@ -222,7 +222,6 @@ async function handler(ctx) {
             guid: `kaipanla:zhibo:${item.ID}`,
             author: item.UserName || '开盘啦',
             category: categories,
-            image: item.Image && item.Image.trim() !== '' ? item.Image : undefined,
         };
     });
 

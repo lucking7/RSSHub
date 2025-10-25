@@ -85,44 +85,75 @@ async function handler(ctx) {
     const newsList = response.List || [];
 
     const items = newsList.map((item) => {
-        const title = item.Title || '无标题';
-        let description = '';
+        // 标题：有就用，没有就留空
+        const title = item.Title || '';
 
-        // 1. 新闻内容
-        description += `<div style="padding: 15px; background: #f8f9fa; border-left: 4px solid #1890ff; border-radius: 5px; margin-bottom: 10px;">`;
-        description += `<p style="margin: 0; line-height: 1.8; font-size: 15px; color: #333;">${item.Content || item.Title}</p>`;
-        description += `</div>`;
+        // 构建纯文本描述，包含股票/板块信息
+        let description = item.Content || item.Title || '';
 
-        // 2. 相关股票/商品（充分利用Stocks字段）
+        // 添加相关股票/板块信息到正文
         if (item.Stocks && item.Stocks.length > 0) {
-            description += `<div style="background: white; padding: 12px; border-radius: 5px; border: 1px solid #e8e8e8; margin-bottom: 10px;">`;
-            description += `<strong>📊 相关标的 (${item.Stocks.length}个)：</strong>`;
-            description += `<div style="margin-top: 8px;">`;
+            // 判断代码类型：8开头是板块，其他是股票
+            const plates: any[] = [];
+            const stocks: any[] = [];
 
             for (const stock of item.Stocks) {
-                const [code, name, changeStr] = stock;
-                // 解析涨跌幅字符串（如"0.95%"）
-                const change = changeStr ? Number.parseFloat(changeStr.replace('%', '')) : 0;
-                const emoji = change > 0 ? '🔴' : (change < 0 ? '🟢' : '⚪');
-                const color = change > 0 ? '#ff4d4f' : (change < 0 ? '#52c41a' : '#666');
-
-                description += `<div style="display: inline-block; padding: 6px 12px; background: #f5f5f5; border-radius: 4px; margin: 4px; font-size: 13px;">`;
-                description += `${emoji} <strong>${name}</strong> (${code}) `;
-                if (changeStr) {
-                    description += `<span style="color: ${color}; font-weight: bold;">${changeStr}</span>`;
+                const [code] = stock;
+                if (code.startsWith('8')) {
+                    plates.push(stock);
+                } else {
+                    stocks.push(stock);
                 }
-                description += `</div>`;
             }
 
-            description += `</div></div>`;
+            // 格式化输出函数
+            const formatItems = (items: any[]) => {
+                let result = '';
+                for (const [code, name, changeStr] of items) {
+                    // 解析涨跌幅
+                    let prefix = '[平]';
+                    let changeDisplay = '';
+
+                    if (changeStr && changeStr.trim() !== '') {
+                        const changeNum = Number.parseFloat(changeStr.replace('%', ''));
+                        if (changeNum > 0) {
+                            prefix = '[涨]';
+                            changeDisplay = ` +${changeStr}`;
+                        } else if (changeNum < 0) {
+                            prefix = '[跌]';
+                            changeDisplay = ` ${changeStr}`;
+                        } else {
+                            prefix = '[平]';
+                            changeDisplay = ` ${changeStr}`;
+                        }
+                    }
+
+                    result += `${prefix} ${name} (${code})${changeDisplay}\n`;
+                }
+                return result;
+            };
+
+            // 先显示板块，再显示股票
+            if (plates.length > 0) {
+                description += '\n\n相关板块：\n';
+                description += formatItems(plates);
+            }
+
+            if (stocks.length > 0) {
+                description += plates.length > 0 ? '\n相关股票：\n' : '\n\n相关股票：\n';
+                description += formatItems(stocks);
+            }
         }
 
-        // 3. 来源信息
-        if (item.Source && item.Source.trim() !== '') {
-            description += `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e8e8e8;">`;
-            description += `<small style="color: #666;">📰 来源：<strong>${item.Source}</strong></small>`;
-            description += `</div>`;
-        }
+        // 构建分类信息：股票名(代码)±涨跌幅
+        const categories =
+            item.Stocks && item.Stocks.length > 0
+                ? item.Stocks.map((s) => {
+                      const [code, name, changeStr] = s;
+                      // 格式：股票名(代码)+涨跌幅 或 股票名(代码)-涨跌幅
+                      return `${name}(${code})${changeStr || ''}`;
+                  })
+                : [];
 
         return {
             title,
@@ -131,7 +162,7 @@ async function handler(ctx) {
             link: item.PushUrl && item.PushUrl.trim() !== '' ? item.PushUrl : 'https://www.longhuvip.com/',
             guid: `kaipanla:news:${item.CID}`,
             author: item.Source || '开盘啦',
-            category: item.Stocks && item.Stocks.length > 0 ? item.Stocks.map((s) => s[1]) : [],
+            category: categories,
         };
     });
 
