@@ -1,14 +1,6 @@
 {{ if level === 'A' }}
 <div style="background: #fff1f0; border-left: 3px solid #ff4d4f; padding: 8px 12px; margin-bottom: 10px; border-radius: 3px;">
-    <strong style="color: #ff4d4f;">🔴 重要</strong>
-</div>
-{{ else if level === 'B' }}
-<div style="background: #fffbe6; border-left: 3px solid #faad14; padding: 8px 12px; margin-bottom: 10px; border-radius: 3px;">
-    <strong style="color: #faad14;">🟡 一般</strong>
-</div>
-{{ else if level === 'C' }}
-<div style="background: #f0f0f0; border-left: 3px solid #d9d9d9; padding: 8px 12px; margin-bottom: 10px; border-radius: 3px;">
-    <strong style="color: #8c8c8c;">⚪ 普通</strong>
+    <strong style="color: #ff4d4f;">【重要】</strong>
 </div>
 {{ /if }}
 
