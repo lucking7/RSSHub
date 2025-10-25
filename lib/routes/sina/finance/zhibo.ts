@@ -206,11 +206,21 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
                                     changePercent = change * 100;
                                 }
                             }
-                        } else if (apiSymbol.startsWith('nf_') || apiSymbol.startsWith('hf_')) {
-                            // 期货：字段[2]昨收，字段[7]现价
+                        } else if (apiSymbol.startsWith('nf_')) {
+                            // 国内期货：字段[2]昨收，字段[7]现价
                             if (data.length >= 8) {
                                 const prevClose = Number.parseFloat(data[2]);
                                 const currentPrice = Number.parseFloat(data[7]);
+                                if (prevClose > 0 && !Number.isNaN(currentPrice)) {
+                                    changePercent = ((currentPrice - prevClose) / prevClose) * 100;
+                                }
+                            }
+                        } else if (apiSymbol.startsWith('hf_')) {
+                            // 国际期货：字段[2]昨收，字段[0]现价（实时价）
+                            // 注意：字段[7]是前结算价，不是现价！
+                            if (data.length >= 3) {
+                                const prevClose = Number.parseFloat(data[2]);
+                                const currentPrice = Number.parseFloat(data[0]);
                                 if (prevClose > 0 && !Number.isNaN(currentPrice)) {
                                     changePercent = ((currentPrice - prevClose) / prevClose) * 100;
                                 }
