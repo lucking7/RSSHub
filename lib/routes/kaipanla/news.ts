@@ -88,23 +88,29 @@ async function handler(ctx) {
         // 标题：有就用，没有就留空
         const title = item.Title || '';
 
-        // 构建纯文本描述，包含股票/板块信息
-        let description = item.Content || item.Title || '';
+        // 构建HTML描述
+        let contentText = item.Content || item.Title || '';
 
         // 移除description开头重复的【标题】
-        if (title && description) {
-            // 匹配【...】格式的标题
-            const titleMatch = description.match(/^【(.+?)】/);
+        if (title && contentText) {
+            const titleMatch = contentText.match(/^【(.+?)】/);
             if (titleMatch) {
                 const bracketTitle = titleMatch[1];
-                // 如果【】中的内容与title相同，移除整个【】部分
                 if (bracketTitle === title || title.includes(bracketTitle) || bracketTitle.includes(title)) {
-                    description = description.replace(/^【.+?】\s*/, '');
+                    contentText = contentText.replace(/^【.+?】\s*/, '');
                 }
             }
         }
 
-        // 添加相关股票/板块信息到正文
+        // 开始构建HTML description
+        let description = '';
+
+        // 1. 新闻正文（HTML卡片样式）
+        description += `<div style="padding: 15px; background: #f8f9fa; border-left: 4px solid #1890ff; border-radius: 5px; margin-bottom: 10px;">`;
+        description += `<p style="margin: 0; line-height: 1.8; font-size: 15px; color: #333;">${contentText}</p>`;
+        description += `</div>`;
+
+        // 2. 相关板块和股票信息（如果有）
         if (item.Stocks && item.Stocks.length > 0) {
             // 判断代码类型：8开头是板块，其他是股票
             const plates: any[] = [];
@@ -119,46 +125,53 @@ async function handler(ctx) {
                 }
             }
 
-            // 格式化输出函数
+            // 格式化输出函数（HTML格式）
             const formatItems = (items: any[]) => {
-                let result = '';
+                let result = '<div style="margin-top: 8px; line-height: 1.8;">';
                 for (const [code, name, changeStr] of items) {
                     // 解析涨跌幅
-                    let prefix = '[平]';
-                    let changeDisplay = '';
+                    let arrow = '-';
+                    let color = '#666';
+                    let changeDisplay = '0.00%';
 
                     if (changeStr && changeStr.trim() !== '') {
                         const changeNum = Number.parseFloat(changeStr.replace('%', ''));
                         if (changeNum > 0) {
-                            prefix = '[涨]';
-                            changeDisplay = ` +${changeStr}`;
+                            arrow = '↑';
+                            color = '#ff4d4f';
+                            changeDisplay = `+${changeStr}`;
                         } else if (changeNum < 0) {
-                            prefix = '[跌]';
-                            changeDisplay = ` ${changeStr}`;
+                            arrow = '↓';
+                            color = '#52c41a';
+                            changeDisplay = changeStr;
                         } else {
-                            prefix = '[平]';
-                            changeDisplay = ` ${changeStr}`;
+                            arrow = '-';
+                            color = '#666';
+                            changeDisplay = changeStr;
                         }
                     }
 
-                    result += `${prefix} ${name} (${code})${changeDisplay}\n`;
+                    result += `• ${name} (${code})<br>`;
+                    result += `<span style="color: ${color}; font-weight: bold;">${arrow} ${changeDisplay}</span><br><br>`;
                 }
+                result += '</div>';
                 return result;
             };
 
-            // 先显示板块，再显示股票
+            // 显示板块
             if (plates.length > 0) {
-                description += '\n\n相关板块：';
-                const platesText = formatItems(plates);
-                // 每个板块独占一行
-                description += '\n' + platesText;
+                description += `<div style="margin-top: 10px;">`;
+                description += `<strong style="font-size: 16px;">相关板块：</strong>`;
+                description += formatItems(plates);
+                description += `</div>`;
             }
 
+            // 显示股票
             if (stocks.length > 0) {
-                description += '\n相关股票：';
-                const stocksText = formatItems(stocks);
-                // 每个股票独占一行
-                description += '\n' + stocksText;
+                description += `<div style="margin-top: 10px;">`;
+                description += `<strong style="font-size: 16px;">相关股票：</strong>`;
+                description += formatItems(stocks);
+                description += `</div>`;
             }
         }
 
