@@ -76,6 +76,10 @@ async function handler(ctx) {
             StockID: stock.StockID ? stock.StockID.toUpperCase() : stock.StockID,
         }));
 
+        // 区分板块和个股（板块代码通常包含801）
+        const sectors = processedStockList.filter((stock) => stock.StockID && stock.StockID.includes('801'));
+        const stocks = processedStockList.filter((stock) => !stock.StockID || !stock.StockID.includes('801'));
+
         // 分别处理主题分类和股票分类
         const subjectCategories = item.subjects?.map((s) => s.subject_name) || [];
 
@@ -104,7 +108,8 @@ async function handler(ctx) {
                 item: processedItem,
                 images: item.images || [],
                 author: item.author || '',
-                stock_list: processedItem.stock_list || [],
+                sectors,
+                stocks,
                 level: item.level || '',
                 assocArticleUrl: item.assocArticleUrl || '',
             }),
