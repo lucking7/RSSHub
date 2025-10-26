@@ -454,8 +454,10 @@ async function handler(ctx) {
                     // 格式：股票名称(代码)涨跌幅% - 移除空格避免RSS阅读器显示为下划线
                     const changeStr = quote.change >= 0 ? `+${quote.change.toFixed(2)}` : quote.change.toFixed(2);
                     const changeColor = quote.change >= 0 ? '#f5222d' : '#52c41a'; // 红涨绿跌
-                    // 为 description 构建行情HTML（保留空格以便阅读）
-                    stockQuotesHtml.push(`<span style="color: ${changeColor};">• ${s.key} (${s.symbol.toUpperCase()}) ${changeStr}%</span>`);
+                    // 为 description 构建行情HTML（保留空格以便阅读，使用加粗突出关键信息）
+                    stockQuotesHtml.push(
+                        `<div style="margin: 4px 0;">• <strong>${s.key}</strong> <span style="color: #999;">(${s.symbol.toUpperCase()})</span> <strong style="color: ${changeColor}; font-size: 1.05em;">${changeStr}%</strong></div>`
+                    );
                     // category中移除空格
                     return `${s.key}(${s.symbol.toUpperCase()})${changeStr}%`;
                 }
@@ -466,7 +468,7 @@ async function handler(ctx) {
             // 生成完整描述（不限制字符长度），包含行情卡片
             let description = `${plainBody}<br>`;
             if (stockQuotesHtml.length > 0) {
-                description += `<br><p style="color: #666; font-size: 0.9em;">📊 相关行情</p>${stockQuotesHtml.join('<br>')}<br>`;
+                description += `<br><div style="background: #f7f9fa; padding: 12px; border-radius: 6px; margin-top: 12px;"><p style="color: #333; font-size: 0.95em; font-weight: bold; margin: 0 0 8px 0;">📊 相关行情</p>${stockQuotesHtml.join('')}</div><br>`;
             }
 
             // 构建多媒体HTML内容
