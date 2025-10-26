@@ -91,6 +91,19 @@ async function handler(ctx) {
         // 构建纯文本描述，包含股票/板块信息
         let description = item.Content || item.Title || '';
 
+        // 移除description开头重复的【标题】
+        if (title && description) {
+            // 匹配【...】格式的标题
+            const titleMatch = description.match(/^【(.+?)】/);
+            if (titleMatch) {
+                const bracketTitle = titleMatch[1];
+                // 如果【】中的内容与title相同，移除整个【】部分
+                if (bracketTitle === title || title.includes(bracketTitle) || bracketTitle.includes(title)) {
+                    description = description.replace(/^【.+?】\s*/, '');
+                }
+            }
+        }
+
         // 添加相关股票/板块信息到正文
         if (item.Stocks && item.Stocks.length > 0) {
             // 判断代码类型：8开头是板块，其他是股票
@@ -135,13 +148,17 @@ async function handler(ctx) {
 
             // 先显示板块，再显示股票
             if (plates.length > 0) {
-                description += '\n\n相关板块：\n';
-                description += formatItems(plates);
+                description += '\n\n相关板块：';
+                const platesText = formatItems(plates);
+                // 每个板块独占一行
+                description += '\n' + platesText;
             }
 
             if (stocks.length > 0) {
-                description += plates.length > 0 ? '\n相关股票：\n' : '\n\n相关股票：\n';
-                description += formatItems(stocks);
+                description += '\n相关股票：';
+                const stocksText = formatItems(stocks);
+                // 每个股票独占一行
+                description += '\n' + stocksText;
             }
         }
 
