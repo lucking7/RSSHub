@@ -454,9 +454,11 @@ async function handler(ctx) {
                     // 格式：股票名称(代码)涨跌幅% - 移除空格避免RSS阅读器显示为下划线
                     const changeStr = quote.change >= 0 ? `+${quote.change.toFixed(2)}` : quote.change.toFixed(2);
                     const changeColor = quote.change >= 0 ? '#f5222d' : '#52c41a'; // 红涨绿跌
-                    // 为 description 构建行情HTML（保留空格以便阅读，使用加粗突出关键信息）
+                    const arrow = quote.change >= 0 ? '↑' : '↓'; // 上涨用↑，下跌用↓
+                    // 为 description 构建行情HTML（两行显示：第一行股票名代码，第二行箭头和涨跌幅）
                     stockQuotesHtml.push(
-                        `<div style="margin: 4px 0;">• <strong>${s.key}</strong> <span style="color: #999;">(${s.symbol.toUpperCase()})</span> <strong style="color: ${changeColor}; font-size: 1.05em;">${changeStr}%</strong></div>`
+                        `<div style="margin: 6px 0;">• <strong>${s.key}</strong> <span style="color: #999;">(${s.symbol.toUpperCase()})</span><br>` +
+                            `<span style="margin-left: 12px; color: ${changeColor}; font-weight: bold;">${arrow} ${changeStr}%</span></div>`
                     );
                     // category中移除空格
                     return `${s.key}(${s.symbol.toUpperCase()})${changeStr}%`;
@@ -468,7 +470,7 @@ async function handler(ctx) {
             // 生成完整描述（不限制字符长度），包含行情信息
             let description = `${plainBody}<br>`;
             if (stockQuotesHtml.length > 0) {
-                description += `<br><p style="color: #333; font-weight: bold; margin: 8px 0 4px 0;">📊 相关行情</p>${stockQuotesHtml.join('')}<br>`;
+                description += `<br><p style="font-weight: bold; margin: 8px 0 4px 0;">相关行情</p>${stockQuotesHtml.join('')}<br>`;
             }
 
             // 构建多媒体HTML内容
