@@ -131,6 +131,8 @@ async function handler(ctx) {
     return {
         title: `财联社 - 电报${category === '' ? '' : ` - ${categories[category]}`}`,
         link: currentUrl,
+        description: `财联社电报 - 实时财经快讯${category === '' ? '' : `，关注${categories[category]}领域`}`,
+        language: 'zh-cn',
         item: items,
     };
 }

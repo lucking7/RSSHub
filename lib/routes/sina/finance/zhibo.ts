@@ -456,10 +456,7 @@ async function handler(ctx) {
                     const changeColor = quote.change >= 0 ? '#f5222d' : '#52c41a'; // 红涨绿跌
                     const arrow = quote.change >= 0 ? '↑' : '↓'; // 上涨用↑，下跌用↓
                     // 为 description 构建行情HTML（两行显示：第一行股票名代码，第二行箭头和涨跌幅）
-                    stockQuotesHtml.push(
-                        `<div style="margin: 6px 0;">• <strong>${s.key}</strong> <span style="color: #999;">(${s.symbol.toUpperCase()})</span><br>` +
-                            `<span style="margin-left: 12px; color: ${changeColor}; font-weight: bold;">${arrow} ${changeStr}%</span></div>`
-                    );
+                    stockQuotesHtml.push(`• <strong>${s.key}</strong> <span style="color: #999;">(${s.symbol.toUpperCase()})</span><br>` + `<span style="color: ${changeColor}; font-weight: bold;">${arrow} ${changeStr}%</span><br>`);
                     // category中移除空格
                     return `${s.key}(${s.symbol.toUpperCase()})${changeStr}%`;
                 }
@@ -470,7 +467,7 @@ async function handler(ctx) {
             // 生成完整描述（不限制字符长度），包含行情信息
             let description = `${plainBody}<br>`;
             if (stockQuotesHtml.length > 0) {
-                description += `<br><p style="font-weight: bold; margin: 8px 0 4px 0;">相关行情</p>${stockQuotesHtml.join('')}<br>`;
+                description += `<br><h3 style="font-size: 16px; font-weight: bold; margin: 12px 0 8px 0; color: #333;">相关行情</h3>${stockQuotesHtml.join('')}`;
             }
 
             // 构建多媒体HTML内容
@@ -566,6 +563,7 @@ async function handler(ctx) {
         title: `新浪财经 - 7×24直播 - ${channelTitle}${focusSuffix}${tagSuffix}`,
         link: 'https://finance.sina.com.cn/7x24/',
         description: `新浪财经7×24小时财经直播 - ${channelTitle}频道${focusSuffix}${tagSuffix}`,
+        language: 'zh-cn',
         item: items,
         author: '新浪财经',
         image: 'https://finance.sina.com.cn/favicon.ico',
