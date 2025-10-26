@@ -465,10 +465,10 @@ async function handler(ctx) {
                 return `${s.key}(${s.symbol.toUpperCase()})`;
             });
 
-            // 生成完整描述（不限制字符长度），包含行情卡片
+            // 生成完整描述（不限制字符长度），包含行情信息
             let description = `${plainBody}<br>`;
             if (stockQuotesHtml.length > 0) {
-                description += `<br><div style="background: #f7f9fa; padding: 12px; border-radius: 6px; margin-top: 12px;"><p style="color: #333; font-size: 0.95em; font-weight: bold; margin: 0 0 8px 0;">📊 相关行情</p>${stockQuotesHtml.join('')}</div><br>`;
+                description += `<br><p style="color: #333; font-weight: bold; margin: 8px 0 4px 0;">📊 相关行情</p>${stockQuotesHtml.join('')}<br>`;
             }
 
             // 构建多媒体HTML内容
