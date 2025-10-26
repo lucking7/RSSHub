@@ -82,19 +82,8 @@ async function handler(ctx) {
         // 股票名称作为独立的 category
         const stockNameCategories = processedStockList.map((stock) => stock.name);
 
-        // 涨跌幅作为独立的 category（使用简洁格式）
-        const stockRangeCategories = processedStockList.map((stock) => {
-            if (stock.RiseRange > 0) {
-                return `+${stock.RiseRange}%`;
-            } else if (stock.RiseRange < 0) {
-                return `${stock.RiseRange}%`;
-            } else {
-                return '0%';
-            }
-        });
-
-        // 合并所有 categories：主题、股票名称、涨跌幅
-        const categories = [...subjectCategories, ...stockNameCategories, ...stockRangeCategories];
+        // 合并所有 categories：主题、股票名称（涨跌幅只在正文显示，不在category中）
+        const categories = [...subjectCategories, ...stockNameCategories];
 
         // 根据 level 添加标题前缀 (只显示重要级别)
         const levelPrefix = item.level === 'A' ? '【重要】' : '';
