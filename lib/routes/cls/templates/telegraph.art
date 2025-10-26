@@ -8,27 +8,6 @@
 <p><strong>作者：</strong>{{ author }}</p>
 {{ /if }}
 
-{{ if stock_list && stock_list.length > 0 }}
-<div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 10px 0; border-radius: 4px;">
-    <strong style="color: #333;">📊 相关股票</strong>
-    {{ each stock_list stock }}
-    <div style="margin-top: 8px; padding: 8px; background: white; border-radius: 3px;">
-        <span style="font-weight: bold; color: #333;">{{ stock.name }}</span>
-        <span style="color: #666; font-size: 0.9em;">({{ stock.StockID }})</span>
-        <br>
-        <span style="font-size: 0.95em;">价格: <strong>¥{{ stock.last }}</strong></span>
-        {{ if stock.RiseRange > 0 }}
-        <span style="color: #f5222d; font-weight: bold; margin-left: 10px;">↑ {{ stock.RiseRange }}%</span>
-        {{ else if stock.RiseRange < 0 }}
-        <span style="color: #52c41a; font-weight: bold; margin-left: 10px;">↓ {{ stock.RiseRange }}%</span>
-        {{ else }}
-        <span style="color: #666; margin-left: 10px;">— 0.00%</span>
-        {{ /if }}
-    </div>
-    {{ /each }}
-</div>
-{{ /if }}
-
 {{ if item.content }}
 {{ item.content }}
 {{ /if }}
@@ -40,6 +19,28 @@
 {{ /each }}
 {{ /if }}
 
+{{ if stock_list && stock_list.length > 0 }}
+<div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">
+    <strong style="color: #333;">📊 相关股票</strong>
+    {{ each stock_list stock }}
+    <div style="margin-top: 8px; padding: 8px; background: white; border-radius: 3px;">
+        <span style="font-weight: bold; color: #333;">{{ stock.name }}</span>
+        <span style="color: #666; font-size: 0.9em; margin-left: 5px;">({{ stock.StockID }})</span>
+
+        {{ if stock.RiseRange > 0 }}
+        <span style="font-weight: bold; margin-left: 10px;">↑ <strong>+{{ stock.RiseRange }}%</strong></span>
+        {{ else if stock.RiseRange < 0 }}
+        <span style="font-weight: bold; margin-left: 10px;">↓ <strong>{{ stock.RiseRange }}%</strong></span>
+        {{ else }}
+        <span style="margin-left: 10px;">— <strong>0.00%</strong></span>
+        {{ /if }}
+
+        <span style="color: #888; font-size: 0.85em; margin-left: 10px;">¥{{ stock.last }}</span>
+    </div>
+    {{ /each }}
+</div>
+{{ /if }}
+
 {{ if assocArticleUrl }}
 <div style="background: #f6ffed; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0; border-radius: 4px;">
     <strong style="color: #52c41a;">📄 相关公告</strong>
@@ -49,4 +50,3 @@
     </a>
 </div>
 {{ /if }}
-

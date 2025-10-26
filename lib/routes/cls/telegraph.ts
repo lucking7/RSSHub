@@ -70,13 +70,31 @@ async function handler(ctx) {
     });
 
     const items = response.data.data.roll_data.slice(0, limit).map((item) => {
-        // 合并主题分类和股票分类（包含涨跌幅）
-        const stockCategories = (item.stock_list || []).map((stock) => {
-            const arrow = stock.RiseRange > 0 ? '↑' : (stock.RiseRange < 0 ? '↓' : '—');
-            return `${stock.name} ${arrow}${stock.RiseRange}%`;
+        // 处理股票信息，格式化股票代码为大写
+        const processedStockList = (item.stock_list || []).map((stock) => ({
+            ...stock,
+            StockID: stock.StockID ? stock.StockID.toUpperCase() : stock.StockID,
+        }));
+
+        // 分别处理主题分类和股票分类
+        const subjectCategories = item.subjects?.map((s) => s.subject_name) || [];
+
+        // 股票名称作为独立的 category
+        const stockNameCategories = processedStockList.map((stock) => stock.name);
+
+        // 涨跌幅作为独立的 category（使用简洁格式）
+        const stockRangeCategories = processedStockList.map((stock) => {
+            if (stock.RiseRange > 0) {
+                return `+${stock.RiseRange}%`;
+            } else if (stock.RiseRange < 0) {
+                return `${stock.RiseRange}%`;
+            } else {
+                return '0%';
+            }
         });
 
-        const categories = [...(item.subjects?.map((s) => s.subject_name) || []), ...stockCategories];
+        // 合并所有 categories：主题、股票名称、涨跌幅
+        const categories = [...subjectCategories, ...stockNameCategories, ...stockRangeCategories];
 
         // 根据 level 添加标题前缀 (只显示重要级别)
         const levelPrefix = item.level === 'A' ? '【重要】' : '';
@@ -86,6 +104,7 @@ async function handler(ctx) {
         const processedItem = {
             ...item,
             content: item.content.replace(/^【[^】]+】/, '').trim(),
+            stock_list: processedStockList,
         };
 
         // 构建基础 RSS item
@@ -96,7 +115,7 @@ async function handler(ctx) {
                 item: processedItem,
                 images: item.images || [],
                 author: item.author || '',
-                stock_list: item.stock_list || [],
+                stock_list: processedItem.stock_list || [],
                 level: item.level || '',
                 assocArticleUrl: item.assocArticleUrl || '',
             }),
