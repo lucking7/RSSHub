@@ -286,6 +286,11 @@ async function handler(ctx) {
                     dpc,
                     page,
                 },
+                headers: {
+                    Referer: 'https://finance.sina.com.cn/',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                },
+                timeout: 30000, // 30秒超时
             }).then((res) => ({ page, list: (res.data?.result?.data?.feed?.list as ZhiboFeedItem[]) ?? [] }))
         )
     );
@@ -446,15 +451,16 @@ async function handler(ctx) {
             const stockCategories = stockInfo.map((s) => {
                 const quote = stockQuotes?.[s.symbol];
                 if (quote && quote.change !== undefined) {
-                    // 格式：股票名称 (代码) ±涨跌幅%
+                    // 格式：股票名称(代码)涨跌幅% - 移除空格避免RSS阅读器显示为下划线
                     const changeStr = quote.change >= 0 ? `+${quote.change.toFixed(2)}` : quote.change.toFixed(2);
                     const changeColor = quote.change >= 0 ? '#f5222d' : '#52c41a'; // 红涨绿跌
-                    // 为 description 构建行情HTML
+                    // 为 description 构建行情HTML（保留空格以便阅读）
                     stockQuotesHtml.push(`<span style="color: ${changeColor};">• ${s.key} (${s.symbol.toUpperCase()}) ${changeStr}%</span>`);
-                    return `${s.key} (${s.symbol.toUpperCase()}) ${changeStr}%`;
+                    // category中移除空格
+                    return `${s.key}(${s.symbol.toUpperCase()})${changeStr}%`;
                 }
-                // 降级方案：仅显示名称和代码
-                return `${s.key} (${s.symbol.toUpperCase()})`;
+                // 降级方案：仅显示名称和代码（移除空格）
+                return `${s.key}(${s.symbol.toUpperCase()})`;
             });
 
             // 生成完整描述（不限制字符长度），包含行情卡片
