@@ -58,7 +58,7 @@ const searchParams = getSearchParams({
 
 ## 📡 已实现的路由
 
-### 1. 电报快讯 (Telegraph)
+### 1. 电报快讯 - telegraph (原接口)
 
 实时财经快讯，支持分类订阅。
 
@@ -89,6 +89,81 @@ const searchParams = getSearchParams({
 - ✅ 股票信息卡片（显示价格和涨跌幅）
 - ✅ 股票标签含涨跌幅（如：`中信证券 ↑1.19%`）
 - ✅ 主题分类标签
+
+**使用示例**:
+```bash
+# 获取全部电报
+/cls/telegraph
+
+# 获取看盘类新闻
+/cls/telegraph/watch
+
+# 获取公司公告，限制10条
+/cls/telegraph/announcement?limit=10
+```
+
+---
+
+### 1.5 电报快讯 - dianbao (API3接口) ✨
+
+使用最新 API3 接口获取实时电报快讯。
+
+**路由**: `/cls/dianbao`
+
+**文件**: [dianbao.ts](./dianbao.ts)
+
+**API 端点**: `https://api3.cls.cn/v1/roll/get_roll_list`
+
+**参数**:
+
+| 参数 | 说明 | 可选值 | 默认值 |
+|------|------|--------|--------|
+| limit | 返回数量 | 数字 | 20 |
+
+**特点**:
+- ✨ 使用最新 API3 接口
+- ✨ 动态时间戳（获取最新数据）
+- ✨ 更优的标题处理（title/brief/content 三重回退）
+- ⚠️ 不支持分类过滤
+
+**功能特性**:
+- ✅ 股票涨跌幅完整展示
+- ✅ 板块和个股自动分离
+- ✅ A级新闻重要标记（【重要】红色高亮）
+- ✅ 音频播客支持（RSS enclosure）
+- ✅ 图片自动展示
+- ✅ 关联文档链接（公告PDF）
+- ✅ 完整分类标签
+
+**使用示例**:
+```bash
+# 获取最新20条电报
+/cls/dianbao
+
+# 获取最新100条电报
+/cls/dianbao?limit=100
+```
+
+**接口对比**:
+
+| 特性 | telegraph | dianbao |
+|------|-----------|---------|
+| 接口域名 | www.cls.cn | api3.cls.cn |
+| 接口路径 | /nodeapi/updateTelegraphList | /v1/roll/get_roll_list |
+| 支持分类 | ✅ 8个分类 | ❌ 不支持 |
+| 时间参数 | ❌ 无 | ✅ last_time |
+| 默认数量 | 50 | 20 |
+| 音频支持 | ❌ | ✅ |
+
+**选择建议**:
+
+| 使用场景 | 推荐路由 | 原因 |
+|----------|----------|------|
+| 需要分类过滤 | `/cls/telegraph` | 支持8个分类 |
+| 获取最新消息 | `/cls/dianbao` | API3实时接口 |
+| 需要大量历史 | `/cls/telegraph` | 默认50条 |
+| 轻量级订阅 | `/cls/dianbao` | 默认20条 |
+| 播客订阅 | `/cls/dianbao` | 支持音频enclosure |
 
 ---
 

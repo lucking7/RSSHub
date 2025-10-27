@@ -36,6 +36,34 @@ export const route: Route = {
 
 async function handler(ctx) {
     const { important = false } = ctx.req.param();
+
+    // 广告过滤函数
+    const isAd = (item: any): boolean => {
+        // 过滤 type=1 的推广内容
+        if (item.type === 1) {
+            return true;
+        }
+
+        const content = item.data?.content || '';
+
+        // 过滤包含"点击查看"的广告（包括各种变体）
+        if (content.includes('点击查看')) {
+            return true;
+        }
+
+        // 过滤包含">>"或"》"结尾的广告链接
+        if (content.includes('>>') || content.endsWith('》')) {
+            return true;
+        }
+
+        // 过滤包含"……"且长度较短的广告预览（通常是VIP内容推广）
+        if (content.includes('……') && content.length < 200 && !content.includes('【')) {
+            return true;
+        }
+
+        return false;
+    };
+
     const data = await cache.tryGet(
         'jin10:index',
         async () => {
@@ -49,7 +77,7 @@ async function handler(ctx) {
                     vip: '1',
                 },
             });
-            return response.data.filter((item) => item.type !== 1);
+            return response.data.filter((item: any) => !isAd(item));
         },
         config.cache.routeExpire,
         false

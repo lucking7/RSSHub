@@ -62,17 +62,61 @@ async function handler(ctx) {
 
     const data = response.data?.data ?? [];
 
-    // 如果只要重要快讯，先过滤
-    const filteredData = importantOnly ? data.filter((item) => item.important === 1) : data;
+    // 广告过滤函数
+    const isAd = (item: any): boolean => {
+        // 过滤 type=1 的推广内容
+        if (item.type === 1) {
+            return true;
+        }
+
+        const content = item.data?.content || '';
+
+        // 过滤包含"点击查看"的广告（包括各种变体）
+        if (content.includes('点击查看')) {
+            return true;
+        }
+
+        // 过滤包含">>"或"》"结尾的广告链接
+        if (content.includes('>>') || content.endsWith('》')) {
+            return true;
+        }
+
+        // 过滤包含"……"且长度较短的广告预览（通常是VIP内容推广）
+        if (content.includes('……') && content.length < 200 && !content.includes('【')) {
+            return true;
+        }
+
+        return false;
+    };
+
+    // 过滤广告和重要快讯
+    let filteredData = data.filter((item) => !isAd(item));
+    if (importantOnly) {
+        filteredData = filteredData.filter((item) => item.important === 1);
+    }
     const list = filteredData.slice(0, limit);
 
     const items = list.map((item) => {
         const id = item.id;
 
-        // 标题：优先使用 data.title，否则使用 content 去除HTML标签
-        const title = (item.data?.title && item.data.title.trim()) || item.data?.content?.replaceAll(/<[^>]+>/g, '') || '';
-
         const content = item.data?.content ?? '';
+
+        // 提取标题和正文
+        // 如果内容以【】开头，将【】内容作为标题，其余作为正文
+        let title = '';
+        let description = '';
+
+        const bracketMatch = content.match(/^【([^】]+)】(.*)$/s);
+        if (bracketMatch) {
+            // 有【】标题
+            title = bracketMatch[1].trim();
+            description = bracketMatch[2].trim();
+        } else {
+            // 没有【】标题，使用 data.title 或截取 content 前部分
+            title = (item.data?.title && item.data.title.trim()) || content.replaceAll(/<[^>]+>/g, '').slice(0, 100) || '';
+            description = content;
+        }
+
         const link = `${rootUrl}/#${id}`;
         const pubDate = timezone(parseDate(item.time), +8); // 转换为北京时间
         const isImportant = item.important === 1;
@@ -93,8 +137,7 @@ async function handler(ctx) {
             }
         }
 
-        // 构建描述（只包含内容和来源，所有额外数据只在category中显示）
-        let description = content;
+        // 正文内容（已经不包含【】标题部分了）
 
         // 添加来源信息（如果有）
         if (item.data?.source) {
