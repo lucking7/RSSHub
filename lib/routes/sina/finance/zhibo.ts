@@ -451,16 +451,13 @@ async function handler(ctx) {
             const stockCategories = stockInfo.map((s) => {
                 const quote = stockQuotes?.[s.symbol];
                 if (quote && quote.change !== undefined) {
-                    // 格式：股票名称(代码)涨跌幅% - 移除空格避免RSS阅读器显示为下划线
                     const changeStr = quote.change >= 0 ? `+${quote.change.toFixed(2)}` : quote.change.toFixed(2);
                     const changeColor = quote.change >= 0 ? '#f5222d' : '#52c41a'; // 红涨绿跌
                     const arrow = quote.change >= 0 ? '↑' : '↓'; // 上涨用↑，下跌用↓
                     // 为 description 构建行情HTML（两行显示：第一行股票名代码，第二行箭头和涨跌幅）
                     stockQuotesHtml.push(`• <strong>${s.key}</strong> <span style="color: #999;">(${s.symbol.toUpperCase()})</span><br>` + `<span style="color: ${changeColor}; font-weight: bold;">${arrow} ${changeStr}%</span><br>`);
-                    // category中移除空格
-                    return `${s.key}(${s.symbol.toUpperCase()})${changeStr}%`;
                 }
-                // 降级方案：仅显示名称和代码（移除空格）
+                // category中只包含股票名称和代码，不包含涨跌幅
                 return `${s.key}(${s.symbol.toUpperCase()})`;
             });
 
@@ -491,7 +488,7 @@ async function handler(ctx) {
             // 生成完整HTML内容，不包含【…】前缀
             const contentHtml = `${richBodyHtml}<br>${mediaHtml.join('<br>')}<br>`;
 
-            // 构建分类信息：标签 + 股票（含涨跌幅）
+            // 构建分类信息：标签 + 股票名称（不含涨跌幅）
             const tagCategories = it.tag?.map((t) => t.name) || [];
             const categories = [...tagCategories, ...stockCategories];
             const uniqueCategories = [...new Set(categories)].filter(Boolean);

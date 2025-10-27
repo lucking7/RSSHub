@@ -145,25 +145,23 @@ async function handler(ctx) {
                     const arrow = isPositive ? '↑' : '↓';
 
                     stockQuotesHtml.push(
-                        `<div style="margin: 6px 0;">• <strong>${stockName}</strong> ` +
-                            (stockCode ? `<span style="color: #999;">(${stockCode})</span>` : '') +
-                            `<br><span style="margin-left: 12px; color: ${changeColor}; font-weight: bold;">${arrow} ${stockRange}</span></div>`
+                        `• <strong>${stockName}</strong> ` + (stockCode ? `<span style="color: #999;">(${stockCode})</span>` : '') + `<br><span style="color: ${changeColor}; font-weight: bold;">${arrow} ${stockRange}</span><br>`
                     );
                 }
             }
 
             if (stockQuotesHtml.length > 0) {
-                description += `<br><p style="font-weight: bold; margin: 8px 0 4px 0;">相关行情</p>${stockQuotesHtml.join('')}`;
+                description += `<br><h3 style="font-size: 16px; font-weight: bold; margin: 12px 0 8px 0; color: #333;">相关行情</h3>${stockQuotesHtml.join('')}`;
             }
         }
 
         // 构建分类
         const categories: string[] = [];
 
-        // 添加股票信息到分类
+        // 添加股票信息到分类（只包含名称，不包含涨跌幅）
         for (const stock of stocks) {
             if (stock.name) {
-                const stockStr = stock.code ? `${stock.name}(${stock.code})${stock.range || ''}` : `${stock.name}${stock.range || ''}`;
+                const stockStr = stock.code ? `${stock.name}(${stock.code})` : stock.name;
                 categories.push(stockStr);
             }
         }
@@ -182,7 +180,8 @@ async function handler(ctx) {
     return {
         title: `新浪财经724 - ${tagParam === 'all' ? '全部' : tagParam}快讯`,
         link: 'https://finance.sina.com.cn/7x24/',
-        item: items,
         description: '新浪财经724移动端接口实时财经快讯',
+        language: 'zh-cn',
+        item: items,
     };
 }
