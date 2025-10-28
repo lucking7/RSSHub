@@ -124,8 +124,10 @@ async function handler(ctx) {
         const newsId = item.id;
         const pubDate = timezone(parseDate(item.ctime), +8);
 
-        // 解析标题（从content前80字符提取）
-        const title = content.replaceAll(/<[^>]+>/g, '').slice(0, 100) || `财经快讯 ${newsId}`;
+        // 解析标题（提取【】内的内容）
+        const cleanContent = content.replaceAll(/<[^>]+>/g, '');
+        const titleMatch = cleanContent.match(/【([^】]+)】/);
+        const title = titleMatch ? `【${titleMatch[1]}】` : cleanContent.slice(0, 100) || `财经快讯 ${newsId}`;
 
         // 构建描述
         let description = content;
@@ -158,11 +160,10 @@ async function handler(ctx) {
         // 构建分类
         const categories: string[] = [];
 
-        // 添加股票信息到分类（只包含名称，不包含涨跌幅）
+        // 添加股票信息到分类（只显示股票名称）
         for (const stock of stocks) {
             if (stock.name) {
-                const stockStr = stock.code ? `${stock.name}(${stock.code})` : stock.name;
-                categories.push(stockStr);
+                categories.push(stock.name);
             }
         }
 
