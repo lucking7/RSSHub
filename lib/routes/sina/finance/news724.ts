@@ -132,28 +132,56 @@ async function handler(ctx) {
         // 构建描述
         let description = content;
 
-        // 添加股票行情信息
+        // 添加股票行情信息（区分板块和股票）
         const stocks = item.stock || [];
         if (stocks.length > 0) {
-            const stockQuotesHtml: string[] = [];
+            // 判断代码类型：8开头是板块，其他是股票
+            const sectors: any[] = [];
+            const individualStocks: any[] = [];
+
             for (const stock of stocks) {
-                const stockName = stock.name || '';
                 const stockCode = stock.code || '';
-                const stockRange = stock.range || '';
-
-                if (stockRange) {
-                    const isPositive = stockRange.startsWith('+') || (!stockRange.startsWith('-') && Number.parseFloat(stockRange) > 0);
-                    const changeColor = isPositive ? '#f5222d' : '#52c41a';
-                    const arrow = isPositive ? '↑' : '↓';
-
-                    stockQuotesHtml.push(
-                        `• <strong>${stockName}</strong> ` + (stockCode ? `<span style="color: #999;">(${stockCode})</span>` : '') + `<br><span style="color: ${changeColor}; font-weight: bold;">${arrow} ${stockRange}</span><br>`
-                    );
+                if (stockCode.startsWith('8')) {
+                    sectors.push(stock);
+                } else {
+                    individualStocks.push(stock);
                 }
             }
 
-            if (stockQuotesHtml.length > 0) {
-                description += `<br><h3 style="font-size: 16px; font-weight: bold; margin: 12px 0 8px 0; color: #333;">相关行情</h3>${stockQuotesHtml.join('')}`;
+            // 格式化输出函数（HTML格式）
+            const formatStockItems = (items: any[]) => {
+                let result = '';
+                for (const stock of items) {
+                    const stockName = stock.name || '';
+                    const stockCode = stock.code || '';
+                    const stockRange = stock.range || '';
+
+                    if (stockRange) {
+                        const isPositive = stockRange.startsWith('+') || (!stockRange.startsWith('-') && Number.parseFloat(stockRange) > 0);
+                        const changeColor = isPositive ? '#f5222d' : '#52c41a';
+                        const arrow = isPositive ? '↑' : '↓';
+
+                        result +=
+                            `• <strong>${stockName}</strong> ` + (stockCode ? `<span style="color: #999;">(${stockCode})</span>` : '') + `<br><span style="color: ${changeColor}; font-weight: bold;">${arrow} ${stockRange}</span><br>`;
+                    }
+                }
+                return result;
+            };
+
+            // 显示板块（蓝色边框）
+            if (sectors.length > 0) {
+                const sectorHtml = formatStockItems(sectors);
+                description += `<br><div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">`;
+                description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关板块</h3>${sectorHtml}`;
+                description += `</div>`;
+            }
+
+            // 显示股票（绿色边框）
+            if (individualStocks.length > 0) {
+                const stockHtml = formatStockItems(individualStocks);
+                description += `<br><div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">`;
+                description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关股票</h3>${stockHtml}`;
+                description += `</div>`;
             }
         }
 
@@ -184,5 +212,7 @@ async function handler(ctx) {
         description: '新浪财经724移动端接口实时财经快讯',
         language: 'zh-cn',
         item: items,
+        author: '新浪财经',
+        image: 'https://finance.sina.com.cn/favicon.ico',
     };
 }

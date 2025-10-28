@@ -174,13 +174,13 @@ async function handler(ctx) {
             }
         }
 
-        // 构建分类信息：股票名(代码)±涨跌幅
+        // 构建分类信息：股票名(代码)，不包含涨跌幅（避免动态数据）
         const categories =
             item.Stocks && item.Stocks.length > 0
                 ? item.Stocks.map((s) => {
-                      const [code, name, changeStr] = s;
-                      // 格式：股票名(代码)+涨跌幅 或 股票名(代码)-涨跌幅
-                      return `${name}(${code})${changeStr || ''}`;
+                      const [code, name] = s;
+                      // 格式：股票名(代码)，不包含涨跌幅
+                      return `${name}(${code})`;
                   })
                 : [];
 

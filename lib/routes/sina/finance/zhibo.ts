@@ -342,6 +342,21 @@ async function handler(ctx) {
     // 批量查询所有股票的实时行情（A股、美股、港股）
     const stockQuotes = await fetchStockQuotes(allStocks);
 
+    // 格式化股票/板块显示的辅助函数
+    const formatStockItems = (items: any[], quotes: Record<string, { name: string; change: number }>) => {
+        const html: string[] = [];
+        for (const s of items) {
+            const quote = quotes?.[s.symbol];
+            if (quote && quote.change !== undefined) {
+                const changeStr = quote.change >= 0 ? `+${quote.change.toFixed(2)}` : quote.change.toFixed(2);
+                const changeColor = quote.change >= 0 ? '#f5222d' : '#52c41a';
+                const arrow = quote.change >= 0 ? '↑' : '↓';
+                html.push(`• <strong>${s.key}</strong> <span style="color: #999;">(${s.symbol.toUpperCase()})</span><br>` + `<span style="color: ${changeColor}; font-weight: bold;">${arrow} ${changeStr}%</span><br>`);
+            }
+        }
+        return html.join('');
+    };
+
     const items = await Promise.all(
         filteredData.map(async (it) => {
             const plain = it.rich_text?.replaceAll(/<[^>]+>/g, '').trim() ?? '';
@@ -349,8 +364,8 @@ async function handler(ctx) {
             const bracketMatch = plain.match(/^【([^】]+)】/);
             let titleText;
             if (bracketMatch) {
-                // 同花顺风格：标题为纯文本，不保留书名号
-                titleText = bracketMatch[1];
+                // 与724对齐：保留【】书名号
+                titleText = `【${bracketMatch[1]}】`;
             } else if (plain.length > 0) {
                 titleText = plain.length > 80 ? `${plain.slice(0, 80)}…` : plain;
             } else {
@@ -360,8 +375,8 @@ async function handler(ctx) {
             const isFocus = it.is_focus === 1;
             const title = isFocus ? `🔥 ${titleText}` : titleText;
             // 去除正文中的【…】前缀，避免标题重复出现在正文
-            const plainBody = plain.replace(/^【[^】]+】\s*/, '');
-            const richBodyHtml = typeof it.rich_text === 'string' ? it.rich_text.replace(/^【[^】]+】\s*/, '') : '';
+            const plainBody = bracketMatch ? plain.replace(/^【[^】]+】\s*/, '') : plain;
+            const richBodyHtml = typeof it.rich_text === 'string' && bracketMatch ? it.rich_text.replace(/^【[^】]+】\s*/, '') : it.rich_text || '';
 
             // 解析ext字段获取完整信息
             let detailLink = 'https://finance.sina.com.cn/7x24/';
@@ -446,25 +461,43 @@ async function handler(ctx) {
                 }
             }
 
-            // 构建股票行情信息（需要在 description 之前生成）
-            const stockQuotesHtml: string[] = [];
-            const stockCategories = stockInfo.map((s) => {
-                const quote = stockQuotes?.[s.symbol];
-                if (quote && quote.change !== undefined) {
-                    const changeStr = quote.change >= 0 ? `+${quote.change.toFixed(2)}` : quote.change.toFixed(2);
-                    const changeColor = quote.change >= 0 ? '#f5222d' : '#52c41a'; // 红涨绿跌
-                    const arrow = quote.change >= 0 ? '↑' : '↓'; // 上涨用↑，下跌用↓
-                    // 为 description 构建行情HTML（两行显示：第一行股票名代码，第二行箭头和涨跌幅）
-                    stockQuotesHtml.push(`• <strong>${s.key}</strong> <span style="color: #999;">(${s.symbol.toUpperCase()})</span><br>` + `<span style="color: ${changeColor}; font-weight: bold;">${arrow} ${changeStr}%</span><br>`);
+            // 构建股票行情信息（区分板块和股票）
+            const sectors: any[] = [];
+            const individualStocks: any[] = [];
+
+            // 分类：8开头是板块，其他是股票
+            for (const s of stockInfo) {
+                const code = s.symbol.toUpperCase();
+                if (code.startsWith('8')) {
+                    sectors.push(s);
+                } else {
+                    individualStocks.push(s);
                 }
-                // category中只包含股票名称和代码，不包含涨跌幅
-                return `${s.key}(${s.symbol.toUpperCase()})`;
-            });
+            }
+
+            const stockCategories = stockInfo.map((s) => `${s.key}(${s.symbol.toUpperCase()})`);
 
             // 生成完整描述（不限制字符长度），包含行情信息
             let description = `${plainBody}<br>`;
-            if (stockQuotesHtml.length > 0) {
-                description += `<br><h3 style="font-size: 16px; font-weight: bold; margin: 12px 0 8px 0; color: #333;">相关行情</h3>${stockQuotesHtml.join('')}`;
+
+            // 显示板块（蓝色边框）
+            if (sectors.length > 0) {
+                const sectorHtml = formatStockItems(sectors, stockQuotes);
+                if (sectorHtml) {
+                    description += `<br><div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">`;
+                    description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关板块</h3>${sectorHtml}`;
+                    description += `</div>`;
+                }
+            }
+
+            // 显示股票（绿色边框）
+            if (individualStocks.length > 0) {
+                const stockHtml = formatStockItems(individualStocks, stockQuotes);
+                if (stockHtml) {
+                    description += `<br><div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">`;
+                    description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关股票</h3>${stockHtml}`;
+                    description += `</div>`;
+                }
             }
 
             // 构建多媒体HTML内容
