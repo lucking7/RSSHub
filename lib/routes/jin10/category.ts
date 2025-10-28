@@ -169,35 +169,50 @@ export const route: Route = {
     url: 'jin10.com/',
 };
 
+// 广告过滤函数
+const isAd = (item: any): boolean => {
+    // 过滤 type=1 的推广内容
+    if (item.type === 1) {
+        return true;
+    }
+
+    // 过滤 VIP 付费内容
+    if (item.data?.vip_level && item.data.vip_level > 0) {
+        return true;
+    }
+
+    const content = item.data?.content || '';
+
+    // 过滤包含"点击查看"的广告（包括各种变体）
+    if (content.includes('点击查看')) {
+        return true;
+    }
+
+    // 过滤包含">>"或"》"结尾的广告链接
+    if (content.includes('>>') || content.endsWith('》')) {
+        return true;
+    }
+
+    // 过滤包含"……"且长度较短的广告预览（通常是VIP内容推广）
+    if (content.includes('……') && content.length < 200 && !content.includes('【')) {
+        return true;
+    }
+
+    // 过滤推广引导式标题
+    if (content.includes('——今日') || content.includes('——本周') || content.includes('——本月')) {
+        return true;
+    }
+
+    // 过滤列表式推广标题
+    if ((content.includes('个重点') || content.includes('个要点')) && (content.includes('需要关注') || content.includes('需要留意'))) {
+        return true;
+    }
+
+    return false;
+};
+
 async function handler(ctx) {
     const id = ctx.req.param('id');
-
-    // 广告过滤函数
-    const isAd = (item: any): boolean => {
-        // 过滤 type=1 的推广内容
-        if (item.type === 1) {
-            return true;
-        }
-
-        const content = item.data?.content || '';
-
-        // 过滤包含"点击查看"的广告（包括各种变体）
-        if (content.includes('点击查看')) {
-            return true;
-        }
-
-        // 过滤包含">>"或"》"结尾的广告链接
-        if (content.includes('>>') || content.endsWith('》')) {
-            return true;
-        }
-
-        // 过滤包含"……"且长度较短的广告预览（通常是VIP内容推广）
-        if (content.includes('……') && content.length < 200 && !content.includes('【')) {
-            return true;
-        }
-
-        return false;
-    };
 
     const data = await cache.tryGet(
         'jin10:aa:${category}',

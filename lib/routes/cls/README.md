@@ -108,7 +108,7 @@ const searchParams = getSearchParams({
 
 使用最新 API3 接口获取实时电报快讯。
 
-**路由**: `/cls/dianbao`
+**路由**: `/cls/dianbao/:category?`
 
 **文件**: [dianbao.ts](./dianbao.ts)
 
@@ -118,13 +118,27 @@ const searchParams = getSearchParams({
 
 | 参数 | 说明 | 可选值 | 默认值 |
 |------|------|--------|--------|
+| category | 新闻分类 | 见下表 | 全部 |
 | limit | 返回数量 | 数字 | 20 |
+
+**支持的分类**:
+
+| 分类名 | 参数 | 说明 |
+|--------|------|------|
+| 看盘 | `watch` | 盘面分析 |
+| 公司 | `announcement` | 公司公告 |
+| 解读 | `explain` | 深度解读 |
+| 加红 | `red` | 重要标记 |
+| 推送 | `jpush` | 推送消息 |
+| 提醒 | `remind` | 提醒事项 |
+| 基金 | `fund` | 基金相关 |
+| 港美股 | `hk_us` | 港美股信息 |
 
 **特点**:
 - ✨ 使用最新 API3 接口
+- ✨ **支持 8 个分类过滤** ✅
 - ✨ 动态时间戳（获取最新数据）
 - ✨ 更优的标题处理（title/brief/content 三重回退）
-- ⚠️ 不支持分类过滤
 
 **功能特性**:
 - ✅ 股票涨跌幅完整展示
@@ -137,11 +151,20 @@ const searchParams = getSearchParams({
 
 **使用示例**:
 ```bash
-# 获取最新20条电报
+# 获取全部电报
 /cls/dianbao
 
-# 获取最新100条电报
-/cls/dianbao?limit=100
+# 获取看盘类新闻
+/cls/dianbao/watch
+
+# 获取公司公告，限制10条
+/cls/dianbao/announcement?limit=10
+
+# 获取港美股新闻
+/cls/dianbao/hk_us
+
+# 获取加红重要新闻
+/cls/dianbao/red
 ```
 
 **接口对比**:
@@ -150,20 +173,28 @@ const searchParams = getSearchParams({
 |------|-----------|---------|
 | 接口域名 | www.cls.cn | api3.cls.cn |
 | 接口路径 | /nodeapi/updateTelegraphList | /v1/roll/get_roll_list |
-| 支持分类 | ✅ 8个分类 | ❌ 不支持 |
+| 支持分类 | ✅ 8个分类 | ✅ 8个分类 |
+| 分类参数 | hk (港股) | hk_us (港美股) |
 | 时间参数 | ❌ 无 | ✅ last_time |
 | 默认数量 | 50 | 20 |
 | 音频支持 | ❌ | ✅ |
+
+**分类差异说明**:
+
+两个接口的分类基本相同，唯一区别：
+- `telegraph` 使用 `hk` 参数（港股）
+- `dianbao` 使用 `hk_us` 参数（港美股）
 
 **选择建议**:
 
 | 使用场景 | 推荐路由 | 原因 |
 |----------|----------|------|
-| 需要分类过滤 | `/cls/telegraph` | 支持8个分类 |
-| 获取最新消息 | `/cls/dianbao` | API3实时接口 |
+| 获取最新消息 | `/cls/dianbao` | ✨ API3 最新接口 + 音频支持 |
 | 需要大量历史 | `/cls/telegraph` | 默认50条 |
 | 轻量级订阅 | `/cls/dianbao` | 默认20条 |
-| 播客订阅 | `/cls/dianbao` | 支持音频enclosure |
+| 播客收听 | `/cls/dianbao` | ✅ 支持音频 enclosure |
+| 港美股新闻 | `/cls/dianbao/hk_us` | 包含美股信息 |
+| 仅港股新闻 | `/cls/telegraph/hk` | 仅港股信息 |
 
 ---
 

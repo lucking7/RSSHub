@@ -7,11 +7,22 @@ import path from 'node:path';
 
 import { getSearchParams } from './utils';
 
+const categories = {
+    watch: '看盘',
+    announcement: '公司',
+    explain: '解读',
+    red: '加红',
+    jpush: '推送',
+    remind: '提醒',
+    fund: '基金',
+    hk_us: '港美股',
+};
+
 export const route: Route = {
-    path: '/dianbao',
+    path: '/dianbao/:category?',
     categories: ['finance'],
     example: '/cls/dianbao',
-    parameters: {},
+    parameters: { category: '分类，见下表，默认为全部' },
     features: {
         requireConfig: false,
         requirePuppeteer: false,
@@ -30,10 +41,15 @@ export const route: Route = {
     maintainers: ['nczitzk'],
     handler,
     url: 'cls.cn/telegraph',
-    description: '获取财联社电报快讯，使用api3.cls.cn接口',
+    description: `获取财联社电报快讯，使用api3.cls.cn接口
+
+| 看盘  | 公司         | 解读    | 加红 | 推送  | 提醒   | 基金 | 港美股  |
+| ----- | ------------ | ------- | ---- | ----- | ------ | ---- | ------- |
+| watch | announcement | explain | red  | jpush | remind | fund | hk_us   |`,
 };
 
 async function handler(ctx) {
+    const category = ctx.req.param('category') ?? '';
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 20;
 
     // 使用 api3.cls.cn 接口
@@ -42,14 +58,22 @@ async function handler(ctx) {
     // 获取当前时间戳作为 last_time
     const lastTime = Math.floor(Date.now() / 1000);
 
+    // 构建请求参数
+    const params = {
+        last_time: lastTime,
+        rn: limit,
+        hasFirstVipArticle: 1,
+    };
+
+    // 如果有分类参数，添加到请求中
+    if (category) {
+        params.category = category;
+    }
+
     const response = await got({
         method: 'get',
         url: apiUrl,
-        searchParams: getSearchParams({
-            last_time: lastTime,
-            rn: limit,
-            hasFirstVipArticle: 1,
-        }),
+        searchParams: getSearchParams(params),
         headers: {
             Referer: 'https://www.cls.cn/telegraph',
         },
@@ -115,9 +139,9 @@ async function handler(ctx) {
     });
 
     return {
-        title: '财联社 - 电报（API3）',
+        title: `财联社 - 电报（API3）${category === '' ? '' : ` - ${categories[category]}`}`,
         link: 'https://www.cls.cn/telegraph',
-        description: '财联社电报快讯 - 使用API3接口实时获取财经新闻',
+        description: `财联社电报快讯 - 使用API3接口实时获取财经新闻${category === '' ? '' : `，关注${categories[category]}领域`}`,
         language: 'zh-cn',
         item: items,
     };
