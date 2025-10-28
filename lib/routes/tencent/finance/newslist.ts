@@ -179,7 +179,11 @@ async function handler(ctx) {
         // 构建描述（主内容区域 - 紫色边框）
         let description = `<div style="padding: 15px; background: #f8f9fa; border-left: 4px solid #667eea; border-radius: 5px; margin-bottom: 10px;">`;
         description += `<p style="margin: 0; line-height: 1.8; font-size: 15px;">`;
-        description += content.replace(/【[^】]+】/, '').trim();
+        // 移除【】标题，并清理 stock:// 协议的链接，只保留文本内容
+        let cleanContent = content.replace(/【[^】]+】/, '').trim();
+        // 将 <a href="stock://...">文本</a> 替换为纯文本
+        cleanContent = cleanContent.replaceAll(/<a[^>]*href="stock:\/\/[^"]*"[^>]*>([^<]+)<\/a>/g, '$1');
+        description += cleanContent;
         description += `</p></div>`;
 
         // 处理股票信息
