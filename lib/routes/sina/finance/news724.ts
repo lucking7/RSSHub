@@ -124,13 +124,13 @@ async function handler(ctx) {
         const newsId = item.id;
         const pubDate = timezone(parseDate(item.ctime), +8);
 
-        // 解析标题（提取【】内的内容）
+        // 解析标题（提取【】内的内容，但title不保留【】符号）
         const cleanContent = content.replaceAll(/<[^>]+>/g, '');
         const titleMatch = cleanContent.match(/【([^】]+)】/);
-        const title = titleMatch ? `【${titleMatch[1]}】` : cleanContent.slice(0, 100) || `财经快讯 ${newsId}`;
+        const title = titleMatch ? titleMatch[1] : cleanContent.slice(0, 100) || `财经快讯 ${newsId}`;
 
-        // 构建描述
-        let description = content;
+        // 构建描述（去掉开头的【】部分）
+        let description = content.replace(/【[^】]+】/, '').trim();
 
         // 添加股票行情信息（区分板块和股票）
         const stocks = item.stock || [];
@@ -210,9 +210,6 @@ async function handler(ctx) {
         title: `新浪财经724 - ${tagParam === 'all' ? '全部' : tagParam}快讯`,
         link: 'https://finance.sina.com.cn/7x24/',
         description: '新浪财经724移动端接口实时财经快讯',
-        language: 'zh-cn',
         item: items,
-        author: '新浪财经',
-        image: 'https://finance.sina.com.cn/favicon.ico',
     };
 }
