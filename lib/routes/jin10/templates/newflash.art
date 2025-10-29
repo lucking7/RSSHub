@@ -1,0 +1,32 @@
+{{ if content }}{{@ content }}{{ /if }}
+
+{{ if pic }}
+<br><br>
+<img src="{{ pic }}" alt="配图" style="max-width: 100%;">
+{{ /if }}
+
+{{ if source_link }}
+<br><br>
+<p><a href="{{ source_link }}" target="_blank">📖 查看原文</a></p>
+{{ /if }}
+
+{{ if remarks && remarks.length > 0 }}
+<br><hr>
+<div style="background: #f5f5f5; padding: 10px; margin-top: 10px;">
+<strong>📊 附加信息：</strong>
+{{ each remarks remark }}
+    {{ if remark.type === 'link' }}
+    <br>• <a href="{{ remark.data.url }}" target="_blank">{{ remark.data.title || '相关链接' }}</a>
+    {{ /if }}
+    {{ if remark.type === 'miniProgram' }}
+    <br>• 📈 {{ remark.data.title || '查看图表' }}
+    {{ /if }}
+    {{ if remark.type === 'quotes' }}
+    <br>• 💹 行情数据: {{ remark.data.name || '' }}
+    {{ /if }}
+    {{ if remark.type === 'content' }}
+    <br>• {{ remark.data.content || remark.data.title || '相关内容' }}
+    {{ /if }}
+{{ /each }}
+</div>
+{{ /if }}
