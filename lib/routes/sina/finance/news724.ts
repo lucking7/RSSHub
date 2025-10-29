@@ -5,12 +5,12 @@ import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
 export const route: Route = {
-    path: '/finance/724/:tag?',
+    path: ['/finance/724/:tag?', '/724/:tag?'],
     name: '财经快讯 - 724接口',
     url: 'finance.sina.com.cn',
     maintainers: [''],
     handler,
-    example: '/sina/finance/724',
+    example: '/sina/724',
     parameters: {
         tag: '分类标签，默认全部，可选：macro（宏观）、stock（股市）、international（国际）、opinion（观点）',
     },
@@ -27,9 +27,12 @@ export const route: Route = {
 - 🔄 支持历史数据分页
 
 示例：
-- \`/sina/finance/724\` - 所有财经快讯
-- \`/sina/finance/724/stock\` - 股市快讯
-- \`/sina/finance/724?limit=50\` - 获取50条快讯`,
+- \`/sina/724\` - 所有财经快讯（简短别名）
+- \`/sina/finance/724\` - 所有财经快讯（完整路径）
+- \`/sina/724/stock\` - 股市快讯
+- \`/sina/724?limit=50\` - 获取50条快讯
+
+别名路径：\`/sina/finance/724/:tag?\` 与 \`/sina/724/:tag?\` 均可使用。`,
     categories: ['finance'],
     features: {
         requireConfig: false,
@@ -42,7 +45,7 @@ export const route: Route = {
     radar: [
         {
             source: ['finance.sina.com.cn/7x24/', 'finance.sina.com.cn'],
-            target: '/finance/724',
+            target: '/724',
         },
     ],
     view: ViewType.Notifications,
