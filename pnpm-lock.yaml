@@ -13,6 +13,7 @@ overrides:
   safe-buffer: npm:@nolyfill/safe-buffer@^1
   safer-buffer: npm:@nolyfill/safer-buffer@^1
   side-channel: npm:@nolyfill/side-channel@^1
+  nan: ^2.22.0
 
 importers:
 
@@ -4603,8 +4604,8 @@ packages:
     resolution: {integrity: sha512-WWdIxpyjEn+FhQJQQv9aQAYlHoNVdzIzUySNV1gHUPDSdZJ3yZn7pAAbQcV7B56Mvu881q9FZV+0Vx2xC44VWA==}
     engines: {node: ^18.17.0 || >=20.5.0}
 
-  nan@1.8.4:
-    resolution: {integrity: sha512-609zQ1h3ApgH/94qmbbEklSrjcYYXCHnsWk4MAojq4OUk3tidhDYhPaMasMFKsZPZ96r4eQA1hbR2W4H7/77XA==}
+  nan@2.23.0:
+    resolution: {integrity: sha512-1UxuyYGdoQHcGg87Lkqm3FzefucTa0NAiOcuRsDmysep3c1LVCRK2krrUDafMWtjSG04htvAmvg96+SDknOmgQ==}
 
   nano-spawn@2.0.0:
     resolution: {integrity: sha512-tacvGzUY5o2D8CBh2rrwxyNojUsZNU2zjNTzKQrkgGJQTbGAfArVWXSKMBokBeeg6C7OLRGUEyoFlYbfeWQIqw==}
@@ -8668,7 +8669,7 @@ snapshots:
   bufferutil@1.1.0:
     dependencies:
       bindings: 1.2.1
-      nan: 1.8.4
+      nan: 2.23.0
     optional: true
 
   bufferutil@4.0.9:
@@ -10740,7 +10741,7 @@ snapshots:
 
   mute-stream@2.0.0: {}
 
-  nan@1.8.4:
+  nan@2.23.0:
     optional: true
 
   nano-spawn@2.0.0: {}
@@ -12013,7 +12014,7 @@ snapshots:
   utf-8-validate@1.1.0:
     dependencies:
       bindings: 1.2.1
-      nan: 1.8.4
+      nan: 2.23.0
     optional: true
 
   utf-8-validate@5.0.10:
