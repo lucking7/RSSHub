@@ -5,7 +5,7 @@ const rootUrl = 'https://www.cls.cn';
 const params = {
     app: 'CailianpressWeb',
     os: 'web',
-    sv: '7.7.5',
+    sv: '8.6.6',
 };
 
 const getSearchParams = (moreParams) => {

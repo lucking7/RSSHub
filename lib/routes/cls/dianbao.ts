@@ -75,7 +75,11 @@ async function handler(ctx) {
         url: apiUrl,
         searchParams: getSearchParams(params),
         headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             Referer: 'https://www.cls.cn/telegraph',
+            Accept: 'application/json, text/plain, */*',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            Origin: 'https://www.cls.cn',
         },
     });
 
