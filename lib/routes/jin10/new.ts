@@ -191,8 +191,32 @@ async function handler(ctx) {
         const typeLabel = item.type === 2 ? '深度' : '';
         const importantLabel = item.important === 1 ? '重要' : '';
 
-        // 组合标签到 category
-        const allCategories = [...channels];
+        // 从 remark 中提取有价值的标签信息
+        const remarkTags: string[] = [];
+        if (item.remark && item.remark.length > 0) {
+            for (const r of item.remark) {
+                // 提取行情数据的名称和代码
+                if (r.type === 'quotes') {
+                    if (r.title) {
+                        remarkTags.push(r.title);
+                    } // 如：现货黄金
+                    if (r.symbol) {
+                        remarkTags.push(r.symbol);
+                    } // 如：XAUUSD.GOODS
+                }
+                // 提取图表标题
+                else if (r.type === 'miniProgram' && r.title) {
+                    remarkTags.push(r.title);
+                }
+                // 提取链接标题
+                else if (r.type === 'link' && r.title) {
+                    remarkTags.push(r.title);
+                }
+            }
+        }
+
+        // 组合标签到 category（去重）
+        const allCategories = [...new Set([...channels, ...remarkTags])];
         if (typeLabel) {
             allCategories.push(typeLabel);
         }
