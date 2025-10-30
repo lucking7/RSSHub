@@ -230,18 +230,17 @@ async function handler(ctx) {
         // 构建简洁的 HTML 描述（符合 RSS2.0 标准）
         let description = '';
 
-        // 添加重要标记（使用简洁的样式）
+        // 构建标记前缀（重要、深度）
+        let prefix = '';
         if (item.important === 1) {
-            description += '<span style="color: #f5222d; font-weight: bold;">[重要]</span> ';
+            prefix += '<span style="color: #f5222d; font-weight: bold; text-decoration: underline; font-style: italic;">[重要]</span>';
         }
-
-        // 添加类型标记
         if (item.type === 2) {
-            description += '<span style="color: #1890ff; font-weight: bold;">[深度]</span> ';
+            prefix += '<span style="color: #1890ff; font-weight: bold; text-decoration: underline; font-style: italic;">[深度]</span>';
         }
 
-        // 正文内容（使用简洁的段落样式）
-        description += `<p style="margin: 0 0 10px 0; line-height: 1.6; color: #333;">${content}</p>`;
+        // 正文内容（标记和正文在同一行）
+        description += `<p style="margin: 0 0 10px 0; line-height: 1.6; color: #333;">${prefix}${content}</p>`;
 
         // 添加原文链接
         if (item.data.source_link) {
