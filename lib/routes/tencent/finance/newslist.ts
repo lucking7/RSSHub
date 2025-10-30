@@ -288,7 +288,7 @@ async function handler(ctx) {
             guid: `tencent-zxg-${newsId}`,
             pubDate,
             category: [...new Set(categories)],
-            author: '腾讯自选股',
+            author: item.source || '腾讯自选股', // 使用API返回的来源作为作者，如"财联社"、"央视新闻"等
         };
     });
 
