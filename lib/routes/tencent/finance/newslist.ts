@@ -179,10 +179,13 @@ async function handler(ctx) {
         // 构建描述（主内容区域 - 紫色边框）
         let description = `<div style="padding: 15px; background: #f8f9fa; border-left: 4px solid #667eea; border-radius: 5px; margin-bottom: 10px;">`;
         description += `<p style="margin: 0; line-height: 1.8; font-size: 15px;">`;
-        // 移除【】标题，并清理 stock:// 协议的链接，只保留文本内容
+        // 移除【】标题
         let cleanContent = content.replace(/【[^】]+】/, '').trim();
-        // 将 <a href="stock://...">文本</a> 替换为纯文本
-        cleanContent = cleanContent.replaceAll(/<a[^>]*href="stock:\/\/[^"]*"[^>]*>([^<]+)<\/a>/g, '$1');
+
+        // 清理 stock:// 协议链接，并为股票名称添加视觉标识
+        // 匹配格式: <a class="xxx" href = "stock://...">股票名</a> (注意 href 前后可能有空格)
+        cleanContent = cleanContent.replaceAll(/<a[^>]*href\s*=\s*"stock:\/\/[^"]*"[^>]*>([^<]+)<\/a>/g, '<em><strong>$1</strong></em>');
+
         description += cleanContent;
         description += `</p></div>`;
 
@@ -197,19 +200,20 @@ async function handler(ctx) {
                 const stockCode = stock.symbol || '';
                 const stockInfo = stockMap[stockCode];
 
-                if (stockInfo) {
-                    const stockData = {
-                        code: stockCode,
-                        name: stock.name || stockInfo.name,
-                        change: Number.parseFloat(stockInfo.change) || 0,
-                    };
+                // 根据市场类型判断（板块代码通常包含 cs、pt、bk 等前缀）
+                const isSector = stockCode.startsWith('cs') || stockCode.startsWith('pt') || stockCode.startsWith('bk');
 
-                    // 根据市场类型判断（板块代码通常包含 cs、pt 等前缀）
-                    if (stockCode.startsWith('cs') || stockCode.startsWith('pt')) {
-                        sectors.push(stockData);
-                    } else {
-                        individualStocks.push(stockData);
-                    }
+                const stockData = {
+                    code: stockCode,
+                    name: stock.name || (stockInfo ? stockInfo.name : ''),
+                    change: stockInfo ? Number.parseFloat(stockInfo.change) || 0 : null,
+                    hasPrice: !!stockInfo,
+                };
+
+                if (isSector) {
+                    sectors.push(stockData);
+                } else {
+                    individualStocks.push(stockData);
                 }
             }
 
@@ -217,12 +221,18 @@ async function handler(ctx) {
             const formatStockItems = (items: any[]) => {
                 let result = '';
                 for (const item of items) {
-                    const changeColor = item.change > 0 ? '#f5222d' : (item.change < 0 ? '#52c41a' : '#666');
-                    const arrow = item.change > 0 ? '↑' : (item.change < 0 ? '↓' : '-');
-                    const sign = item.change > 0 ? '+' : '';
-
                     result += `• <strong>${item.name}</strong> <span style="color: #999;">(${item.code})</span><br>`;
-                    result += `<span style="color: ${changeColor}; font-weight: bold;">${arrow} ${sign}${item.change}%</span><br>`;
+
+                    // 如果有价格信息，显示涨跌幅
+                    if (item.hasPrice && item.change !== null) {
+                        const changeColor = item.change > 0 ? '#f5222d' : (item.change < 0 ? '#52c41a' : '#666');
+                        const arrow = item.change > 0 ? '↑' : (item.change < 0 ? '↓' : '-');
+                        const sign = item.change > 0 ? '+' : '';
+                        result += `<span style="color: ${changeColor}; font-weight: bold;">${arrow} ${sign}${item.change}%</span><br>`;
+                    } else {
+                        // 没有价格信息时显示提示
+                        result += `<span style="color: #999; font-size: 0.9em;">暂无行情数据</span><br>`;
+                    }
                 }
                 return result;
             };
