@@ -128,6 +128,12 @@ async function handler(ctx) {
     }
 
     // 批量请求股票信息（使用腾讯行情接口）
+    // 优化3测试结果：
+    // ✅ 支持A股: sh600519, sz002533 等
+    // ✅ 支持港股: hk09988, hk09696 等
+    // ✅ 支持美股: usNVDA (英伟达), usBABA (阿里巴巴), usMSFT (微软) 等
+    // ✅ 支持板块: cs931071 (人工智能), pt02GN2162 (钒电池) 等部分板块
+    // ❌ 不支持: 大部分板块代码（pt、bk开头）无法获取实时行情
     const stockMap: Record<string, any> = {};
     if (allStocks.size > 0) {
         try {
@@ -221,18 +227,19 @@ async function handler(ctx) {
             const formatStockItems = (items: any[]) => {
                 let result = '';
                 for (const item of items) {
-                    result += `• <strong>${item.name}</strong> <span style="color: #999;">(${item.code})</span><br>`;
-
-                    // 如果有价格信息，显示涨跌幅
-                    if (item.hasPrice && item.change !== null) {
-                        const changeColor = item.change > 0 ? '#f5222d' : (item.change < 0 ? '#52c41a' : '#666');
-                        const arrow = item.change > 0 ? '↑' : (item.change < 0 ? '↓' : '-');
-                        const sign = item.change > 0 ? '+' : '';
-                        result += `<span style="color: ${changeColor}; font-weight: bold;">${arrow} ${sign}${item.change}%</span><br>`;
-                    } else {
-                        // 没有价格信息时显示提示
-                        result += `<span style="color: #999; font-size: 0.9em;">暂无行情数据</span><br>`;
+                    // 优化1: 只显示有行情数据的股票/板块
+                    if (!item.hasPrice || item.change === null) {
+                        continue;
                     }
+
+                    // 优化2: 股票代码统一大写显示
+                    const upperCode = item.code.toUpperCase();
+                    result += `• <strong>${item.name}</strong> <span style="color: #999;">(${upperCode})</span><br>`;
+
+                    const changeColor = item.change > 0 ? '#f5222d' : (item.change < 0 ? '#52c41a' : '#666');
+                    const arrow = item.change > 0 ? '↑' : (item.change < 0 ? '↓' : '-');
+                    const sign = item.change > 0 ? '+' : '';
+                    result += `<span style="color: ${changeColor}; font-weight: bold;">${arrow} ${sign}${item.change}%</span><br>`;
                 }
                 return result;
             };
