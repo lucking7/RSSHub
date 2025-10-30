@@ -219,11 +219,6 @@ async function handler(ctx) {
         // 正文内容（使用简洁的段落样式）
         description += `<p style="margin: 0 0 10px 0; line-height: 1.6; color: #333;">${content}</p>`;
 
-        // 添加来源信息
-        if (item.data.source) {
-            description += `<p style="margin: 0; color: #999; font-size: 0.9em;">来源：${item.data.source}</p>`;
-        }
-
         // 添加原文链接
         if (item.data.source_link) {
             description += `<p style="margin: 5px 0 0 0;"><a href="${item.data.source_link}" target="_blank" style="color: #1890ff;">查看原文</a></p>`;
