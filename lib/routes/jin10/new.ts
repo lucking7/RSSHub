@@ -208,12 +208,12 @@ async function handler(ctx) {
 
         // 添加重要标记（使用简洁的样式）
         if (item.important === 1) {
-            description += '<span style="color: #f5222d; font-weight: bold;">🔴 重要</span> ';
+            description += '<span style="color: #f5222d; font-weight: bold;">[重要]</span> ';
         }
 
         // 添加类型标记
         if (item.type === 2) {
-            description += '<span style="color: #1890ff; font-weight: bold;">📰 深度</span> ';
+            description += '<span style="color: #1890ff; font-weight: bold;">[深度]</span> ';
         }
 
         // 正文内容（使用简洁的段落样式）
@@ -221,12 +221,12 @@ async function handler(ctx) {
 
         // 添加来源信息
         if (item.data.source) {
-            description += `<p style="margin: 0; color: #999; font-size: 0.9em;">📌 来源：${item.data.source}</p>`;
+            description += `<p style="margin: 0; color: #999; font-size: 0.9em;">来源：${item.data.source}</p>`;
         }
 
         // 添加原文链接
         if (item.data.source_link) {
-            description += `<p style="margin: 5px 0 0 0;"><a href="${item.data.source_link}" target="_blank" style="color: #1890ff;">📖 查看原文</a></p>`;
+            description += `<p style="margin: 5px 0 0 0;"><a href="${item.data.source_link}" target="_blank" style="color: #1890ff;">查看原文</a></p>`;
         }
 
         // 添加图片（如果有）
@@ -238,15 +238,15 @@ async function handler(ctx) {
         const remarks = item.remark || [];
         if (remarks.length > 0) {
             description += '<div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;">';
-            description += '<div style="line-height: 1.8;"><u><b>📊 附加信息</b></u></div>';
+            description += '<div style="line-height: 1.8;"><u><b>附加信息</b></u></div>';
 
             for (const r of remarks) {
                 if (r.type === 'link' && r.data?.url) {
                     description += `<p style="margin: 5px 0;">• <a href="${r.data.url}" target="_blank">${r.data.title || '相关链接'}</a></p>`;
                 } else if (r.type === 'miniProgram' && r.data?.title) {
-                    description += `<p style="margin: 5px 0;">• 📈 ${r.data.title}</p>`;
+                    description += `<p style="margin: 5px 0;">• 图表：${r.data.title}</p>`;
                 } else if (r.type === 'quotes' && r.data?.name) {
-                    description += `<p style="margin: 5px 0;">• 💹 行情数据：${r.data.name}</p>`;
+                    description += `<p style="margin: 5px 0;">• 行情数据：${r.data.name}</p>`;
                 } else if (r.type === 'content' && (r.data?.content || r.data?.title)) {
                     description += `<p style="margin: 5px 0;">• ${r.data.content || r.data.title}</p>`;
                 }
