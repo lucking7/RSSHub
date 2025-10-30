@@ -4,21 +4,21 @@ import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
-import { art } from '@/utils/render';
-import path from 'node:path';
 import { config } from '@/config';
 
 export const route: Route = {
-    path: '/newflash/:channel?/:type?/:important?',
+    path: '/new/:channel?/:type?/:important?',
     categories: ['finance'],
     view: ViewType.Notifications,
-    example: '/jin10/newflash',
+    example: '/jin10/new',
     parameters: {
         channel: '频道分类，可选值见下表，留空则返回所有频道（支持查询参数）',
         type: '内容类型：0=快讯，2=深度文章，留空则返回所有类型（支持查询参数）',
         important: '只看重要快讯：1=只看重要，留空则返回所有（支持查询参数）',
     },
     description: `
+金十数据实时快讯 - 支持多维度分类筛选
+
 | 频道名称       | channel值 |
 |----------------|-----------|
 | 外汇/贵金属    | 1         |
@@ -27,17 +27,17 @@ export const route: Route = {
 | A股            | 4         |
 | 深度文章       | 5         |
 
-**路径参数示例：**
-- \`/jin10/newflash\` - 所有快讯
-- \`/jin10/newflash/3\` - 全球市场快讯
-- \`/jin10/newflash/4/0/1\` - A股重要快讯
-
 **查询参数示例（推荐）：**
-- \`/jin10/newflash?important=1\` - 只看重要快讯
-- \`/jin10/newflash?channel=4\` - A股快讯
-- \`/jin10/newflash?channel=4&important=1\` - A股重要快讯
-- \`/jin10/newflash?type=2\` - 所有深度文章
-- \`/jin10/newflash?channel=3&type=0&important=1\` - 全球市场重要快讯
+- \`/jin10/new?important=1\` - 只看重要快讯
+- \`/jin10/new?channel=4\` - A股快讯
+- \`/jin10/new?channel=4&important=1\` - A股重要快讯
+- \`/jin10/new?type=2\` - 所有深度文章（带图片）
+- \`/jin10/new?channel=3&type=0&important=1\` - 全球市场重要快讯
+
+**路径参数示例：**
+- \`/jin10/new\` - 所有快讯
+- \`/jin10/new/3\` - 全球市场快讯
+- \`/jin10/new/4/0/1\` - A股重要快讯
 `,
     features: {
         requireConfig: false,
@@ -50,10 +50,10 @@ export const route: Route = {
     radar: [
         {
             source: ['jin10.com/'],
-            target: '/newflash',
+            target: '/new',
         },
     ],
-    name: '新版快讯',
+    name: '实时快讯',
     maintainers: ['laampui'],
     handler,
     url: 'jin10.com/',
@@ -170,50 +170,112 @@ async function handler(ctx) {
     );
 
     const items = data.map((item) => {
+        // 提取标题 - 从【】中提取或使用内容开头
         const titleMatch = item.data.content.match(/^【(.*?)】/);
         let title;
         let content = item.data.content;
 
         if (titleMatch) {
             title = titleMatch[1];
-            content = content.replace(titleMatch[0], '');
+            content = content.replace(titleMatch[0], '').trim();
         } else {
-            title = item.data.title || item.data.content;
+            // 使用内容前50个字符作为标题
+            const plainText = (item.data.title || item.data.content || '').replaceAll(/<[^>]+>/g, '');
+            title = plainText.length > 50 ? plainText.slice(0, 50) + '...' : plainText;
         }
 
         // 获取所属频道
         const channels = (item.channel || []).map((ch: number) => channelMap[ch] || '').filter(Boolean);
 
         // 添加类型标签
-        const typeLabel = item.type === 2 ? '【深度】' : '';
-        const importantLabel = item.important === 1 ? '【重要】' : '';
+        const typeLabel = item.type === 2 ? '深度' : '';
+        const importantLabel = item.important === 1 ? '重要' : '';
+
+        // 组合标签到 category
+        const allCategories = [...channels];
+        if (typeLabel) {
+            allCategories.push(typeLabel);
+        }
+        if (importantLabel) {
+            allCategories.push(importantLabel);
+        }
 
         // 使用原文链接（如果有），否则使用金十锚点链接
         const itemLink = item.data.source_link || `https://www.jin10.com/#${item.id}`;
 
-        // 处理 remark 附加信息
-        const remarks = (item.remark || []).map((r: any) => ({
-            type: r.type,
-            data: r.data || {},
-        }));
+        // 构建简洁的 HTML 描述（符合 RSS2.0 标准）
+        let description = '';
 
-        return {
-            title: `${importantLabel}${typeLabel}${title}`,
-            description: art(path.join(__dirname, 'templates/newflash.art'), {
-                content,
-                pic: item.data.pic,
-                source_link: item.data.source_link,
-                remarks,
-            }),
+        // 添加重要标记（使用简洁的样式）
+        if (item.important === 1) {
+            description += '<span style="color: #f5222d; font-weight: bold;">🔴 重要</span> ';
+        }
+
+        // 添加类型标记
+        if (item.type === 2) {
+            description += '<span style="color: #1890ff; font-weight: bold;">📰 深度</span> ';
+        }
+
+        // 正文内容（使用简洁的段落样式）
+        description += `<p style="margin: 0 0 10px 0; line-height: 1.6; color: #333;">${content}</p>`;
+
+        // 添加来源信息
+        if (item.data.source) {
+            description += `<p style="margin: 0; color: #999; font-size: 0.9em;">📌 来源：${item.data.source}</p>`;
+        }
+
+        // 添加原文链接
+        if (item.data.source_link) {
+            description += `<p style="margin: 5px 0 0 0;"><a href="${item.data.source_link}" target="_blank" style="color: #1890ff;">📖 查看原文</a></p>`;
+        }
+
+        // 添加图片（如果有）
+        if (item.data.pic) {
+            description += `<br><img src="${item.data.pic}" alt="配图" style="max-width: 100%; border-radius: 4px; margin-top: 10px;">`;
+        }
+
+        // 处理附加信息（remark）
+        const remarks = item.remark || [];
+        if (remarks.length > 0) {
+            description += '<div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;">';
+            description += '<div style="line-height: 1.8;"><u><b>📊 附加信息</b></u></div>';
+
+            for (const r of remarks) {
+                if (r.type === 'link' && r.data?.url) {
+                    description += `<p style="margin: 5px 0;">• <a href="${r.data.url}" target="_blank">${r.data.title || '相关链接'}</a></p>`;
+                } else if (r.type === 'miniProgram' && r.data?.title) {
+                    description += `<p style="margin: 5px 0;">• 📈 ${r.data.title}</p>`;
+                } else if (r.type === 'quotes' && r.data?.name) {
+                    description += `<p style="margin: 5px 0;">• 💹 行情数据：${r.data.name}</p>`;
+                } else if (r.type === 'content' && (r.data?.content || r.data?.title)) {
+                    description += `<p style="margin: 5px 0;">• ${r.data.content || r.data.title}</p>`;
+                }
+            }
+
+            description += '</div>';
+        }
+
+        // 构建返回对象
+        const result: any = {
+            title,
+            description,
             pubDate: timezone(parseDate(item.time), 8),
             link: itemLink,
-            guid: `jin10:newflash:${item.id}`,
-            category: channels,
+            guid: `jin10:new:${item.id}`,
+            category: allCategories,
             author: item.data.source || '金十数据',
         };
+
+        // 如果有图片，添加 enclosure 字段（RSS2.0 标准）
+        if (item.data.pic) {
+            result.enclosure_url = item.data.pic;
+            result.enclosure_type = 'image/jpeg';
+        }
+
+        return result;
     });
 
-    // 构建标题
+    // 构建 RSS 频道标题
     const titleParts = ['金十数据'];
     if (channelFilter && channelMap[channelFilter]) {
         titleParts.push(channelMap[channelFilter]);
@@ -227,10 +289,17 @@ async function handler(ctx) {
         titleParts.push('重要');
     }
 
+    const channelTitle = titleParts.join(' - ');
+    const channelDescription = titleParts.slice(1).join(' ') || '实时财经快讯';
+
+    // 返回符合 RSS2.0 标准的数据
     return {
-        title: titleParts.join(' - '),
+        title: channelTitle,
         link: 'https://www.jin10.com/',
+        description: `金十数据 - ${channelDescription}`,
         item: items,
-        description: titleParts.slice(1).join(' ') || '实时快讯',
+        language: 'zh-CN',
+        image: 'https://www.jin10.com/favicon.ico',
+        author: '金十数据',
     };
 }
