@@ -229,27 +229,6 @@ async function handler(ctx) {
             description += `<br><img src="${item.data.pic}" alt="配图" style="max-width: 100%; border-radius: 4px; margin-top: 10px;">`;
         }
 
-        // 处理附加信息（remark）
-        const remarks = item.remark || [];
-        if (remarks.length > 0) {
-            description += '<div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;">';
-            description += '<div style="line-height: 1.8;"><u><b>附加信息</b></u></div>';
-
-            for (const r of remarks) {
-                if (r.type === 'link' && r.data?.url) {
-                    description += `<p style="margin: 5px 0;">• <a href="${r.data.url}" target="_blank">${r.data.title || '相关链接'}</a></p>`;
-                } else if (r.type === 'miniProgram' && r.data?.title) {
-                    description += `<p style="margin: 5px 0;">• 图表：${r.data.title}</p>`;
-                } else if (r.type === 'quotes' && r.data?.name) {
-                    description += `<p style="margin: 5px 0;">• 行情数据：${r.data.name}</p>`;
-                } else if (r.type === 'content' && (r.data?.content || r.data?.title)) {
-                    description += `<p style="margin: 5px 0;">• ${r.data.content || r.data.title}</p>`;
-                }
-            }
-
-            description += '</div>';
-        }
-
         // 构建返回对象
         const result: any = {
             title,
