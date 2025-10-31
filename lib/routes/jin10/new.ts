@@ -262,7 +262,7 @@ async function handler(ctx) {
         }
 
         // 构建返回对象
-        const result: any = {
+        return {
             title,
             description,
             pubDate: timezone(parseDate(item.time), 8),
@@ -271,14 +271,6 @@ async function handler(ctx) {
             category: allCategories,
             author: item.data.source || '金十数据',
         };
-
-        // 如果有图片，添加 enclosure 字段（RSS2.0 标准）
-        if (item.data.pic) {
-            result.enclosure_url = item.data.pic;
-            result.enclosure_type = 'image/jpeg';
-        }
-
-        return result;
     });
 
     // 构建 RSS 频道标题
