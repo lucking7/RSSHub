@@ -174,14 +174,17 @@ async function handler(ctx) {
         const titleMatch = item.data.content.match(/^【(.*?)】/);
         let title;
         let content = item.data.content;
+        let hasExplicitTitle = false; // 标记是否有明确标题
 
         if (titleMatch) {
             title = titleMatch[1];
             content = content.replace(titleMatch[0], '').trim();
+            hasExplicitTitle = true; // 有明确标题
         } else {
             // 使用内容前50个字符作为标题
             const plainText = (item.data.title || item.data.content || '').replaceAll(/<[^>]+>/g, '');
             title = plainText.length > 50 ? plainText.slice(0, 50) + '...' : plainText;
+            hasExplicitTitle = false; // 无明确标题
         }
 
         // 获取所属频道
@@ -227,20 +230,26 @@ async function handler(ctx) {
         // 使用原文链接（如果有），否则使用金十锚点链接
         const itemLink = item.data.source_link || `https://www.jin10.com/#${item.id}`;
 
+        // 构建标记前缀（简化样式：只保留颜色+加粗）
+        let markPrefix = '';
+        if (item.important === 1) {
+            markPrefix += '<span style="color: #f5222d; font-weight: bold;">[重要]</span>';
+        }
+        if (item.type === 2) {
+            markPrefix += '<span style="color: #1890ff; font-weight: bold;">[深度]</span>';
+        }
+
         // 构建简洁的 HTML 描述（符合 RSS2.0 标准）
         let description = '';
 
-        // 构建标记前缀（重要、深度）
-        let prefix = '';
-        if (item.important === 1) {
-            prefix += '<span style="color: #f5222d; font-weight: bold; text-decoration: underline; font-style: italic;">[重要]</span>';
+        if (hasExplicitTitle) {
+            // 情况1：有明确标题 - 标记加在标题上，标题和内容分开显示
+            description += `<p style="margin: 0 0 10px 0; line-height: 1.6;">${markPrefix}<strong>${title}</strong></p>`;
+            description += `<p style="margin: 0 0 10px 0; line-height: 1.6; color: #333;">${content}</p>`;
+        } else {
+            // 情况2：无明确标题 - 标记加在内容开头
+            description += `<p style="margin: 0 0 10px 0; line-height: 1.6; color: #333;">${markPrefix}${content}</p>`;
         }
-        if (item.type === 2) {
-            prefix += '<span style="color: #1890ff; font-weight: bold; text-decoration: underline; font-style: italic;">[深度]</span>';
-        }
-
-        // 正文内容（标记和正文在同一行）
-        description += `<p style="margin: 0 0 10px 0; line-height: 1.6; color: #333;">${prefix}${content}</p>`;
 
         // 添加原文链接
         if (item.data.source_link) {
