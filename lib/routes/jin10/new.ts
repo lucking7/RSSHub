@@ -258,7 +258,7 @@ async function handler(ctx) {
 
         // 添加图片（如果有）
         if (item.data.pic) {
-            description += `<br><img src="${item.data.pic}" alt="配图" style="max-width: 100%; border-radius: 4px; margin-top: 10px;">`;
+            description += `<br><img src="${item.data.pic}" alt="配图" referrerpolicy="no-referrer" style="max-width: 100%; border-radius: 4px; margin-top: 10px;">`;
         }
 
         // 构建返回对象
