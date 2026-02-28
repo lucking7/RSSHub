@@ -2,12 +2,14 @@ import type { Route } from '@/types';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
+import { renderDescription } from './templates/description';
+
 export const route: Route = {
     path: '/live/:lang?',
     categories: ['finance'],
     example: '/futunn/live',
     parameters: {
-        category: {
+        lang: {
             description: '通知语言',
             default: 'Mandarin',
             options: [
@@ -48,51 +50,54 @@ export const route: Route = {
     handler,
 };
 
+const langConfig = {
+    Mandarin:  { header: 0, path: '',    locale: 'zh-CN', title: '富途牛牛 - 快讯',   author: '富途牛牛' },
+    Cantonese: { header: 1, path: '/hk', locale: 'zh-HK', title: '富途牛牛 - 快訊',   author: '富途牛牛' },
+    English:   { header: 2, path: '/en', locale: 'en',    title: 'Futubull - Latest', author: 'Futubull' },
+};
+
 async function handler(ctx) {
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 30;
     const lang = ctx.req.param('lang') ?? 'Mandarin';
+    const cfg = langConfig[lang] ?? langConfig.Mandarin;
 
     const rootUrl = 'https://news.futunn.com';
-    const link = `${rootUrl}/main${lang === 'Mandarin' ? '' : lang === 'Cantonese' ? '/hk' : '/en'}/live`;
+    const link = `${rootUrl}${cfg.path}/main/live`;
     const apiUrl = `${rootUrl}/news-site-api/main/get-flash-list?pageSize=${limit}`;
 
     const response = await got({
         method: 'get',
         url: apiUrl,
         headers: {
-            'x-news-site-lang': lang === 'Mandarin' ? 0 : lang === 'Cantonese' ? 1 : 2,
+            'x-news-site-lang': cfg.header,
         },
     });
 
     const items = response.data.data.data.news.map((item) => {
-        const audio = item.audioInfos.find((audio) => audio.language === lang);
+        const audio = item.audioInfos?.find((a) => a.language === lang);
 
         const isImportant = item.level === 1;
         const title = (isImportant ? '【重要】' : '') + (item.title || item.content);
 
-        const quoteNames = item.quote.map((q) => q.name);
+        const stocks = (item.quote || [])
+            .filter((q) => q.name)
+            .map((q) => ({
+                name: q.name,
+                code: q.code,
+                href: q.quoteUrl ? `https://${q.quoteUrl}` : undefined,
+                ratio: q.changeRatio,
+                price: q.price,
+                up: q.changeRatio?.startsWith('+'),
+                down: q.changeRatio?.startsWith('-'),
+            }));
+
+        const quoteNames = stocks.map((s) => s.name);
         const relatedNames = (item.relatedStocks || []).map((s) => s.name).filter(Boolean);
         const category = [...new Set([...quoteNames, ...relatedNames])];
 
-        let description = item.content;
-        const relatedStocks = item.relatedStocks || [];
-        if (relatedStocks.length > 0) {
-            const stockItems = relatedStocks.filter((s) => s.name);
-            if (stockItems.length > 0) {
-                description += '<br><div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
-                description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关股票</h3>';
-                for (const s of stockItems) {
-                    description += `• <strong>${s.name}</strong>`;
-                    if (s.code) {
-                        description += ` <span style="color: #999;">(${s.code})</span>`;
-                    }
-                    description += '<br>';
-                }
-                description += '</div>';
-            }
-        }
+        const description = renderDescription({ abs: item.content, stocks });
 
-        return {
+        const result: Record<string, unknown> = {
             guid: `futunn:flash:${item.id}`,
             title,
             description,
@@ -100,29 +105,32 @@ async function handler(ctx) {
             pubDate: parseDate(item.time * 1000),
             category,
             itunes_item_image: item.pic,
-            itunes_duration: audio.duration,
-            enclosure_url: audio.audioUrl,
-            enclosure_type: 'audio/mpeg',
-            media: {
+        };
+
+        if (audio) {
+            result.itunes_duration = audio.duration;
+            result.enclosure_url = audio.audioUrl;
+            result.enclosure_type = 'audio/mpeg';
+            result.media = {
                 content: {
                     url: audio.audioUrl,
                     type: 'audio/mpeg',
                     duration: audio.duration,
-                    language: lang === 'Mandarin' ? 'zh-CN' : lang === 'Cantonese' ? 'zh-HK' : 'en',
+                    language: cfg.locale,
                 },
-                thumbnail: {
-                    url: item.pic,
-                },
-            },
-        };
+                thumbnail: { url: item.pic },
+            };
+        }
+
+        return result;
     });
 
     return {
-        title: lang === 'Mandarin' ? '富途牛牛 - 快讯' : lang === 'Cantonese' ? '富途牛牛 - 快訊' : 'Futubull - Latest',
+        title: cfg.title,
         link,
         item: items,
-        language: lang === 'Mandarin' ? 'zh-CN' : lang === 'Cantonese' ? 'zh-HK' : 'en',
-        itunes_author: lang === 'Mandarin' || lang === 'Cantonese' ? '富途牛牛' : 'Futubull',
+        language: cfg.locale,
+        itunes_author: cfg.author,
         itunes_category: 'News',
     };
 }
