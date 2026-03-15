@@ -1,18 +1,16 @@
 {
     "$schema": "https://openapi.vercel.sh/vercel.json",
-    "buildCommand": "pnpm build:vercel",
-    "installCommand": "pnpm install",
-    "outputDirectory": "assets",
-    "framework": null,
+    "framework": "hono",
+    "outputDirectory": "src",
+    "functions": {
+        "src/server.mjs": {
+            "includeFiles": "./src/templates/**/*.art"
+        }
+    },
     "rewrites": [
         {
-            "source": "/(.*)",
-            "destination": "/api/vercel.js"
+            "source": "/favicon.ico",
+            "destination": "/favicon.png"
         }
-    ],
-    "functions": {
-        "api/vercel.js": {
-            "includeFiles": "dist/**/*"
-        }
-    }
+    ]
 }

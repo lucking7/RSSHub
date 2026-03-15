@@ -66,24 +66,11 @@ async function handler(ctx) {
     let items = response.data.data.data.map((item) => ({
         title: item.title,
         link: item.url,
-        guid: `futunn:topic:${item.idx}`,
         author: item.source,
         pubDate: parseDate(item.time * 1000),
-        category: (item.quote || []).map((q) => q.name).filter(Boolean),
         description: renderDescription({
             abs: item.abstract,
             pic: item.pic,
-            stocks: (item.quote || [])
-                .filter((q) => q.name)
-                .map((q) => ({
-                    name: q.name,
-                    code: q.code,
-                    href: q.quoteUrl ? `https://${q.quoteUrl}` : undefined,
-                    ratio: q.changeRatio,
-                    price: q.price,
-                    up: q.changeRatio?.startsWith('+'),
-                    down: q.changeRatio?.startsWith('-'),
-                })),
         }),
     }));
 
@@ -103,28 +90,14 @@ async function handler(ctx) {
                         content(this).replaceWith(`<a href="${content(this).attr('href')}">${content(this).text().replaceAll('$', '')}</a>`);
                     });
 
-                    const stocks = content('#relatedStockWeb a.stock')
-                        .toArray()
-                        .map((el) => ({
-                            name: content(el).find('.stock-name').text().trim(),
-                            ratio: content(el).find('.stock-ratio').text().trim(),
-                            href: content(el).attr('href') ?? '',
-                            up: content(el).hasClass('up'),
-                            down: content(el).hasClass('down'),
-                        }))
-                        .filter((s) => s.name);
-
-                    item.description = renderDescription({
-                        content: content('.origin_content').html() ?? '',
-                        stocks,
-                    });
-
+                    item.description = content('.origin_content').html();
                     item.category = [
-                        ...(item.category || []),
                         ...content('.news__from-topic__title')
                             .toArray()
                             .map((a) => content(a).text().trim()),
-                        ...stocks.map((s) => s.name),
+                        ...content('#relatedStockWeb .stock-name')
+                            .toArray()
+                            .map((s) => content(s).text().trim()),
                     ];
                 }
 

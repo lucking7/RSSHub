@@ -16,11 +16,6 @@ export const route: Route = {
     example: '/sina/zhibo',
     parameters: {
         zhibo_id: '直播频道 id，默认为 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业。特殊值：focus（仅显示焦点新闻🔥）',
-        limit: '返回条数，默认 20；接口单页最多 10 条，超过将自动分页抓取',
-        pagesize: '单页条数（1-10），默认 10；超过仍按 10 处理',
-        tag: '标签过滤，支持标签名或ID。如：市场、公司、A股、美股等，留空表示不过滤',
-        dire: "方向，'f'（默认）或 'b'",
-        dpc: '客户端标记，默认 1（与官网一致）',
     },
     features: {
         requireConfig: false,
@@ -506,7 +501,7 @@ async function handler(ctx) {
 
             // 添加图片
             if (images.length > 0) {
-                mediaHtml.push(...images.map((img) => `<img src="${img}" referrerpolicy="no-referrer" />`));
+                mediaHtml.push(...images.map((img) => `<img src="${img}" />`));
             }
 
             // 添加视频

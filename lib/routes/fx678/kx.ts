@@ -1,13 +1,15 @@
-import { Route, ViewType } from '@/types';
-import cache from '@/utils/cache';
 import { load } from 'cheerio';
+
+import type { Route } from '@/types';
+import { ViewType } from '@/types';
+import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
 export const route: Route = {
     path: '/kx',
-    categories: ['finance', 'popular'],
+    categories: ['finance'],
     view: ViewType.Notifications,
     example: '/fx678/kx',
     parameters: {},
@@ -24,7 +26,7 @@ export const route: Route = {
             source: ['fx678.com/kx'],
         },
     ],
-    name: '汇通网 7x24 小时快讯',
+    name: '7x24 小时快讯',
     maintainers: ['occupy5', 'dousha'],
     handler,
     url: 'fx678.com/kx',
@@ -37,12 +39,9 @@ async function handler() {
     // 页面新闻消息列表
     const list = $('.body_zb ul .body_zb_li .zb_word')
         .find('.list_font_pic > a:first-child')
-        .map((i, e) => $(e).attr('href'))
+        .toArray()
         .slice(0, 30)
-        .get();
-
-    const STRIP_TEXT_PREFIX = /^(?:\s*|\uFEFF)*汇通财经APP讯[—–-]+\s*/i;
-    const STRIP_HTML_PREFIX = /^(?:\s*<b>\s*)?汇通财经APP讯[—–-]+(?:\s*<\/b>)?\s*/i;
+        .map((e) => $(e).attr('href'));
 
     const out = await Promise.all(
         list.map((itemUrl) =>
@@ -55,16 +54,10 @@ async function handler() {
                 const datetimeString = $('.article-cont .details i').text().trim();
                 const articlePubDate = timezone(parseDate(datetimeString, 'YYYY-MM-DD HH:mm:ss'), +8);
 
-                const titleRaw = $('.article-main .foreword').text().trim();
-                const titleCleaned = titleRaw.replace(STRIP_TEXT_PREFIX, '').split('——').pop().trim();
-
-                const descRawHtml = (contentPart.length > 1 ? contentPart : forewordPart) || '';
-                const descCleanedHtml = descRawHtml.replace(STRIP_HTML_PREFIX, '');
-
                 const item = {
-                    title: titleCleaned,
+                    title: $('.article-main .foreword').text().trim().split('——').pop(),
                     link: itemUrl,
-                    description: descCleanedHtml,
+                    description: contentPart.length > 1 ? contentPart : forewordPart,
                     pubDate: articlePubDate,
                 };
 
@@ -73,7 +66,7 @@ async function handler() {
         )
     );
     return {
-        title: '汇通网 - 7x24 小时快讯',
+        title: '7x24小时快讯',
         link,
         item: out,
     };

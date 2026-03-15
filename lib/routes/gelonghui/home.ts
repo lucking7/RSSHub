@@ -1,12 +1,14 @@
-import { Route, ViewType } from '@/types';
+import type { Route } from '@/types';
+import { ViewType } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
+
 import { parseItem } from './utils';
 
 export const route: Route = {
     path: '/home/:tag?',
-    categories: ['finance', 'popular'],
+    categories: ['finance'],
     view: ViewType.Articles,
     example: '/gelonghui/home',
     parameters: {
@@ -34,7 +36,7 @@ export const route: Route = {
     handler,
     description: `| 推荐            | 股票  | 基金 | 新股       | 研报     |
 | --------------- | ----- | ---- | ---------- | -------- |
-| web\_home\_page | stock | fund | new\_stock | research |`,
+| web_home_page | stock | fund | new_stock | research |`,
 };
 
 async function handler(ctx) {
@@ -56,18 +58,8 @@ async function handler(ctx) {
 
     const items = await Promise.all(list.map((item) => parseItem(item, cache.tryGet)));
 
-    const tagLabelMap: Record<string, string> = {
-        web_home_page: '推荐',
-        stock: '股票',
-        fund: '基金',
-        new_stock: '新股',
-        research: '研报',
-    };
-
-    const titleSuffix = tagLabelMap[tag] ?? tag;
-
     return {
-        title: `格隆汇 - ${titleSuffix}`,
+        title: '格隆汇-财经资讯动态-股市行情',
         description: '格隆汇为中国投资者出海投资及中国公司出海融资,提供海外投资,港股开户行情,科创板股票发行数据、资讯、研究、交易等一站式服务,目前业务范围主要涉及港股与美股两大市场,未来将陆续开通台湾、日本、印度、欧洲等市场.',
         image: 'https://cdn.gelonghui.com/static/web/www.ico.la.ico',
         link: 'https://www.gelonghui.com',

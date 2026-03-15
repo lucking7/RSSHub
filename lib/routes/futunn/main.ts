@@ -38,12 +38,10 @@ async function handler(ctx) {
     });
 
     let items = response.data.data.list.map((item) => ({
-        guid: `futunn:main:${item.newsId}`,
-        title: (item.isTop ? '[置顶] ' : '') + item.title,
+        title: item.title,
         link: item.url.split('?')[0],
         author: item.source,
         pubDate: parseDate(item.timestamp * 1000),
-        category: item.imptTag ? [item.imptTag] : [],
         description: renderDescription({
             abs: item.abstract,
             pic: item.pic,
@@ -68,7 +66,6 @@ async function handler(ctx) {
 
                     item.description = content('.origin_content').html();
                     item.category = [
-                        ...(item.category || []),
                         ...content('.news__from-topic__title')
                             .toArray()
                             .map((a) => content(a).text().trim()),

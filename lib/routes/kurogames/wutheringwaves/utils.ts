@@ -1,6 +1,8 @@
+import type { Data } from '@/types';
 import ofetch from '@/utils/ofetch';
-import { Data } from '@/types';
-import { Article, Language, SUPPORTED_LANGUAGES } from './constants';
+
+import type { Article } from './constants';
+import { Language, SUPPORTED_LANGUAGES } from './constants';
 
 /**
  * Parse a number or a number as string.\
@@ -12,7 +14,7 @@ export const parseInteger = (value?: string | number, fallback?: number): number
     }
 
     if (value === undefined) {
-        return fallback === undefined ? Number.NaN : fallback;
+        return fallback === undefined ? NaN : fallback;
     }
 
     const parsed = Number.parseInt(value, 10);

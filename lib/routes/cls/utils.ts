@@ -3,9 +3,9 @@ import CryptoJS from 'crypto-js';
 const rootUrl = 'https://www.cls.cn';
 
 const params = {
-    app: 'CailianpressWeb',
+    appName: 'CailianpressWeb',
     os: 'web',
-    sv: '8.6.6',
+    sv: '7.7.5',
 };
 
 const getSearchParams = (moreParams) => {
@@ -15,4 +15,4 @@ const getSearchParams = (moreParams) => {
     return searchParams;
 };
 
-export { rootUrl, getSearchParams };
+export { getSearchParams, rootUrl };
