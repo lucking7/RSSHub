@@ -27,13 +27,15 @@ Investigation intent — 检查 futunn 路由设计是否符合 RSSHub 规范。
 **Tool: glob**
 
 **Input:**
+
 ```json
 {
-  "pattern": "lib/routes/futunn/**/*"
+    "pattern": "lib/routes/futunn/**/*"
 }
 ```
 
 **Output:**
+
 ```
 /Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/topic.ts
 /Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/main.ts
@@ -59,11 +61,13 @@ Available subagents:
   - multimodal: Analyze media files (PDFs, images, diagrams) that require interpretation beyond raw text. Extracts specific information, describes visual content. Saves context tokens by processing files the main agent can't.
 
 ```
+
 // Parallel exploration - fire multiple agents simultaneously
 task(subagent_type="explore", prompt="Find all files matching pattern X")
 task(subagent_type="librarian", prompt="Lookup documentation for Z")
 
 // Then continue your work while they run in background
+
 ```
 
 WHY:
@@ -79,15 +83,17 @@ ALWAYS prefer: Multiple parallel task calls > Direct tool calls
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "pattern": "futunn",
-  "include": "*.ts",
-  "path": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes"
+    "pattern": "futunn",
+    "include": "*.ts",
+    "path": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes"
 }
 ```
 
 **Output:**
+
 ```
 Found 20 matches
 /Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/topic.ts:
@@ -137,11 +143,13 @@ Available subagents:
   - multimodal: Analyze media files (PDFs, images, diagrams) that require interpretation beyond raw text. Extracts specific information, describes visual content. Saves context tokens by processing files the main agent can't.
 
 ```
+
 // Parallel exploration - fire multiple agents simultaneously
 task(subagent_type="explore", prompt="Find all files matching pattern X")
 task(subagent_type="librarian", prompt="Lookup documentation for Z")
 
 // Then continue your work while they run in background
+
 ```
 
 WHY:
@@ -167,18 +175,20 @@ Found 6 files. Let me read them all in parallel to review the route design.
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/namespace.ts"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/namespace.ts"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/namespace.ts</path>
 <type>file</type>
 <content>1: import type { Namespace } from '@/types';
-2: 
+2:
 3: export const namespace: Namespace = {
 4:     name: 'Futubull 富途牛牛',
 5:     url: 'news.futunn.com',
@@ -263,25 +273,27 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/main.ts"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/main.ts"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/main.ts</path>
 <type>file</type>
 <content>1: import { load } from 'cheerio';
-2: 
+2:
 3: import type { Route } from '@/types';
 4: import cache from '@/utils/cache';
 5: import got from '@/utils/got';
 6: import { parseDate } from '@/utils/parse-date';
-7: 
+7:
 8: import { renderDescription } from './templates/description';
-9: 
+9:
 10: export const route: Route = {
 11:     path: ['/main', '/'],
 12:     categories: ['finance'],
@@ -299,19 +311,19 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 24:     maintainers: ['Wsine', 'nczitzk', 'kennyfong19931'],
 25:     handler,
 26: };
-27: 
+27:
 28: async function handler(ctx) {
 29:     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 48;
-30: 
+30:
 31:     const rootUrl = 'https://news.futunn.com';
 32:     const currentUrl = `${rootUrl}/main`;
 33:     const apiUrl = `${rootUrl}/news-site-api/main/get-market-list?size=${limit}`;
-34: 
+34:
 35:     const response = await got({
 36:         method: 'get',
 37:         url: apiUrl,
 38:     });
-39: 
+39:
 40:     let items = response.data.data.list.map((item) => ({
 41:         guid: `futunn:main:${item.newsId}`,
 42:         title: (item.isTop ? '[置顶] ' : '') + item.title,
@@ -324,7 +336,7 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 49:             pic: item.pic,
 50:         }),
 51:     }));
-52: 
+52:
 53:     items = await Promise.all(
 54:         items.map((item) =>
 55:             cache.tryGet(item.link, async () => {
@@ -333,14 +345,14 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 58:                         method: 'get',
 59:                         url: item.link,
 60:                     });
-61: 
+61:
 62:                     const content = load(detailResponse.data);
-63: 
+63:
 64:                     content('.futu-news-time-stamp').remove();
 65:                     content('.nnstock').each(function () {
 66:                         content(this).replaceWith(`<a href="${content(this).attr('href')}">${content(this).text().replaceAll('$', '')}</a>`);
 67:                     });
-68: 
+68:
 69:                     const stocks = content('#relatedStockWeb a.stock')
 70:                         .toArray()
 71:                         .map((el) => ({
@@ -351,12 +363,12 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 76:                             down: content(el).hasClass('down'),
 77:                         }))
 78:                         .filter((s) => s.name);
-79: 
+79:
 80:                     item.description = renderDescription({
 81:                         content: content('.origin_content').html() ?? '',
 82:                         stocks,
 83:                     });
-84: 
+84:
 85:                     item.category = [
 86:                         ...(item.category || []),
 87:                         ...content('.news__from-topic__title')
@@ -365,12 +377,12 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 90:                         ...stocks.map((s) => s.name),
 91:                     ];
 92:                 }
-93: 
+93:
 94:                 return item;
 95:             })
 96:         )
 97:     );
-98: 
+98:
 99:     return {
 100:         title: '富途牛牛 - 要闻',
 101:         link: currentUrl,
@@ -385,25 +397,27 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/topic.ts"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/topic.ts"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/topic.ts</path>
 <type>file</type>
 <content>1: import { load } from 'cheerio';
-2: 
+2:
 3: import type { Route } from '@/types';
 4: import cache from '@/utils/cache';
 5: import got from '@/utils/got';
 6: import { parseDate } from '@/utils/parse-date';
-7: 
+7:
 8: import { renderDescription } from './templates/description';
-9: 
+9:
 10: export const route: Route = {
 11:     path: '/topic/:id',
 12:     categories: ['finance'],
@@ -422,7 +436,7 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 25:     maintainers: ['kennyfong19931'],
 26:     handler,
 27: };
-28: 
+28:
 29: async function getTopic(rootUrl, id, seqMarkInput = '') {
 30:     const topicListResponse = await got({
 31:         method: 'get',
@@ -444,22 +458,22 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 47:         };
 48:     }
 49: }
-50: 
+50:
 51: async function handler(ctx) {
 52:     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 48;
 53:     const id = ctx.req.param('id');
-54: 
+54:
 55:     const rootUrl = 'https://news.futunn.com';
 56:     const link = `${rootUrl}/news-topics/${id}/`;
 57:     const apiUrl = `${rootUrl}/news-site-api/topic/get-topics-news-list?topicsId=${id}&pageSize=${limit}`;
-58: 
+58:
 59:     const { topicTitle, topicDescription } = await cache.tryGet(link, async () => await getTopic(rootUrl, id));
-60: 
+60:
 61:     const response = await got({
 62:         method: 'get',
 63:         url: apiUrl,
 64:     });
-65: 
+65:
 66:     let items = response.data.data.data.map((item) => ({
 67:         title: item.title,
 68:         link: item.url,
@@ -483,7 +497,7 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 86:                 })),
 87:         }),
 88:     }));
-89: 
+89:
 90:     items = await Promise.all(
 91:         items.map((item) =>
 92:             cache.tryGet(item.link, async () => {
@@ -492,14 +506,14 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 95:                         method: 'get',
 96:                         url: item.link,
 97:                     });
-98: 
+98:
 99:                     const content = load(detailResponse.data);
-100: 
+100:
 101:                     content('.futu-news-time-stamp').remove();
 102:                     content('.nnstock').each(function () {
 103:                         content(this).replaceWith(`<a href="${content(this).attr('href')}">${content(this).text().replaceAll('$', '')}</a>`);
 104:                     });
-105: 
+105:
 106:                     const stocks = content('#relatedStockWeb a.stock')
 107:                         .toArray()
 108:                         .map((el) => ({
@@ -510,12 +524,12 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 113:                             down: content(el).hasClass('down'),
 114:                         }))
 115:                         .filter((s) => s.name);
-116: 
+116:
 117:                     item.description = renderDescription({
 118:                         content: content('.origin_content').html() ?? '',
 119:                         stocks,
 120:                     });
-121: 
+121:
 122:                     item.category = [
 123:                         ...(item.category || []),
 124:                         ...content('.news__from-topic__title')
@@ -524,12 +538,12 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 127:                         ...stocks.map((s) => s.name),
 128:                     ];
 129:                 }
-130: 
+130:
 131:                 return item;
 132:             })
 133:         )
 134:     );
-135: 
+135:
 136:     return {
 137:         title: `富途牛牛 - 专题 - ${topicTitle}`,
 138:         link,
@@ -545,20 +559,22 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/live.ts"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/live.ts"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/live.ts</path>
 <type>file</type>
 <content>1: import type { Route } from '@/types';
 2: import got from '@/utils/got';
 3: import { parseDate } from '@/utils/parse-date';
-4: 
+4:
 5: export const route: Route = {
 6:     path: '/live/:lang?',
 7:     categories: ['finance'],
@@ -604,15 +620,15 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 47:     maintainers: ['kennyfong19931'],
 48:     handler,
 49: };
-50: 
+50:
 51: async function handler(ctx) {
 52:     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 30;
 53:     const lang = ctx.req.param('lang') ?? 'Mandarin';
-54: 
+54:
 55:     const rootUrl = 'https://news.futunn.com';
 56:     const link = `${rootUrl}/main${lang === 'Mandarin' ? '' : lang === 'Cantonese' ? '/hk' : '/en'}/live`;
 57:     const apiUrl = `${rootUrl}/news-site-api/main/get-flash-list?pageSize=${limit}`;
-58: 
+58:
 59:     const response = await got({
 60:         method: 'get',
 61:         url: apiUrl,
@@ -620,17 +636,17 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 63:             'x-news-site-lang': lang === 'Mandarin' ? 0 : lang === 'Cantonese' ? 1 : 2,
 64:         },
 65:     });
-66: 
+66:
 67:     const items = response.data.data.data.news.map((item) => {
 68:         const audio = item.audioInfos.find((audio) => audio.language === lang);
-69: 
+69:
 70:         const isImportant = item.level === 1;
 71:         const title = (isImportant ? '【重要】' : '') + (item.title || item.content);
-72: 
+72:
 73:         const quoteNames = item.quote.map((q) => q.name);
 74:         const relatedNames = (item.relatedStocks || []).map((s) => s.name).filter(Boolean);
 75:         const category = [...new Set([...quoteNames, ...relatedNames])];
-76: 
+76:
 77:         let description = item.content;
 78:         const relatedStocks = item.relatedStocks || [];
 79:         if (relatedStocks.length > 0) {
@@ -648,7 +664,7 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 91:                 description += '</div>';
 92:             }
 93:         }
-94: 
+94:
 95:         return {
 96:             guid: `futunn:flash:${item.id}`,
 97:             title,
@@ -673,7 +689,7 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 116:             },
 117:         };
 118:     });
-119: 
+119:
 120:     return {
 121:         title: lang === 'Mandarin' ? '富途牛牛 - 快讯' : lang === 'Cantonese' ? '富途牛牛 - 快訊' : 'Futubull - Latest',
 122:         link,
@@ -691,22 +707,24 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/video.ts"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/video.ts"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/video.ts</path>
 <type>file</type>
 <content>1: import type { Route } from '@/types';
 2: import got from '@/utils/got';
 3: import { parseDate } from '@/utils/parse-date';
-4: 
+4:
 5: import { renderDescription } from './templates/description';
-6: 
+6:
 7: export const route: Route = {
 8:     path: '/video',
 9:     categories: ['finance'],
@@ -724,19 +742,19 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 21:     maintainers: ['kennyfong19931'],
 22:     handler,
 23: };
-24: 
+24:
 25: async function handler(ctx) {
 26:     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 50;
-27: 
+27:
 28:     const rootUrl = 'https://news.futunn.com';
 29:     const link = `${rootUrl}/main/video-list`;
 30:     const apiUrl = `${rootUrl}/news-site-api/main/get-video-list?size=${limit}`;
-31: 
+31:
 32:     const response = await got({
 33:         method: 'get',
 34:         url: apiUrl,
 35:     });
-36: 
+36:
 37:     const items = response.data.data.videoList.list.map((item) => ({
 38:         title: item.title,
 39:         description: renderDescription({
@@ -746,7 +764,7 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 43:         link: item.targetUrl,
 44:         pubDate: parseDate(item.timestamp * 1000),
 45:     }));
-46: 
+46:
 47:     return {
 48:         title: '富途牛牛 - 视频',
 49:         link,
@@ -761,19 +779,21 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/templates/description.tsx"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/templates/description.tsx"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/templates/description.tsx</path>
 <type>file</type>
 <content>1: import { raw } from 'hono/html';
 2: import { renderToString } from 'hono/jsx/dom/server';
-3: 
+3:
 4: type StockItem = {
 5:     name: string;
 6:     code?: string;
@@ -783,14 +803,14 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 10:     up?: boolean;
 11:     down?: boolean;
 12: };
-13: 
+13:
 14: type DescriptionData = {
 15:     pic?: string;
 16:     abs?: string;
 17:     content?: string; // raw HTML body from detail page
 18:     stocks?: StockItem[];
 19: };
-20: 
+20:
 21: const StockTable = ({ stocks }: { stocks: StockItem[] }) => (
 22:     <table style="border-collapse:collapse;margin-top:12px;width:100%;font-size:14px;">
 23:         <thead>
@@ -827,7 +847,7 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 54:         </tbody>
 55:     </table>
 56: );
-57: 
+57:
 58: const FutunnDescription = ({ pic, abs, content, stocks }: DescriptionData) => (
 59:     <>
 60:         {content ? <>{raw(content)}</> : pic || abs ? (
@@ -839,7 +859,7 @@ RECOMMENDED: Use task to assign work to the appropriate subagent.
 66:         {stocks && stocks.length > 0 ? <StockTable stocks={stocks} /> : null}
 67:     </>
 68: );
-69: 
+69:
 70: export const renderDescription = (data: DescriptionData) => renderToString(<FutunnDescription {...data} />);
 
 (End of file - total 70 lines)
@@ -855,11 +875,11 @@ _Thinking:_
 Now let me analyze the futunn route design against the AGENTS.md review guidelines. Let me go through each relevant guideline:
 
 ### Route Configuration
+
 1. **Example Format** ✅ - All examples start with `/` (e.g., `/futunn/main`, `/futunn/topic/1267`)
 2. **Route Name** ✅ - Route names are '要闻', '专题', '快讯', '视频' — don't repeat namespace name
 3. **Radar Source Format** ✅ - Sources don't have `https://` prefix
 4. **Radar Target** ✅ - Targets match route paths
-
 
 5. **Namespace URL** ✅ - `news.futunn.com` without protocol
 6. **Single Category** ✅ - All routes have single `'finance'` category
@@ -868,6 +888,7 @@ Now let me analyze the futunn route design against the AGENTS.md review guidelin
 9. **Features Accuracy** ✅ - No puppeteer claimed
 
 ### Code Style
+
 11. **Naming Convention** ✅ - Uses camelCase
 12. **Type Imports** ✅ - Uses `import type { Route }` and `import type { Namespace }`
 13. **Import Organization** ✅ - Proper import structure
@@ -980,6 +1001,7 @@ async function getTopic(rootUrl, id, seqMarkInput = '') {
 ### 5. `main.ts` 和 `topic.ts` — 大量重复的 detail-fetching 逻辑（违反 Rule #50）
 
 两个文件中 `cache.tryGet` 内的详情抓取代码几乎完全相同（约 30 行）：
+
 - cheerio `load`
 - `.futu-news-time-stamp` 删除
 - `.nnstock` 替换
@@ -1026,13 +1048,12 @@ HTTP header value 通常应为 string 类型，虽然 `got` 可能自动转换�
 
 ## 总结
 
-| 严重度 | 数量 | 关键项 |
-|--------|------|--------|
-| 🔴 严重 | 3 | parameters key 错误、audio 空指针、link URL 构造错误 |
-| 🟡 中等 | 3 | 递归翻页无限制、大量重复代码、description 风格不一致 |
-| 🟢 轻微 | 4 | 双路径注册、缺失字段、冗余 await、header 类型 |
+| 严重度  | 数量 | 关键项                                               |
+| ------- | ---- | ---------------------------------------------------- |
+| 🔴 严重 | 3    | parameters key 错误、audio 空指针、link URL 构造错误 |
+| 🟡 中等 | 3    | 递归翻页无限制、大量重复代码、description 风格不一致 |
+| 🟢 轻微 | 4    | 双路径注册、缺失字段、冗余 await、header 类型        |
 
 3 个 🔴 问题都在 `live.ts` 中，建议优先修复。要我修这些问题吗？
 
 ---
-

@@ -237,8 +237,8 @@ async function handler(ctx) {
                     const upperCode = item.code.toUpperCase();
                     result += `• <strong>${item.name}</strong> <span style="color: #999;">(${upperCode})</span><br>`;
 
-                    const changeColor = item.change > 0 ? '#f5222d' : (item.change < 0 ? '#52c41a' : '#666');
-                    const arrow = item.change > 0 ? '↑' : (item.change < 0 ? '↓' : '-');
+                    const changeColor = item.change > 0 ? '#f5222d' : item.change < 0 ? '#52c41a' : '#666';
+                    const arrow = item.change > 0 ? '↑' : item.change < 0 ? '↓' : '-';
                     const sign = item.change > 0 ? '+' : '';
                     result += `<span style="color: ${changeColor}; font-weight: bold;">${arrow} ${sign}${item.change}%</span><br>`;
                 }

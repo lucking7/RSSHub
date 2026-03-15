@@ -169,7 +169,9 @@ async function handler(ctx) {
     const allStocks = new Set<string>();
     for (const item of filteredList.slice(0, limit)) {
         if (item.stockList && Array.isArray(item.stockList)) {
-            for (const stock of item.stockList) {allStocks.add(stock);}
+            for (const stock of item.stockList) {
+                allStocks.add(stock);
+            }
         }
     }
 
@@ -177,9 +179,7 @@ async function handler(ctx) {
     const stockMap: Record<string, any> = {};
     if (allStocks.size > 0) {
         try {
-            const stockCodes = [...allStocks]
-                .map((s) => `i:${s}`)
-                .join(',');
+            const stockCodes = [...allStocks].map((s) => `i:${s}`).join(',');
             const stockResponse = await got({
                 method: 'get',
                 url: 'https://push2.eastmoney.com/api/qt/clist/get',
@@ -272,8 +272,8 @@ async function handler(ctx) {
             const formatStockItems = (items: any[]) => {
                 let result = '';
                 for (const item of items) {
-                    const changeColor = item.change > 0 ? '#f5222d' : (item.change < 0 ? '#52c41a' : '#666');
-                    const arrow = item.change > 0 ? '↑' : (item.change < 0 ? '↓' : '-');
+                    const changeColor = item.change > 0 ? '#f5222d' : item.change < 0 ? '#52c41a' : '#666';
+                    const arrow = item.change > 0 ? '↑' : item.change < 0 ? '↓' : '-';
                     const sign = item.change > 0 ? '+' : '';
                     const code = item.code.split('.')[1];
 

@@ -21,15 +21,17 @@ The user wants me to check the route design for "futunn" in the RSSHub codebase.
 **Tool: task**
 
 **Input:**
+
 ```json
 {
-  "description": "Explore futunn route files",
-  "prompt": "Explore the RSSHub codebase at /Users/jasperl/Downloads/RSSHub-master-2 to find ALL files related to the \"futunn\" route. Search for:\n1. Any directory named \"futunn\" under lib/routes/\n2. All files in that directory\n3. Any references to \"futunn\" in other files (like lib/router.js)\n\nReturn the full file paths and a brief description of each file's purpose. Read and return the COMPLETE contents of every file found.",
-  "subagent_type": "explore"
+    "description": "Explore futunn route files",
+    "prompt": "Explore the RSSHub codebase at /Users/jasperl/Downloads/RSSHub-master-2 to find ALL files related to the \"futunn\" route. Search for:\n1. Any directory named \"futunn\" under lib/routes/\n2. All files in that directory\n3. Any references to \"futunn\" in other files (like lib/router.js)\n\nReturn the full file paths and a brief description of each file's purpose. Read and return the COMPLETE contents of every file found.",
+    "subagent_type": "explore"
 }
 ```
 
 **Output:**
+
 ```
 task_id: ses_35fef5f43ffe0MTMVyvI4wCuTF (for resuming to continue this task if needed)
 
@@ -51,15 +53,17 @@ All files read. No references in `lib/router.js` (the legacy router). Here are t
 ## Directory Structure
 
 ```
+
 lib/routes/futunn/
-  namespace.ts
-  main.ts
-  topic.ts
-  live.ts
-  video.ts
-  templates/
-    description.tsx
-```
+namespace.ts
+main.ts
+topic.ts
+live.ts
+video.ts
+templates/
+description.tsx
+
+````
 
 There are **no references** to "futunn" in `lib/router.js` or any other `.js` file under `lib/` -- this route uses RSSHub's modern file-based routing (auto-discovered from `lib/routes/`), not the legacy router.
 
@@ -76,22 +80,28 @@ export const namespace: Namespace = {
     url: 'news.futunn.com',
     lang: 'zh-CN',
 };
-```
+````
 
 ### 2. `main.ts` (104 lines) -- Route: `/futunn/main` or `/futunn`
+
 **Headlines/Main News** feed. Fetches from API `news-site-api/main/get-market-list`. For each item, it fetches the full article detail page (cached), parses it with Cheerio to extract article body + related stocks, and renders via the shared template. Path is `['/main', '/']` so both `/futunn/main` and `/futunn` trigger this route. Maintainers: Wsine, nczitzk, kennyfong19931.
 
 ### 3. `topic.ts` (142 lines) -- Route: `/futunn/topic/:id`
+
 **Topic/Special** feed by topic ID. First resolves the topic title/description via a paginated topic list API (`get-topics-list`), then fetches topic news from `get-topics-news-list`. Detail enrichment uses the same Cheerio pattern as `main.ts`. Maintainer: kennyfong19931.
 
 ### 4. `live.ts` (128 lines) -- Route: `/futunn/live/:lang?`
+
 **Flash News** feed with optional language parameter (Mandarin/Cantonese/English). Fetches from `get-flash-list` API with a language header. Includes **podcast/audio support** -- each item exposes `enclosure_url`, `enclosure_type: 'audio/mpeg'`, `itunes_duration`, and `media` object. Three radar entries map the different language paths. Maintainer: kennyfong19931.
 
 ### 5. `video.ts` (52 lines) -- Route: `/futunn/video`
+
 **Video** feed. Fetches from `get-video-list` API. Simplest route -- no detail page enrichment, just maps API response to RSS items with the description template. Maintainer: kennyfong19931.
 
 ### 6. `templates/description.tsx` (70 lines)
+
 Shared **JSX rendering template** used by main, topic, and video routes. Exports `renderDescription()` which accepts `{ pic, abs, content, stocks }` and renders:
+
 - Full HTML article content (from detail pages), OR a thumbnail + abstract (for list-level items)
 - A styled **stock table** with name, code, price, and up/down colored change ratios
 
@@ -101,12 +111,12 @@ Uses Hono's `renderToString` and `raw()` for HTML injection.
 
 ## Route Summary Table
 
-| Route Path | Example | Feed Name | API Endpoint | Has Detail Enrichment |
-|---|---|---|---|---|
-| `/futunn/main` or `/futunn` | `/futunn/main` | 要闻 (Headlines) | `get-market-list` | Yes (Cheerio) |
-| `/futunn/topic/:id` | `/futunn/topic/1267` | 专题 (Topics) | `get-topics-news-list` | Yes (Cheerio) |
-| `/futunn/live/:lang?` | `/futunn/live` | 快讯 (Flash) | `get-flash-list` | No (has audio) |
-| `/futunn/video` | `/futunn/video` | 视频 (Video) | `get-video-list` | No |
+| Route Path                  | Example              | Feed Name        | API Endpoint           | Has Detail Enrichment |
+| --------------------------- | -------------------- | ---------------- | ---------------------- | --------------------- |
+| `/futunn/main` or `/futunn` | `/futunn/main`       | 要闻 (Headlines) | `get-market-list`      | Yes (Cheerio)         |
+| `/futunn/topic/:id`         | `/futunn/topic/1267` | 专题 (Topics)    | `get-topics-news-list` | Yes (Cheerio)         |
+| `/futunn/live/:lang?`       | `/futunn/live`       | 快讯 (Flash)     | `get-flash-list`       | No (has audio)        |
+| `/futunn/video`             | `/futunn/video`      | 视频 (Video)     | `get-video-list`       | No                    |
 
 </answer>
 
@@ -115,7 +125,8 @@ All 6 files have been read in full above. The complete contents are included in 
 </next_steps>
 </results>
 </task_result>
-```
+
+````
 
 ---
 
@@ -134,14 +145,15 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 {
   "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/namespace.ts"
 }
-```
+````
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/namespace.ts</path>
 <type>file</type>
 <content>1: import type { Namespace } from '@/types';
-2: 
+2:
 3: export const namespace: Namespace = {
 4:     name: 'Futubull 富途牛牛',
 5:     url: 'news.futunn.com',
@@ -155,25 +167,27 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/main.ts"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/main.ts"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/main.ts</path>
 <type>file</type>
 <content>1: import { load } from 'cheerio';
-2: 
+2:
 3: import type { Route } from '@/types';
 4: import cache from '@/utils/cache';
 5: import got from '@/utils/got';
 6: import { parseDate } from '@/utils/parse-date';
-7: 
+7:
 8: import { renderDescription } from './templates/description';
-9: 
+9:
 10: export const route: Route = {
 11:     path: ['/main', '/'],
 12:     categories: ['finance'],
@@ -191,19 +205,19 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 24:     maintainers: ['Wsine', 'nczitzk', 'kennyfong19931'],
 25:     handler,
 26: };
-27: 
+27:
 28: async function handler(ctx) {
 29:     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 48;
-30: 
+30:
 31:     const rootUrl = 'https://news.futunn.com';
 32:     const currentUrl = `${rootUrl}/main`;
 33:     const apiUrl = `${rootUrl}/news-site-api/main/get-market-list?size=${limit}`;
-34: 
+34:
 35:     const response = await got({
 36:         method: 'get',
 37:         url: apiUrl,
 38:     });
-39: 
+39:
 40:     let items = response.data.data.list.map((item) => ({
 41:         guid: `futunn:main:${item.newsId}`,
 42:         title: (item.isTop ? '[置顶] ' : '') + item.title,
@@ -216,7 +230,7 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 49:             pic: item.pic,
 50:         }),
 51:     }));
-52: 
+52:
 53:     items = await Promise.all(
 54:         items.map((item) =>
 55:             cache.tryGet(item.link, async () => {
@@ -225,14 +239,14 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 58:                         method: 'get',
 59:                         url: item.link,
 60:                     });
-61: 
+61:
 62:                     const content = load(detailResponse.data);
-63: 
+63:
 64:                     content('.futu-news-time-stamp').remove();
 65:                     content('.nnstock').each(function () {
 66:                         content(this).replaceWith(`<a href="${content(this).attr('href')}">${content(this).text().replaceAll('$', '')}</a>`);
 67:                     });
-68: 
+68:
 69:                     const stocks = content('#relatedStockWeb a.stock')
 70:                         .toArray()
 71:                         .map((el) => ({
@@ -243,12 +257,12 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 76:                             down: content(el).hasClass('down'),
 77:                         }))
 78:                         .filter((s) => s.name);
-79: 
+79:
 80:                     item.description = renderDescription({
 81:                         content: content('.origin_content').html() ?? '',
 82:                         stocks,
 83:                     });
-84: 
+84:
 85:                     item.category = [
 86:                         ...(item.category || []),
 87:                         ...content('.news__from-topic__title')
@@ -257,12 +271,12 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 90:                         ...stocks.map((s) => s.name),
 91:                     ];
 92:                 }
-93: 
+93:
 94:                 return item;
 95:             })
 96:         )
 97:     );
-98: 
+98:
 99:     return {
 100:         title: '富途牛牛 - 要闻',
 101:         link: currentUrl,
@@ -277,25 +291,27 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/topic.ts"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/topic.ts"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/topic.ts</path>
 <type>file</type>
 <content>1: import { load } from 'cheerio';
-2: 
+2:
 3: import type { Route } from '@/types';
 4: import cache from '@/utils/cache';
 5: import got from '@/utils/got';
 6: import { parseDate } from '@/utils/parse-date';
-7: 
+7:
 8: import { renderDescription } from './templates/description';
-9: 
+9:
 10: export const route: Route = {
 11:     path: '/topic/:id',
 12:     categories: ['finance'],
@@ -314,7 +330,7 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 25:     maintainers: ['kennyfong19931'],
 26:     handler,
 27: };
-28: 
+28:
 29: async function getTopic(rootUrl, id, seqMarkInput = '') {
 30:     const topicListResponse = await got({
 31:         method: 'get',
@@ -336,22 +352,22 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 47:         };
 48:     }
 49: }
-50: 
+50:
 51: async function handler(ctx) {
 52:     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 48;
 53:     const id = ctx.req.param('id');
-54: 
+54:
 55:     const rootUrl = 'https://news.futunn.com';
 56:     const link = `${rootUrl}/news-topics/${id}/`;
 57:     const apiUrl = `${rootUrl}/news-site-api/topic/get-topics-news-list?topicsId=${id}&pageSize=${limit}`;
-58: 
+58:
 59:     const { topicTitle, topicDescription } = await cache.tryGet(link, async () => await getTopic(rootUrl, id));
-60: 
+60:
 61:     const response = await got({
 62:         method: 'get',
 63:         url: apiUrl,
 64:     });
-65: 
+65:
 66:     let items = response.data.data.data.map((item) => ({
 67:         title: item.title,
 68:         link: item.url,
@@ -375,7 +391,7 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 86:                 })),
 87:         }),
 88:     }));
-89: 
+89:
 90:     items = await Promise.all(
 91:         items.map((item) =>
 92:             cache.tryGet(item.link, async () => {
@@ -384,14 +400,14 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 95:                         method: 'get',
 96:                         url: item.link,
 97:                     });
-98: 
+98:
 99:                     const content = load(detailResponse.data);
-100: 
+100:
 101:                     content('.futu-news-time-stamp').remove();
 102:                     content('.nnstock').each(function () {
 103:                         content(this).replaceWith(`<a href="${content(this).attr('href')}">${content(this).text().replaceAll('$', '')}</a>`);
 104:                     });
-105: 
+105:
 106:                     const stocks = content('#relatedStockWeb a.stock')
 107:                         .toArray()
 108:                         .map((el) => ({
@@ -402,12 +418,12 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 113:                             down: content(el).hasClass('down'),
 114:                         }))
 115:                         .filter((s) => s.name);
-116: 
+116:
 117:                     item.description = renderDescription({
 118:                         content: content('.origin_content').html() ?? '',
 119:                         stocks,
 120:                     });
-121: 
+121:
 122:                     item.category = [
 123:                         ...(item.category || []),
 124:                         ...content('.news__from-topic__title')
@@ -416,12 +432,12 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 127:                         ...stocks.map((s) => s.name),
 128:                     ];
 129:                 }
-130: 
+130:
 131:                 return item;
 132:             })
 133:         )
 134:     );
-135: 
+135:
 136:     return {
 137:         title: `富途牛牛 - 专题 - ${topicTitle}`,
 138:         link,
@@ -437,20 +453,22 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/live.ts"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/live.ts"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/live.ts</path>
 <type>file</type>
 <content>1: import type { Route } from '@/types';
 2: import got from '@/utils/got';
 3: import { parseDate } from '@/utils/parse-date';
-4: 
+4:
 5: export const route: Route = {
 6:     path: '/live/:lang?',
 7:     categories: ['finance'],
@@ -496,15 +514,15 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 47:     maintainers: ['kennyfong19931'],
 48:     handler,
 49: };
-50: 
+50:
 51: async function handler(ctx) {
 52:     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 30;
 53:     const lang = ctx.req.param('lang') ?? 'Mandarin';
-54: 
+54:
 55:     const rootUrl = 'https://news.futunn.com';
 56:     const link = `${rootUrl}/main${lang === 'Mandarin' ? '' : lang === 'Cantonese' ? '/hk' : '/en'}/live`;
 57:     const apiUrl = `${rootUrl}/news-site-api/main/get-flash-list?pageSize=${limit}`;
-58: 
+58:
 59:     const response = await got({
 60:         method: 'get',
 61:         url: apiUrl,
@@ -512,17 +530,17 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 63:             'x-news-site-lang': lang === 'Mandarin' ? 0 : lang === 'Cantonese' ? 1 : 2,
 64:         },
 65:     });
-66: 
+66:
 67:     const items = response.data.data.data.news.map((item) => {
 68:         const audio = item.audioInfos.find((audio) => audio.language === lang);
-69: 
+69:
 70:         const isImportant = item.level === 1;
 71:         const title = (isImportant ? '【重要】' : '') + (item.title || item.content);
-72: 
+72:
 73:         const quoteNames = item.quote.map((q) => q.name);
 74:         const relatedNames = (item.relatedStocks || []).map((s) => s.name).filter(Boolean);
 75:         const category = [...new Set([...quoteNames, ...relatedNames])];
-76: 
+76:
 77:         let description = item.content;
 78:         const relatedStocks = item.relatedStocks || [];
 79:         if (relatedStocks.length > 0) {
@@ -540,7 +558,7 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 91:                 description += '</div>';
 92:             }
 93:         }
-94: 
+94:
 95:         return {
 96:             guid: `futunn:flash:${item.id}`,
 97:             title,
@@ -565,7 +583,7 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 116:             },
 117:         };
 118:     });
-119: 
+119:
 120:     return {
 121:         title: lang === 'Mandarin' ? '富途牛牛 - 快讯' : lang === 'Cantonese' ? '富途牛牛 - 快訊' : 'Futubull - Latest',
 122:         link,
@@ -583,22 +601,24 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/video.ts"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/video.ts"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/video.ts</path>
 <type>file</type>
 <content>1: import type { Route } from '@/types';
 2: import got from '@/utils/got';
 3: import { parseDate } from '@/utils/parse-date';
-4: 
+4:
 5: import { renderDescription } from './templates/description';
-6: 
+6:
 7: export const route: Route = {
 8:     path: '/video',
 9:     categories: ['finance'],
@@ -616,19 +636,19 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 21:     maintainers: ['kennyfong19931'],
 22:     handler,
 23: };
-24: 
+24:
 25: async function handler(ctx) {
 26:     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 50;
-27: 
+27:
 28:     const rootUrl = 'https://news.futunn.com';
 29:     const link = `${rootUrl}/main/video-list`;
 30:     const apiUrl = `${rootUrl}/news-site-api/main/get-video-list?size=${limit}`;
-31: 
+31:
 32:     const response = await got({
 33:         method: 'get',
 34:         url: apiUrl,
 35:     });
-36: 
+36:
 37:     const items = response.data.data.videoList.list.map((item) => ({
 38:         title: item.title,
 39:         description: renderDescription({
@@ -638,7 +658,7 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 43:         link: item.targetUrl,
 44:         pubDate: parseDate(item.timestamp * 1000),
 45:     }));
-46: 
+46:
 47:     return {
 48:         title: '富途牛牛 - 视频',
 49:         link,
@@ -653,19 +673,21 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/templates/description.tsx"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/templates/description.tsx"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/lib/routes/futunn/templates/description.tsx</path>
 <type>file</type>
 <content>1: import { raw } from 'hono/html';
 2: import { renderToString } from 'hono/jsx/dom/server';
-3: 
+3:
 4: type StockItem = {
 5:     name: string;
 6:     code?: string;
@@ -675,14 +697,14 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 10:     up?: boolean;
 11:     down?: boolean;
 12: };
-13: 
+13:
 14: type DescriptionData = {
 15:     pic?: string;
 16:     abs?: string;
 17:     content?: string; // raw HTML body from detail page
 18:     stocks?: StockItem[];
 19: };
-20: 
+20:
 21: const StockTable = ({ stocks }: { stocks: StockItem[] }) => (
 22:     <table style="border-collapse:collapse;margin-top:12px;width:100%;font-size:14px;">
 23:         <thead>
@@ -719,7 +741,7 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 54:         </tbody>
 55:     </table>
 56: );
-57: 
+57:
 58: const FutunnDescription = ({ pic, abs, content, stocks }: DescriptionData) => (
 59:     <>
 60:         {content ? <>{raw(content)}</> : pic || abs ? (
@@ -731,7 +753,7 @@ Let我逐一阅读文件内容，按 AGENTS.md 的 Review Guidelines 做详细�
 66:         {stocks && stocks.length > 0 ? <StockTable stocks={stocks} /> : null}
 67:     </>
 68: );
-69: 
+69:
 70: export const renderDescription = (data: DescriptionData) => renderToString(<FutunnDescription {...data} />);
 
 (End of file - total 70 lines)
@@ -747,16 +769,17 @@ _Thinking:_
 Now let me review all files against the AGENTS.md review guidelines. Let me go through each rule:
 
 ### Route Configuration
+
 1. **Example Format**: All examples start with `/` - ✅
-   - `/futunn/main`, `/futunn/topic/1267`, `/futunn/live`, `/futunn/video` - all good
+    - `/futunn/main`, `/futunn/topic/1267`, `/futunn/live`, `/futunn/video` - all good
 
 2. **Route Name**: Names are `要闻`, `专题`, `快讯`, `视频` - none repeat the namespace "Futubull 富途牛牛" - ✅
 
 3. **Radar Source Format**: Let me check...
-   - `main.ts`: `source: ['news.futunn.com/main', 'news.futunn.com/:lang/main']` - ✅ no https://
-   - `topic.ts`: `source: ['news.futunn.com/news-topics/:id/*', 'news.futunn.com/:lang/news-topics/:id/*']` - ✅
-   - `live.ts`: `source: ['news.futunn.com/main/live']`, etc. - ✅
-   - `video.ts`: source patterns look good too - ✅
+    - `main.ts`: `source: ['news.futunn.com/main', 'news.futunn.com/:lang/main']` - ✅ no https://
+    - `topic.ts`: `source: ['news.futunn.com/news-topics/:id/*', 'news.futunn.com/:lang/news-topics/:id/*']` - ✅
+    - `live.ts`: `source: ['news.futunn.com/main/live']`, etc. - ✅
+    - `video.ts`: source patterns look good too - ✅
 
 The radar target entries all match their corresponding route paths, the namespace URL is correctly set without https://, and everything uses the finance category consistently. There's no unnecessary documentation or legacy router entries, and the feature flags are appropriate with radar support enabled. The maintainers appear to be legitimate GitHub users.
 
@@ -784,14 +807,14 @@ I'm noticing a mismatch in `live.ts` where the path declares `lang` as the param
 
 ### 文件结构总览
 
-| 文件 | 路由路径 | 功能 |
-|------|----------|------|
-| `namespace.ts` | - | 命名空间 |
-| `main.ts` | `/futunn/main`, `/futunn` | 要闻 |
-| `topic.ts` | `/futunn/topic/:id` | 专题 |
-| `live.ts` | `/futunn/live/:lang?` | 快讯 |
-| `video.ts` | `/futunn/video` | 视频 |
-| `templates/description.tsx` | - | 共享描述模板 |
+| 文件                        | 路由路径                  | 功能         |
+| --------------------------- | ------------------------- | ------------ |
+| `namespace.ts`              | -                         | 命名空间     |
+| `main.ts`                   | `/futunn/main`, `/futunn` | 要闻         |
+| `topic.ts`                  | `/futunn/topic/:id`       | 专题         |
+| `live.ts`                   | `/futunn/live/:lang?`     | 快讯         |
+| `video.ts`                  | `/futunn/video`           | 视频         |
+| `templates/description.tsx` | -                         | 共享描述模板 |
 
 ---
 
@@ -840,4 +863,3 @@ const audio = item.audioInfos.find((audio) => audio.language === lang);
 如果 `audioInfos` 为空数组或没有匹配项，`audio`
 
 ---
-

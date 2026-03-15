@@ -21,13 +21,15 @@ The user wants me to check the project. Let me start by understanding the projec
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2</path>
 <type>directory</type>
@@ -87,13 +89,15 @@ wrangler.toml
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/package.json"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/package.json"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/package.json</path>
 <type>file</type>
@@ -372,14 +376,16 @@ wrangler.toml
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
-  "command": "node -v && npm -v 2>/dev/null; pnpm -v 2>/dev/null",
-  "description": "Check Node and package manager versions"
+    "command": "node -v && npm -v 2>/dev/null; pnpm -v 2>/dev/null",
+    "description": "Check Node and package manager versions"
 }
 ```
 
 **Output:**
+
 ```
 v24.11.0
 11.6.1
@@ -484,14 +490,16 @@ The user wants me to check the project. Let me gather more info about the projec
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
-  "command": "ls node_modules/.package-lock.json 2>/dev/null && echo \"node_modules exists\" || echo \"node_modules NOT found\"",
-  "description": "Check if dependencies are installed"
+    "command": "ls node_modules/.package-lock.json 2>/dev/null && echo \"node_modules exists\" || echo \"node_modules NOT found\"",
+    "description": "Check if dependencies are installed"
 }
 ```
 
 **Output:**
+
 ```
 node_modules NOT found
 
@@ -500,13 +508,15 @@ node_modules NOT found
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/tsconfig.json"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/tsconfig.json"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/tsconfig.json</path>
 <type>file</type>
@@ -541,13 +551,15 @@ node_modules NOT found
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/eslint.config.mjs"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/eslint.config.mjs"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/eslint.config.mjs</path>
 <type>file</type>
@@ -563,11 +575,11 @@ node_modules NOT found
 10: import unicorn from 'eslint-plugin-unicorn';
 11: import eslintPluginYml from 'eslint-plugin-yml';
 12: import globals from 'globals';
-13: 
+13:
 14: // import nsfwFlagPlugin from './eslint-plugins/nsfw-flag.js';
-15: 
+15:
 16: const SOURCE_FILES_GLOB = '**/*.?([cm])[jt]s?(x)';
-17: 
+17:
 18: export default defineConfig([
 19:     // {
 20:     //     plugins: {
@@ -591,18 +603,18 @@ node_modules NOT found
 38:             unicorn,
 39:         },
 40:         extends: [js.configs.recommended, typescriptEslint.configs['flat/recommended'], typescriptEslint.configs['flat/stylistic'], n.configs['flat/recommended-script'], unicorn.configs.recommended],
-41: 
+41:
 42:         languageOptions: {
 43:             globals: {
 44:                 ...globals.node,
 45:                 ...globals.browser,
 46:             },
-47: 
+47:
 48:             parser: tsParser,
 49:             ecmaVersion: 'latest',
 50:             sourceType: 'module',
 51:         },
-52: 
+52:
 53:         rules: {
 54:             // #region possible problems
 55:             'array-callback-return': [
@@ -611,32 +623,32 @@ node_modules NOT found
 58:                     allowImplicit: true,
 59:                 },
 60:             ],
-61: 
+61:
 62:             'no-await-in-loop': 'error',
 63:             'no-control-regex': 'off',
 64:             'no-prototype-builtins': 'off',
 65:             // #endregion
-66: 
+66:
 67:             // #region suggestions
 68:             'arrow-body-style': 'error',
 69:             'block-scoped-var': 'error',
 70:             curly: 'error',
 71:             'dot-notation': 'error',
 72:             eqeqeq: 'error',
-73: 
+73:
 74:             'default-case': [
 75:                 'warn',
 76:                 {
 77:                     commentPattern: '^no default$',
 78:                 },
 79:             ],
-80: 
+80:
 81:             'default-case-last': 'error',
 82:             'no-console': 'error',
 83:             'no-eval': 'error',
 84:             'no-extend-native': 'error',
 85:             'no-extra-label': 'error',
-86: 
+86:
 87:             'no-implicit-coercion': [
 88:                 'error',
 89:                 {
@@ -646,13 +658,13 @@ node_modules NOT found
 93:                     disallowTemplateShorthand: true,
 94:                 },
 95:             ],
-96: 
+96:
 97:             'no-implicit-globals': 'error',
 98:             'no-labels': 'error',
 99:             'no-lonely-if': 'error',
 100:             'no-multi-str': 'error',
 101:             'no-new-func': 'error',
-102: 
+102:
 103:             'no-restricted-syntax': [
 104:                 'error',
 105:                 {
@@ -680,7 +692,7 @@ node_modules NOT found
 127:                     message: 'Usage of .catch(() => {}) is not allowed. Please handle the error appropriately.',
 128:                 },
 129:             ],
-130: 
+130:
 131:             'no-unneeded-ternary': 'error',
 132:             'no-useless-computed-key': 'error',
 133:             'no-useless-concat': 'warn',
@@ -690,30 +702,30 @@ node_modules NOT found
 137:             'prefer-arrow-callback': 'error',
 138:             'prefer-const': 'error',
 139:             'prefer-object-has-own': 'error',
-140: 
+140:
 141:             'prefer-regex-literals': [
 142:                 'error',
 143:                 {
 144:                     disallowRedundantWrapping: true,
 145:                 },
 146:             ],
-147: 
+147:
 148:             'require-await': 'error',
 149:             // #endregion
-150: 
+150:
 151:             // #region typescript
 152:             '@typescript-eslint/array-type': ['error', { default: 'array-simple' }],
-153: 
+153:
 154:             '@typescript-eslint/ban-ts-comment': 'off',
 155:             '@typescript-eslint/consistent-indexed-object-style': 'off', // stylistic
 156:             '@typescript-eslint/consistent-type-definitions': 'off', // stylistic
 157:             '@typescript-eslint/no-empty-function': 'off', // stylistic && tests
 158:             '@typescript-eslint/no-explicit-any': 'off',
-159: 
+159:
 160:             '@typescript-eslint/no-inferrable-types': ['error', { ignoreParameters: true, ignoreProperties: true }],
-161: 
+161:
 162:             '@typescript-eslint/no-var-requires': 'off',
-163: 
+163:
 164:             '@typescript-eslint/no-unused-expressions': [
 165:                 'error',
 166:                 {
@@ -721,7 +733,7 @@ node_modules NOT found
 168:                     allowTernary: true,
 169:                 },
 170:             ],
-171: 
+171:
 172:             '@typescript-eslint/no-unused-vars': [
 173:                 'error',
 174:                 {
@@ -729,14 +741,14 @@ node_modules NOT found
 176:                     argsIgnorePattern: '^_',
 177:                 },
 178:             ],
-179: 
+179:
 180:             '@typescript-eslint/prefer-for-of': 'error',
 181:             // #endregion
-182: 
+182:
 183:             // #region unicorn
 184:             'unicorn/consistent-function-scoping': 'warn',
 185:             'unicorn/explicit-length-check': 'off',
-186: 
+186:
 187:             'unicorn/filename-case': [
 188:                 'error',
 189:                 {
@@ -744,7 +756,7 @@ node_modules NOT found
 191:                     ignore: [String.raw`.*\.(yaml|yml)$`, String.raw`RequestInProgress\.js$`],
 192:                 },
 193:             ],
-194: 
+194:
 195:             'unicorn/no-array-callback-reference': 'warn',
 196:             'unicorn/no-array-reduce': 'warn',
 197:             'unicorn/no-array-sort': 'warn',
@@ -757,46 +769,46 @@ node_modules NOT found
 204:             'unicorn/no-nested-ternary': 'off',
 205:             'unicorn/no-process-exit': 'off',
 206:             'unicorn/no-useless-switch-case': 'off',
-207: 
+207:
 208:             'unicorn/no-useless-undefined': [
 209:                 'error',
 210:                 {
 211:                     checkArguments: false,
 212:                 },
 213:             ],
-214: 
+214:
 215:             'unicorn/numeric-separators-style': [
 216:                 'warn',
 217:                 {
 218:                     onlyIfContainsSeparator: false,
-219: 
+219:
 220:                     number: {
 221:                         minimumDigits: 7,
 222:                         groupLength: 3,
 223:                     },
-224: 
+224:
 225:                     binary: {
 226:                         minimumDigits: 9,
 227:                         groupLength: 4,
 228:                     },
-229: 
+229:
 230:                     octal: {
 231:                         minimumDigits: 9,
 232:                         groupLength: 4,
 233:                     },
-234: 
+234:
 235:                     hexadecimal: {
 236:                         minimumDigits: 5,
 237:                         groupLength: 2,
 238:                     },
 239:                 },
 240:             ],
-241: 
+241:
 242:             'unicorn/prefer-code-point': 'warn',
 243:             'unicorn/prefer-global-this': 'off',
 244:             'unicorn/prefer-import-meta-properties': 'warn',
 245:             'unicorn/prefer-module': 'off',
-246: 
+246:
 247:             'unicorn/prefer-number-properties': [
 248:                 'error',
 249:                 {
@@ -804,24 +816,24 @@ node_modules NOT found
 251:                     checkNaN: false,
 252:                 },
 253:             ],
-254: 
+254:
 255:             'unicorn/prefer-spread': 'warn',
 256:             'unicorn/prefer-string-slice': 'warn',
-257: 
+257:
 258:             'unicorn/prefer-switch': [
 259:                 'warn',
 260:                 {
 261:                     emptyDefaultCase: 'do-nothing-comment',
 262:                 },
 263:             ],
-264: 
+264:
 265:             'unicorn/prefer-top-level-await': 'off',
 266:             'unicorn/prevent-abbreviations': 'off',
 267:             'unicorn/switch-case-braces': ['error', 'avoid'],
 268:             'unicorn/text-encoding-identifier-case': 'off',
 269:             'unicorn/number-literal-case': 'off',
 270:             // #endregion
-271: 
+271:
 272:             // #region stylistic
 273:             '@stylistic/arrow-parens': 'error',
 274:             '@stylistic/arrow-spacing': 'error',
@@ -830,14 +842,14 @@ node_modules NOT found
 277:             '@stylistic/function-call-spacing': 'error',
 278:             '@stylistic/keyword-spacing': 'off',
 279:             '@stylistic/linebreak-style': 'error',
-280: 
+280:
 281:             '@stylistic/lines-around-comment': [
 282:                 'error',
 283:                 {
 284:                     beforeBlockComment: false,
 285:                 },
 286:             ],
-287: 
+287:
 288:             '@stylistic/no-multiple-empty-lines': 'error',
 289:             '@stylistic/no-trailing-spaces': 'error',
 290:             '@stylistic/rest-spread-spacing': 'error',
@@ -848,23 +860,23 @@ node_modules NOT found
 295:             '@stylistic/space-unary-ops': 'error',
 296:             '@stylistic/spaced-comment': 'error',
 297:             // #endregion
-298: 
+298:
 299:             // #region node specific rules
 300:             'n/no-extraneous-require': 'error',
-301: 
+301:
 302:             'n/no-deprecated-api': 'warn',
 303:             'n/no-missing-import': 'off',
 304:             'n/no-missing-require': 'off',
 305:             'n/no-process-exit': 'off',
 306:             'n/no-unpublished-import': 'off',
-307: 
+307:
 308:             'n/no-unpublished-require': [
 309:                 'error',
 310:                 {
 311:                     allowModules: ['tosource'],
 312:                 },
 313:             ],
-314: 
+314:
 315:             'n/no-unsupported-features/node-builtins': [
 316:                 'error',
 317:                 {
@@ -874,7 +886,7 @@ node_modules NOT found
 321:                 },
 322:             ],
 323:             // #endregion
-324: 
+324:
 325:             // github
 326:             'github/no-then': 'warn',
 327:         },
@@ -896,12 +908,12 @@ node_modules NOT found
 343:             'import-x/order': 'off',
 344:             'simple-import-sort/imports': 'error',
 345:             'simple-import-sort/exports': 'error',
-346: 
+346:
 347:             'import-x/first': 'error',
 348:             'import-x/newline-after-import': 'error',
 349:             'no-duplicate-imports': 'off',
 350:             'import-x/no-duplicates': 'error',
-351: 
+351:
 352:             '@typescript-eslint/consistent-type-imports': 'error',
 353:             'import-x/consistent-type-specifier-style': ['error', 'prefer-top-level'],
 354:         },
@@ -920,7 +932,7 @@ node_modules NOT found
 367:                     beforeBlockComment: false,
 368:                 },
 369:             ],
-370: 
+370:
 371:             'yml/indent': [
 372:                 'error',
 373:                 4,
@@ -928,9 +940,9 @@ node_modules NOT found
 375:                     indicatorValueIndent: 2,
 376:                 },
 377:             ],
-378: 
+378:
 379:             'yml/no-empty-mapping-value': 'off',
-380: 
+380:
 381:             'yml/quotes': [
 382:                 'error',
 383:                 {
@@ -948,13 +960,15 @@ node_modules NOT found
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/lib"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/lib</path>
 <type>directory</type>
@@ -1009,14 +1023,16 @@ Let me get a quick overview of the project state. Dependencies aren't installed.
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
-  "command": "wc -l pnpm-lock.yaml 2>/dev/null | awk '{print $1}'",
-  "description": "Check lock file size"
+    "command": "wc -l pnpm-lock.yaml 2>/dev/null | awk '{print $1}'",
+    "description": "Check lock file size"
 }
 ```
 
 **Output:**
+
 ```
 12172
 
@@ -1025,14 +1041,16 @@ Let me get a quick overview of the project state. Dependencies aren't installed.
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
-  "command": "ls lib/routes/ | head -30 && echo \"---\" && ls lib/routes/ | wc -l",
-  "description": "List route directories count"
+    "command": "ls lib/routes/ | head -30 && echo \"---\" && ls lib/routes/ | wc -l",
+    "description": "List route directories count"
 }
 ```
 
 **Output:**
+
 ```
 005
 0818tuan
@@ -1072,19 +1090,21 @@ Let me get a quick overview of the project state. Dependencies aren't installed.
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/vitest.config.ts"
+    "filePath": "/Users/jasperl/Downloads/RSSHub-master-2/vitest.config.ts"
 }
 ```
 
 **Output:**
+
 ```
 <path>/Users/jasperl/Downloads/RSSHub-master-2/vitest.config.ts</path>
 <type>file</type>
 <content>1: import tsconfigPaths from 'vite-tsconfig-paths';
 2: import { configDefaults, defineConfig } from 'vitest/config';
-3: 
+3:
 4: export default defineConfig({
 5:     plugins: [tsconfigPaths()],
 6:     test: {
@@ -1115,29 +1135,33 @@ Let me get a quick overview of the project state. Dependencies aren't installed.
 **版本**: 1.0.0 | **License**: AGPL-3.0
 
 ### 技术栈
-| 层面 | 技术 |
-|------|------|
-| Runtime | Node.js `^22.20.0 \|\| ^24` (当前 v24.11.0) ✅ |
-| 包管理 | pnpm 10.30.1 ✅ |
-| 框架 | Hono (web) + TSX |
-| 构建 | tsdown (多配置: vercel/worker/container/lib) |
-| 测试 | Vitest + coverage-v8 + supertest + msw |
-| Lint | ESLint 10 + oxfmt + husky + lint-staged |
-| TS | TypeScript 5.9.3, strict mode, bundler resolution |
-| 部署 | Vercel / Cloudflare Workers / Docker / Fly.io |
+
+| 层面    | 技术                                              |
+| ------- | ------------------------------------------------- |
+| Runtime | Node.js `^22.20.0 \|\| ^24` (当前 v24.11.0) ✅    |
+| 包管理  | pnpm 10.30.1 ✅                                   |
+| 框架    | Hono (web) + TSX                                  |
+| 构建    | tsdown (多配置: vercel/worker/container/lib)      |
+| 测试    | Vitest + coverage-v8 + supertest + msw            |
+| Lint    | ESLint 10 + oxfmt + husky + lint-staged           |
+| TS      | TypeScript 5.9.3, strict mode, bundler resolution |
+| 部署    | Vercel / Cloudflare Workers / Docker / Fly.io     |
 
 ### 代码规模
+
 - **1,562 个 route 目录** (`lib/routes/`)
 - 完善的 ESLint 配置 (stylistic + unicorn + import-sort + typescript + node)
 - 路径别名 `@/*` → `./lib/*`
 
 ### 代码库状态: **Disciplined** ✅
+
 - 一致的 linting/formatting 配置
 - 测试框架完备 (vitest + setup files + coverage)
 - Git hooks (husky + lint-staged)
 - 严格的 ESLint 规则 (no-console, eqeqeq, no-var, prefer-const, etc.)
 
 ### ⚠️ 注意事项
+
 1. **`node_modules` 未安装** — 需要 `pnpm install` 才能 build/test/dev
 2. **非 git 仓库** — 当前目录没有 `.git`，无法追踪变更
 3. 有一个残留文件 `session-ses_362c.md` 看起来是临时文件
@@ -1145,4 +1169,3 @@ Let me get a quick overview of the project state. Dependencies aren't installed.
 需要我做什么操作？比如安装依赖、跑测试、或者具体看某个 route？
 
 ---
-
