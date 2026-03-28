@@ -6,6 +6,8 @@ import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
+import { isJin10PromotionalItem } from './filters';
+
 export const route: Route = {
     path: '/new/:channel?/:important?',
     categories: ['finance'],
@@ -63,53 +65,6 @@ const channelMap: Record<number, string> = {
     4: 'A股',
 };
 
-// 广告过滤函数
-const isAd = (item: any): boolean => {
-    // 过滤 type=1 的推广内容
-    if (item.type === 1) {
-        return true;
-    }
-
-    // 过滤 type=2 的深度文章（多为软广引流）
-    if (item.type === 2) {
-        return true;
-    }
-
-    // 过滤 VIP 锁定内容
-    if (item.data?.lock || (item.data?.vip_level && item.data.vip_level > 0)) {
-        return true;
-    }
-
-    const content = item.data?.content || '';
-
-    // 过滤包含"点击查看"的广告
-    if (content.includes('点击查看')) {
-        return true;
-    }
-
-    // 过滤包含">>"或"》"结尾的广告链接
-    if (content.includes('>>') || content.endsWith('》')) {
-        return true;
-    }
-
-    // 过滤包含"……"且长度较短的广告预览
-    if (content.includes('……') && content.length < 200 && !content.includes('【')) {
-        return true;
-    }
-
-    // 过滤推广引导式标题
-    if (content.includes('——今日') || content.includes('——本周') || content.includes('——本月')) {
-        return true;
-    }
-
-    // 过滤列表式推广标题
-    if ((content.includes('个重点') || content.includes('个要点')) && (content.includes('需要关注') || content.includes('需要留意'))) {
-        return true;
-    }
-
-    return false;
-};
-
 // 解析 flash_newest.js 的 JavaScript 代码
 const parseFlashData = (rawData: string) => {
     // 移除 "var newest = " 和末尾的 ";"
@@ -144,7 +99,7 @@ async function handler(ctx) {
             const items = parseFlashData(response);
 
             // 过滤广告、VIP 和深度文章
-            let filtered = items.filter((item: any) => !isAd(item));
+            let filtered = items.filter((item: any) => !isJin10PromotionalItem(item));
 
             // 按频道过滤
             if (channelFilter) {
