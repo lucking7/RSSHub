@@ -52,6 +52,35 @@ export const route: Route = {
     view: ViewType.Notifications,
 };
 
+// 股票分类辅助：根据 stocktype 字段把 item.stock[] 分成个股和非个股
+// 非个股包括：基金、商品、国际期货、国际指数、股指期货、外汇
+const INDIVIDUAL_STOCK_TYPES = new Set(['cn', 'hk', 'us']);
+
+export interface Sina724Stock {
+    stocktype?: string;
+    name?: string;
+    code?: string;
+    symbol?: string;
+    range?: string;
+    [key: string]: unknown;
+}
+
+export function classifyStocks(stocks: Sina724Stock[]): {
+    individualStocks: Sina724Stock[];
+    sectors: Sina724Stock[];
+} {
+    const individualStocks: Sina724Stock[] = [];
+    const sectors: Sina724Stock[] = [];
+    for (const stock of stocks) {
+        if (INDIVIDUAL_STOCK_TYPES.has(stock.stocktype ?? '')) {
+            individualStocks.push(stock);
+        } else {
+            sectors.push(stock);
+        }
+    }
+    return { individualStocks, sectors };
+}
+
 // 分类标签映射
 const TAG_MAP = {
     all: 0,
@@ -136,21 +165,10 @@ async function handler(ctx) {
         // 构建描述（去掉开头的【】部分）
         let description = content.replace(/【[^】]+】/, '').trim();
 
-        // 添加股票行情信息（区分板块和股票）
-        const stocks = item.stock || [];
+        // 添加股票行情信息（区分板块/非个股与个股，按 stocktype 字段分类）
+        const stocks: Sina724Stock[] = item.stock || [];
         if (stocks.length > 0) {
-            // 判断代码类型：8开头是板块，其他是股票
-            const sectors: any[] = [];
-            const individualStocks: any[] = [];
-
-            for (const stock of stocks) {
-                const stockCode = stock.code || '';
-                if (stockCode.startsWith('8')) {
-                    sectors.push(stock);
-                } else {
-                    individualStocks.push(stock);
-                }
-            }
+            const { individualStocks, sectors } = classifyStocks(stocks);
 
             // 格式化输出函数（HTML格式）
             const formatStockItems = (items: any[]) => {
