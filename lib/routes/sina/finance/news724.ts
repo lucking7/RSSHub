@@ -97,6 +97,25 @@ export function pickLink(item: { pageUrl?: string; url?: string; id: number | st
     return raw.replace(/^http:/, 'https:');
 }
 
+function formatStockItems(items: Sina724Stock[]): string {
+    let result = '';
+    for (const stock of items) {
+        const stockName = stock.name || '';
+        const stockCode = stock.code || '';
+        const stockRange = stock.range || '';
+
+        if (stockRange) {
+            const isPositive = stockRange.startsWith('+') || (!stockRange.startsWith('-') && Number.parseFloat(stockRange) > 0);
+            const changeColor = isPositive ? '#f5222d' : '#52c41a';
+            const arrow = isPositive ? '↑' : '↓';
+
+            result +=
+                `• <strong>${stockName}</strong> ` + (stockCode ? `<span style="color: #999;">(${stockCode})</span>` : '') + `<br><span style="color: ${changeColor}; font-weight: bold;">${arrow} ${stockRange}</span><br>`;
+        }
+    }
+    return result;
+}
+
 // 分类标签映射
 const TAG_MAP = {
     all: 0,
@@ -170,26 +189,6 @@ async function handler(ctx) {
         const stocks: Sina724Stock[] = item.stock || [];
         if (stocks.length > 0) {
             const { individualStocks, sectors } = classifyStocks(stocks);
-
-            // 格式化输出函数（HTML格式）
-            const formatStockItems = (items: any[]) => {
-                let result = '';
-                for (const stock of items) {
-                    const stockName = stock.name || '';
-                    const stockCode = stock.code || '';
-                    const stockRange = stock.range || '';
-
-                    if (stockRange) {
-                        const isPositive = stockRange.startsWith('+') || (!stockRange.startsWith('-') && Number.parseFloat(stockRange) > 0);
-                        const changeColor = isPositive ? '#f5222d' : '#52c41a';
-                        const arrow = isPositive ? '↑' : '↓';
-
-                        result +=
-                            `• <strong>${stockName}</strong> ` + (stockCode ? `<span style="color: #999;">(${stockCode})</span>` : '') + `<br><span style="color: ${changeColor}; font-weight: bold;">${arrow} ${stockRange}</span><br>`;
-                    }
-                }
-                return result;
-            };
 
             // 显示板块（蓝色边框）
             if (sectors.length > 0) {
