@@ -109,8 +109,7 @@ function formatStockItems(items: Sina724Stock[]): string {
             const changeColor = isPositive ? '#f5222d' : '#52c41a';
             const arrow = isPositive ? '↑' : '↓';
 
-            result +=
-                `• <strong>${stockName}</strong> ` + (stockCode ? `<span style="color: #999;">(${stockCode})</span>` : '') + `<br><span style="color: ${changeColor}; font-weight: bold;">${arrow} ${stockRange}</span><br>`;
+            result += `• <strong>${stockName}</strong> ` + (stockCode ? `<span style="color: #999;">(${stockCode})</span>` : '') + `<br><span style="color: ${changeColor}; font-weight: bold;">${arrow} ${stockRange}</span><br>`;
         }
     }
     return result;
