@@ -19,7 +19,6 @@ export const route: Route = {
 
 支持查询参数：
 - \`limit=20\` - 限制返回数量（默认20条）
-- \`num=30\` - 每次请求数量（5-30，默认10）
 
 特点：
 - 📱 移动端专用接口
@@ -93,8 +92,6 @@ const TAG_MAP = {
 async function handler(ctx) {
     const tagParam = ctx.req.param('tag') || 'all';
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 20;
-    const numPerPage = ctx.req.query('num') ? Number.parseInt(ctx.req.query('num')) : 10;
-
     const tag = TAG_MAP[tagParam] ?? 0;
     const baseUrl = 'https://news.cj.sina.cn';
     const apiUrl = `${baseUrl}/app/v1/news724/list`;
@@ -105,52 +102,25 @@ async function handler(ctx) {
         return crypto.randomBytes(16).toString('hex');
     });
 
-    // 计算需要获取的页数
-    const maxPages = Math.max(1, Math.ceil(limit / numPerPage));
-    const collected: any[] = [];
-    let currentId: number | null = null;
+    // 上游 num 参数最大 100（超过会降级为 10）。RSS 只取第一页，不翻页。
+    const num = Math.min(Math.max(limit, 1), 100);
 
-    // 分页获取数据（必须串行，因为需要上一页的last_id）
-
-    for (let page = 1; page <= maxPages; page++) {
-        const params: any = {
+    const response = await got(apiUrl, {
+        searchParams: {
             deviceid: deviceId,
             version: '9.0.1',
-            num: numPerPage,
+            num,
             tag,
             dire: 'b',
-        };
+        },
+        headers: {
+            'User-Agent': `sinafinance__9.0.1__iOS__${deviceId}__26.0.1__iPhone18,2`,
+            Cookie: `genTime=${Math.floor(Date.now() / 1000)}; vt=4; wm=b122`,
+        },
+        timeout: 30000,
+    });
 
-        if (currentId) {
-            params.id = currentId;
-        }
-
-        try {
-            // eslint-disable-next-line no-await-in-loop
-            const response = await got(apiUrl, {
-                searchParams: params,
-                headers: {
-                    'User-Agent': `sinafinance__9.0.1__iOS__${deviceId}__26.0.1__iPhone18,2`,
-                    Cookie: `genTime=${Math.floor(Date.now() / 1000)}; vt=4; wm=b122`,
-                },
-                timeout: 30000,
-            });
-
-            const newsData = response.data?.result?.data?.data ?? [];
-            if (newsData.length === 0) {
-                break;
-            }
-
-            collected.push(...newsData);
-            currentId = newsData.at(-1)?.id;
-
-            if (collected.length >= limit) {
-                break;
-            }
-        } catch {
-            break;
-        }
-    }
+    const collected: any[] = response.data?.result?.data?.data ?? [];
 
     const items = collected.slice(0, limit).map((item) => {
         const content = item.content || '';
