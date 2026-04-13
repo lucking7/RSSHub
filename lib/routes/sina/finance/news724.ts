@@ -89,6 +89,14 @@ export function buildImageHtml(pics: string[] | undefined | null): string {
     return pics.map((u) => `<img src="${u.replace(/^http:/, 'https:')}">`).join('<br>');
 }
 
+const SINA_724_BASE_URL = 'https://news.cj.sina.cn';
+
+// 选 item link：pageUrl（正文页）→ url（分享页）→ 构造兜底，统一升 https。
+export function pickLink(item: { pageUrl?: string; url?: string; id: number | string }): string {
+    const raw = item.pageUrl || item.url || `${SINA_724_BASE_URL}/7x24/${item.id}`;
+    return raw.replace(/^http:/, 'https:');
+}
+
 // 分类标签映射
 const TAG_MAP = {
     all: 0,
@@ -102,8 +110,7 @@ async function handler(ctx) {
     const tagParam = ctx.req.param('tag') || 'all';
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 20;
     const tag = TAG_MAP[tagParam] ?? 0;
-    const baseUrl = 'https://news.cj.sina.cn';
-    const apiUrl = `${baseUrl}/app/v1/news724/list`;
+    const apiUrl = `${SINA_724_BASE_URL}/app/v1/news724/list`;
 
     // 生成设备ID（缓存24小时）
     const deviceId = await cache.tryGet('sina:724:deviceid', async () => {
@@ -205,7 +212,7 @@ async function handler(ctx) {
         return {
             title,
             description,
-            link: (item.url || `${baseUrl}/7x24/${newsId}`).replace(/^http:/, 'https:'),
+            link: pickLink(item),
             guid: `sina-724-${newsId}`,
             pubDate,
             category: categories,

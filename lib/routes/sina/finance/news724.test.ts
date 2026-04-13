@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { classifyStocks, buildImageHtml } from './news724';
+import { classifyStocks, buildImageHtml, pickLink } from './news724';
 
 describe('classifyStocks', () => {
     test('A 股按 stocktype=cn 归入个股', () => {
@@ -71,5 +71,31 @@ describe('buildImageHtml', () => {
     test('非数组输入视为空', () => {
         expect(buildImageHtml(null as unknown as string[])).toBe('');
         expect(buildImageHtml('not-array' as unknown as string[])).toBe('');
+    });
+});
+
+describe('pickLink', () => {
+    test('pageUrl 非空优先', () => {
+        expect(
+            pickLink({
+                pageUrl: 'https://finance.sina.com.cn/7x24/2026-04-13/doc-inhuitra2435063.shtml',
+                url: 'http://finance.sina.com.cn/focus/app/7x24_share.shtml?id=4812180',
+                id: 4812180,
+            })
+        ).toBe('https://finance.sina.com.cn/7x24/2026-04-13/doc-inhuitra2435063.shtml');
+    });
+
+    test('pageUrl 为空串时退回 item.url（并升 https）', () => {
+        expect(
+            pickLink({
+                pageUrl: '',
+                url: 'http://finance.sina.com.cn/focus/app/7x24_share.shtml?id=4812176',
+                id: 4812176,
+            })
+        ).toBe('https://finance.sina.com.cn/focus/app/7x24_share.shtml?id=4812176');
+    });
+
+    test('都没有时退回构造 URL', () => {
+        expect(pickLink({ id: 9999 })).toBe('https://news.cj.sina.cn/7x24/9999');
     });
 });
