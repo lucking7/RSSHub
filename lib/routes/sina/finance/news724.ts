@@ -190,7 +190,7 @@ async function handler(ctx) {
         return {
             title,
             description,
-            link: item.url || `${baseUrl}/7x24/${newsId}`,
+            link: (item.url || `${baseUrl}/7x24/${newsId}`).replace(/^http:/, 'https:'),
             guid: `sina-724-${newsId}`,
             pubDate,
             category: categories,
