@@ -114,7 +114,7 @@ async function handler(ctx) {
 
     // 生成设备ID（缓存24小时）
     const deviceId = await cache.tryGet('sina:724:deviceid', async () => {
-        const crypto = await import('crypto');
+        const crypto = await import('node:crypto');
         return crypto.randomBytes(16).toString('hex');
     });
 
@@ -122,7 +122,7 @@ async function handler(ctx) {
     const num = Math.min(Math.max(limit, 1), 100);
 
     const cacheKey = `sina:724:feed:${tag}:${num}`;
-    const collected: Record<string, any>[] = await cache.tryGet(
+    const collected: Array<Record<string, any>> = await cache.tryGet(
         cacheKey,
         async () => {
             const response = await got(apiUrl, {

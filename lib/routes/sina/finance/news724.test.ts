@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { classifyStocks, buildImageHtml, pickLink } from './news724';
+import { buildImageHtml, classifyStocks, pickLink } from './news724';
 
 describe('classifyStocks', () => {
     test('A 股按 stocktype=cn 归入个股', () => {
@@ -80,7 +80,7 @@ describe('pickLink', () => {
             pickLink({
                 pageUrl: 'https://finance.sina.com.cn/7x24/2026-04-13/doc-inhuitra2435063.shtml',
                 url: 'http://finance.sina.com.cn/focus/app/7x24_share.shtml?id=4812180',
-                id: 4812180,
+                id: 4_812_180,
             })
         ).toBe('https://finance.sina.com.cn/7x24/2026-04-13/doc-inhuitra2435063.shtml');
     });
@@ -90,7 +90,7 @@ describe('pickLink', () => {
             pickLink({
                 pageUrl: '',
                 url: 'http://finance.sina.com.cn/focus/app/7x24_share.shtml?id=4812176',
-                id: 4812176,
+                id: 4_812_176,
             })
         ).toBe('https://finance.sina.com.cn/focus/app/7x24_share.shtml?id=4812176');
     });
