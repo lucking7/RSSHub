@@ -121,22 +121,31 @@ async function handler(ctx) {
     // 上游 num 参数最大 100（超过会降级为 10）。RSS 只取第一页，不翻页。
     const num = Math.min(Math.max(limit, 1), 100);
 
-    const response = await got(apiUrl, {
-        searchParams: {
-            deviceid: deviceId,
-            version: '9.0.1',
-            num,
-            tag,
-            dire: 'b',
+    const cacheKey = `sina:724:feed:${tag}:${num}`;
+    const collected: Record<string, any>[] = await cache.tryGet(
+        cacheKey,
+        async () => {
+            const response = await got(apiUrl, {
+                searchParams: {
+                    deviceid: deviceId,
+                    version: '9.0.1',
+                    num,
+                    tag,
+                    dire: 'b',
+                },
+                headers: {
+                    'User-Agent': `sinafinance__9.0.1__iOS__${deviceId}__26.0.1__iPhone18,2`,
+                    // genTime 实测非必须；去掉避免请求指纹每次变化、便于调试。
+                    Cookie: 'vt=4; wm=b122',
+                },
+                timeout: 30000,
+            });
+            // 注意：空数组也会被缓存 60s。代价是上游若短暂返回空，用户会在 60s 内看到空 feed；
+            // 收益是避免上游短时挂掉时高频重试雪崩。
+            return response.data?.result?.data?.data ?? [];
         },
-        headers: {
-            'User-Agent': `sinafinance__9.0.1__iOS__${deviceId}__26.0.1__iPhone18,2`,
-            Cookie: `genTime=${Math.floor(Date.now() / 1000)}; vt=4; wm=b122`,
-        },
-        timeout: 30000,
-    });
-
-    const collected: any[] = response.data?.result?.data?.data ?? [];
+        60 // 60s 应用层缓存
+    );
 
     const items = collected.slice(0, limit).map((item) => {
         const content = item.content || '';
