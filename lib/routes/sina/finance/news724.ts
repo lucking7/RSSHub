@@ -80,6 +80,15 @@ export function classifyStocks(stocks: Sina724Stock[]): {
     return { individualStocks, sectors };
 }
 
+// 把上游 original_pic 数组渲染成 html。
+// 注意：根据 AGENTS.md #40 不要写 referrerpolicy，RSSHub middleware 自行处理。
+export function buildImageHtml(pics: string[] | undefined | null): string {
+    if (!Array.isArray(pics) || pics.length === 0) {
+        return '';
+    }
+    return pics.map((u) => `<img src="${u.replace(/^http:/, 'https:')}">`).join('<br>');
+}
+
 // 分类标签映射
 const TAG_MAP = {
     all: 0,
@@ -134,6 +143,12 @@ async function handler(ctx) {
 
         // 构建描述（去掉开头的【】部分）
         let description = content.replace(/【[^】]+】/, '').trim();
+
+        // 把上游 original_pic 渲染到 description 最前面（AGENTS.md #40：不写 referrerpolicy）
+        const imageHtml = buildImageHtml(item.original_pic);
+        if (imageHtml) {
+            description = `${imageHtml}<br>${description}`;
+        }
 
         // 添加股票行情信息（区分板块/非个股与个股，按 stocktype 字段分类）
         const stocks: Sina724Stock[] = item.stock || [];
