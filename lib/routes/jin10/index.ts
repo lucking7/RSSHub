@@ -6,6 +6,7 @@ import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
+import { isJin10AdFeedItem, isJin10PromotionalItem } from './filters';
 import { renderDescription } from './templates/description';
 
 export const route: Route = {
@@ -49,32 +50,34 @@ async function handler(ctx) {
                     vip: '1',
                 },
             });
-            return response.data.filter((item) => item.type !== 1);
+            return response.data.filter((item) => !isJin10PromotionalItem(item));
         },
         config.cache.routeExpire,
         false
     );
 
-    const item = data.map((item) => {
-        const titleMatch = item.data.content.match(/^【(.*?)】/);
-        let title;
-        let content = item.data.content;
-        if (titleMatch) {
-            title = titleMatch[1];
-            content = content.replace(titleMatch[0], '');
-        } else {
-            title = item.data.vip_title || item.data.content;
-        }
+    const item = data
+        .map((item) => {
+            const titleMatch = item.data.content.match(/^【(.*?)】/);
+            let title;
+            let content = item.data.content;
+            if (titleMatch) {
+                title = titleMatch[1];
+                content = content.replace(titleMatch[0], '');
+            } else {
+                title = item.data.vip_title || item.data.content;
+            }
 
-        return {
-            title,
-            description: renderDescription(content, item.data.pic),
-            pubDate: timezone(parseDate(item.time), 8),
-            link: item.data.link,
-            guid: `jin10:index:${item.id}`,
-            important: item.important,
-        };
-    });
+            return {
+                title,
+                description: renderDescription(content, item.data.pic),
+                pubDate: timezone(parseDate(item.time), 8),
+                link: item.data.link,
+                guid: `jin10:index:${item.id}`,
+                important: item.important,
+            };
+        })
+        .filter((item) => !isJin10AdFeedItem(item));
 
     return {
         title: '金十数据',
