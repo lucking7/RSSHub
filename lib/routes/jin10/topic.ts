@@ -10,7 +10,7 @@ export const route: Route = {
     path: '/topic/:id',
     categories: ['finance'],
     view: ViewType.Articles,
-    example: '/jin10/topic/396',
+    example: '/jin10/topic/100',
     parameters: { id: 'N' },
     features: {
         requireConfig: false,
@@ -48,26 +48,13 @@ async function handler(ctx) {
         false
     );
 
-    const items = await Promise.all(
-        data.list.map((item) =>
-            cache.tryGet(`jin10:reference:${item.id}`, async () => {
-                const { data: response } = await got(`https://reference-api.jin10.com/reference/getOne?id=${item.id}&type=news`, {
-                    headers: {
-                        'x-app-id': 'g93rhHb9DcDptyPb',
-                        'x-version': '1.0.1',
-                    },
-                });
-
-                return {
-                    title: item.title,
-                    description: response.data.content,
-                    author: item.author.nick,
-                    pubDate: timezone(parseDate(item.display_datetime), 8),
-                    link: `https://xnews.jin10.com/details/${item.id}`,
-                };
-            })
-        )
-    );
+    const items = data.list.map((item) => ({
+        title: item.title,
+        description: (item.data?.content ?? '').replace(/^【[^】]+】/s, ''),
+        author: item.author?.nick,
+        pubDate: timezone(parseDate(item.display_datetime), 8),
+        link: `https://xnews.jin10.com/details/${item.id}`,
+    }));
 
     return {
         title: data.title,

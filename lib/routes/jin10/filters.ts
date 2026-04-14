@@ -1,15 +1,29 @@
-type Jin10FeedItem = {
+export type Jin10FeedItem = {
     title?: string;
     description?: string;
 };
 
-type Jin10RawItem = {
+export type Jin10RawItem = {
+    id?: string | number;
+    time?: string;
     type?: number;
     title?: string;
     summary?: string;
+    important?: number;
+    tags?: unknown[];
+    channel?: number[];
+    remark?: Array<{
+        type?: string;
+        title?: string;
+        symbol?: string;
+        category_name?: string;
+        pic?: string;
+    }>;
     data?: {
         content?: string;
         title?: string;
+        source?: string;
+        source_link?: string;
         vip_title?: string;
         vip_level?: number;
         lock?: boolean | number;

@@ -58,7 +58,7 @@ async function handler(ctx) {
 
     const item = data
         .map((item) => {
-            const titleMatch = item.data.content.match(/^【(.*?)】/);
+            const titleMatch = item.data.content.match(/^【([^】]+)】/s);
             let title;
             let content = item.data.content;
             if (titleMatch) {

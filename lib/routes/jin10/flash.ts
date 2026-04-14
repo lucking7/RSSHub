@@ -1,10 +1,13 @@
+import { config } from '@/config';
 import type { Route } from '@/types';
 import { ViewType } from '@/types';
+import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
-import { isJin10PromotionalItem } from './filters';
+import { isJin10AdFeedItem, isJin10PromotionalItem, type Jin10RawItem } from './filters';
+import { CHANNEL_MAP, buildFlashDescription, buildFlashLink, collectFlashImages } from './utils';
 
 export const route: Route = {
     path: '/flash/:channel?',
@@ -12,7 +15,7 @@ export const route: Route = {
     view: ViewType.Notifications,
     example: '/jin10/flash',
     parameters: {
-        channel: '频道，可选，留空为全部快讯',
+        channel: '频道，可选；留空=全部快讯，`1`=美股盘前/盘后异动，`2`=港股盘前/盘后异动',
     },
     features: {
         requireConfig: false,
@@ -28,161 +31,118 @@ export const route: Route = {
         },
     ],
     name: '快讯 - 美港电讯',
-    maintainers: [''],
+    maintainers: ['laampui'],
     handler,
     description: `获取金十数据（美港电讯）的实时财经快讯。
 
-支持参数：
+频道（路径参数）：
+- 留空 = 全部快讯（综合，更新最快）
+- \`1\` = 美股盘前/盘后异动
+- \`2\` = 港股盘前/盘后异动
+
+查询参数：
 - \`important_only=1\` 仅返回重要快讯
 - \`limit=50\` 限制返回数量（默认50条）
 
 示例：
 - \`/jin10/flash\` - 所有快讯
-- \`/jin10/flash?important_only=1\` - 仅重要快讯
-- \`/jin10/flash?limit=20\` - 限制20条`,
+- \`/jin10/flash/1\` - 美股盘前/盘后异动
+- \`/jin10/flash/2\` - 港股盘前/盘后异动
+- \`/jin10/flash?important_only=1\` - 全部快讯中仅重要
+- \`/jin10/flash/1?limit=20\` - 美港频道前20条`,
+};
+
+const extractRemarkTags = (remark: Jin10RawItem['remark']): string[] => {
+    const tags: string[] = [];
+    for (const r of remark ?? []) {
+        if (r.category_name) {
+            tags.push(r.category_name);
+        }
+        if (r.symbol) {
+            tags.push(r.symbol);
+        }
+    }
+    return tags;
 };
 
 async function handler(ctx) {
     const channel = ctx.req.param('channel') ?? '';
-    const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 50;
+    const limitQuery = ctx.req.query('limit');
+    const limit = limitQuery ? Number.parseInt(limitQuery) : 50;
     const importantOnly = ctx.req.query('important_only') === '1';
 
-    const rootUrl = 'https://www.ushknews.com';
-    const apiUrl = 'https://flash-api.ushknews.com/get_flash_list_with_channel';
-
-    const response = await got({
-        method: 'get',
-        url: apiUrl,
-        searchParams: {
-            channel,
+    const rawItems: Jin10RawItem[] = await cache.tryGet(
+        `jin10:ushknews:${channel || 'all'}`,
+        async () => {
+            const { data: response } = await got('https://flash-api.ushknews.com/get_flash_list_with_channel', {
+                searchParams: { channel },
+                headers: {
+                    'x-app-id': 'brCYec5s1ova317e',
+                    'x-version': '1.0.0',
+                    referer: 'https://www.ushknews.com/',
+                },
+            });
+            return response.data ?? [];
         },
-        headers: {
-            'x-app-id': 'brCYec5s1ova317e',
-            'x-version': '1.0.0',
-            referer: 'https://www.ushknews.com/',
-        },
-    });
+        config.cache.routeExpire,
+        false
+    );
 
-    const data = response.data?.data ?? [];
+    const filtered = rawItems.filter((item) => !isJin10PromotionalItem(item) && (!importantOnly || item.important === 1)).slice(0, limit);
 
-    // 过滤广告和重要快讯
-    let filteredData = data.filter((item) => !isJin10PromotionalItem(item));
-    if (importantOnly) {
-        filteredData = filteredData.filter((item) => item.important === 1);
-    }
-    const list = filteredData.slice(0, limit);
+    const items = filtered
+        .map((item) => {
+            const content = item.data?.content ?? '';
+            const bracketMatch = content.match(/^【([^】]+)】(.*)$/s);
 
-    const items = list.map((item) => {
-        const id = item.id;
-
-        const content = item.data?.content ?? '';
-
-        // 提取标题和正文 - 保留【】书名号（与 sina 一致）
-        let baseTitle = '';
-        let bodyContent = '';
-
-        const bracketMatch = content.match(/^【([^】]+)】(.*)$/s);
-        if (bracketMatch) {
-            baseTitle = `【${bracketMatch[1].trim()}】`;
-            bodyContent = bracketMatch[2].trim();
-        } else {
-            // 使用内容前80个字符作为标题
-            const plainText = (item.data?.title && item.data.title.trim()) || content.replaceAll(/<[^>]+>/g, '');
-            baseTitle = plainText.length > 80 ? plainText.slice(0, 80) + '…' : plainText;
-            bodyContent = content;
-        }
-
-        const link = `${rootUrl}/#${id}`;
-        const pubDate = timezone(parseDate(item.time), +8);
-        const isImportant = item.important === 1;
-        const isVip = item.data?.vip_level && item.data.vip_level > 0;
-
-        // 构建标题前缀（纯文本，用于 RSS 标题）
-        const titlePrefix = isImportant ? '[重要]' : '';
-        const title = titlePrefix ? `${titlePrefix} ${baseTitle}` : baseTitle;
-
-        // 构建 description
-        // 标题（下划线+加粗）
-        const titleHtml = `<p style="margin: 0 0 10px 0;"><strong><u>${baseTitle}</u></strong></p>`;
-        // 重要标签 HTML（加粗+斜体+划线）
-        const importantHtml = isImportant ? '<p style="margin: 0 0 8px 0;"><b><i><u>[重要]</u></i></b></p>' : '';
-
-        // 正文内容
-        let description = bodyContent;
-
-        // 收集所有图片
-        const images: string[] = [];
-        if (item.data?.pic) {
-            images.push(item.data.pic);
-        }
-
-        if (item.remark && Array.isArray(item.remark)) {
-            for (const remark of item.remark) {
-                if (remark.pic) {
-                    images.push(remark.pic);
-                }
+            let baseTitle: string;
+            let body: string;
+            if (bracketMatch) {
+                baseTitle = `【${bracketMatch[1].trim()}】`;
+                body = bracketMatch[2].trim();
+            } else {
+                const plainText = item.data?.title?.trim() || content.replaceAll(/<[^>]+>/g, '');
+                baseTitle = plainText.length > 80 ? plainText.slice(0, 80) + '…' : plainText;
+                body = content;
             }
-        }
 
-        // 添加来源信息（如果有）
-        if (item.data?.source) {
-            const sourceLink = item.data?.source_link;
-            const sourceText = sourceLink ? `<a href="${sourceLink}" target="_blank">${item.data.source}</a>` : item.data.source;
-            description += `<br><br><p style="color: #666; font-size: 0.9em;">来源: ${sourceText}</p>`;
-        }
+            const isImportant = item.important === 1;
+            const isVip = (item.data?.vip_level ?? 0) > 0;
+            const channels = (item.channel ?? []).map((ch) => CHANNEL_MAP[ch]).filter(Boolean);
+            const category = [...new Set([...(isImportant ? ['重要'] : []), ...(isVip ? ['VIP'] : []), ...channels, ...extractRemarkTags(item.remark)])];
+            const images = collectFlashImages(item);
 
-        // 构建分类
-        const category: string[] = [];
+            const title = isImportant ? `「重要」${baseTitle}` : baseTitle;
+            const description = buildFlashDescription({
+                baseTitle,
+                body,
+                isImportant,
+                source: item.data?.source,
+                sourceLink: item.data?.source_link,
+                images,
+            });
+            const [firstImage] = images;
 
-        if (isImportant) {
-            category.push('重要');
-        }
-
-        if (isVip) {
-            category.push('VIP');
-        }
-
-        if (item.tags && Array.isArray(item.tags) && item.tags.length > 0) {
-            category.push(...item.tags.map((tag: any) => tag.toString()));
-        }
-
-        if (item.channel && Array.isArray(item.channel) && item.channel.length > 0) {
-            category.push(...item.channel.map((ch: any) => ch.toString()));
-        }
-
-        if (item.remark && Array.isArray(item.remark)) {
-            for (const remark of item.remark) {
-                if (remark.category_name) {
-                    category.push(remark.category_name);
-                }
-                if (remark.symbol) {
-                    category.push(remark.symbol);
-                }
-            }
-        }
-
-        const result: any = {
-            title,
-            description: titleHtml + importantHtml + description,
-            link,
-            pubDate,
-            category: [...new Set(category)],
-            guid: id,
-            author: item.data?.source || '金十数据',
-        };
-
-        if (images.length > 0) {
-            result.image = images[0];
-            result.enclosure_url = images[0];
-            result.enclosure_type = 'image/jpeg';
-        }
-
-        return result;
-    });
+            return {
+                title,
+                description,
+                link: buildFlashLink(item),
+                pubDate: timezone(parseDate(item.time!), +8),
+                category,
+                guid: item.id,
+                author: item.data?.source || '金十数据',
+                ...(firstImage && {
+                    image: firstImage,
+                    enclosure_url: firstImage,
+                    enclosure_type: 'image/jpeg',
+                }),
+            };
+        })
+        .filter((item) => !isJin10AdFeedItem(item));
 
     return {
         title: `金十数据 - 美港电讯${importantOnly ? ' - 重要快讯' : ''}${channel ? ` - ${channel}` : ''}`,
-        link: rootUrl,
+        link: 'https://www.ushknews.com',
         item: items,
         description: `金十数据实时财经快讯${importantOnly ? '（仅重要）' : ''}`,
     };

@@ -1,4 +1,5 @@
 import { config } from '@/config';
+import InvalidParameterError from '@/errors/types/invalid-parameter';
 import type { Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
@@ -8,148 +9,67 @@ import timezone from '@/utils/timezone';
 
 import { isJin10AdFeedItem, isJin10PromotionalItem } from './filters';
 import { renderDescription } from './templates/description';
+import { buildFlashLink } from './utils';
+
+const JIN10_API_BASE = 'https://4a735ea38f8146198dc205d2e2d1bd28.z3c.jin10.com';
+const JIN10_API_HEADERS = {
+    'x-app-id': 'bVBF4FyRTn5NJF5n',
+    'x-version': '1.0',
+};
+
+type ClassifyNode = { id: number; name: string; child?: ClassifyNode[] };
+
+const fetchClassifyTree = async (): Promise<ClassifyNode[]> =>
+    (await cache.tryGet(
+        'jin10:classify:tree',
+        async () => {
+            const { data: response } = await got(`${JIN10_API_BASE}/classify`, {
+                headers: JIN10_API_HEADERS,
+            });
+            return response.data as ClassifyNode[];
+        },
+        config.cache.contentExpire,
+        false
+    )) as ClassifyNode[];
+
+const findClassifyName = (tree: ClassifyNode[], id: number): string | undefined => {
+    for (const top of tree) {
+        if (top.id === id) {
+            return top.name;
+        }
+        for (const child of top.child ?? []) {
+            if (child.id === id) {
+                return `${top.name}/${child.name}`;
+            }
+        }
+    }
+};
 
 export const route: Route = {
     path: '/category/:id',
     categories: ['finance'],
     view: ViewType.Notifications,
     example: '/jin10/category/36',
-    parameters: { id: '分类id，见下表' },
-    description: `
-| Name           | ID   |
-|----------------|------|
-| 贵金属         | 1    |
-| 黄金           | 2    |
-| 白银           | 3    |
-| 钯金           | 4    |
-| 铂金           | 5    |
-| 石油           | 6    |
-| WTI原油        | 7    |
-| 布伦特原油     | 8    |
-| 欧佩克         | 9    |
-| 页岩气         | 10   |
-| 原油市场报告   | 11   |
-| 外汇           | 12   |
-| 欧元           | 13   |
-| 英镑           | 14   |
-| 日元           | 15   |
-| 美元           | 16   |
-| 瑞郎           | 17   |
-| 人民币         | 18   |
-| 期货           | 36   |
-| 油脂油料       | 145  |
-| 钢矿           | 146  |
-| 煤炭           | 147  |
-| 化工           | 148  |
-| 有色           | 149  |
-| 谷物           | 150  |
-| 糖棉果蛋       | 151  |
-| 生猪           | 152  |
-| 碳排放         | 154  |
-| 数字货币       | 19   |
-| 数字人民币     | 107  |
-| 科技           | 22   |
-| 手机           | 23   |
-| 电动汽车       | 39   |
-| 芯片           | 40   |
-| 中国突破       | 41   |
-| 5G             | 42   |
-| 量子计算       | 43   |
-| 航空航天       | 158  |
-| 元宇宙         | 165  |
-| 人工智能       | 168  |
-| 地缘局势       | 24   |
-| 缅甸局势       | 44   |
-| 印巴纷争       | 45   |
-| 中东风云       | 46   |
-| 阿富汗局势     | 155  |
-| 俄乌冲突       | 167  |
-| 人物           | 25   |
-| 鲍威尔         | 47   |
-| 马斯克         | 48   |
-| 拉加德         | 49   |
-| 特朗普         | 50   |
-| 拜登           | 51   |
-| 巴菲特         | 157  |
-| 央行           | 26   |
-| 美联储         | 53   |
-| 中国央行       | 54   |
-| 欧洲央行       | 55   |
-| 日本央行       | 56   |
-| 货币政策调整   | 137  |
-| 英国央行       | 141  |
-| 澳洲联储       | 159  |
-| 新西兰联储     | 160  |
-| 加拿大央行     | 161  |
-| 美股           | 27   |
-| 财报           | 59   |
-| Reddit散户动态 | 60   |
-| 个股动态       | 108  |
-| 港股           | 28   |
-| 美股回港       | 61   |
-| 交易所动态     | 62   |
-| 指数动态       | 63   |
-| 个股动态       | 109  |
-| A股            | 29   |
-| 美股回A        | 64   |
-| 券商分析       | 65   |
-| 板块异动       | 66   |
-| 大盘动态       | 67   |
-| 南北资金       | 68   |
-| 亚盘动态       | 69   |
-| IPO信息        | 70   |
-| 个股动态       | 110  |
-| 北交所         | 166  |
-| 基金           | 30   |
-| 投行机构       | 31   |
-| 标普、惠誉、穆迪 | 71  |
-| 美银           | 72   |
-| 高盛           | 112  |
-| 疫情           | 32   |
-| 疫苗动态       | 73   |
-| 确诊数据       | 74   |
-| 新冠药物       | 113  |
-| 债券           | 33   |
-| 政策           | 34   |
-| 中国           | 75   |
-| 美国           | 76   |
-| 欧盟           | 77   |
-| 日本           | 78   |
-| 贸易、关税     | 79   |
-| 碳中和         | 80   |
-| 中国香港       | 81   |
-| 英国           | 120  |
-| 房地产动态     | 156  |
-| 经济数据       | 35   |
-| 中国           | 82   |
-| 美国           | 83   |
-| 欧盟           | 84   |
-| 日本           | 85   |
-| 公司           | 37   |
-| 特斯拉         | 86   |
-| 苹果           | 90   |
-| 独角兽         | 91   |
-| 谷歌           | 92   |
-| 华为           | 93   |
-| 阿里巴巴       | 94   |
-| 小米           | 95   |
-| 字节跳动       | 116  |
-| 腾讯           | 117  |
-| 微软           | 118  |
-| 百度           | 119  |
-| 美团           | 162  |
-| 滴滴           | 163  |
-| 中国恒大       | 164  |
-| 灾害事故       | 38   |
-| 地震           | 96   |
-| 爆炸           | 97   |
-| 海啸           | 98   |
-| 寒潮           | 99   |
-| 洪涝           | 100  |
-| 火灾           | 101  |
-| 矿难           | 102  |
-| 枪击案         | 103  |
-`,
+    parameters: { id: '分类 id' },
+    description: `获取金十数据指定分类的实时快讯。
+
+分类 id 来自 [分类树接口](https://4a735ea38f8146198dc205d2e2d1bd28.z3c.jin10.com/classify)，路由会在运行时动态拉取并校验，id 不存在会报错。
+
+常用一级分类：
+
+| 分类     | id  | 分类     | id  |
+|----------|-----|----------|-----|
+| 贵金属   | 1   | 美股     | 27  |
+| 石油     | 6   | 港股     | 28  |
+| 外汇     | 12  | A股      | 29  |
+| 期货     | 36  | 基金     | 30  |
+| 科技     | 22  | 投行机构 | 31  |
+| 地缘局势 | 24  | 债券     | 33  |
+| 人物     | 25  | 政策     | 34  |
+| 央行     | 26  | 经济数据 | 35  |
+| 公司     | 37  | 灾害事故 | 38  |
+
+子分类（黄金=2、WTI原油=7、美联储=53、特斯拉=86 等）从接口实时查询。`,
     features: {
         requireConfig: false,
         requirePuppeteer: false,
@@ -164,22 +84,30 @@ export const route: Route = {
             target: '',
         },
     ],
-    name: '外汇',
+    name: '分类快讯',
     maintainers: ['laampui'],
     handler,
     url: 'jin10.com/',
 };
 
 async function handler(ctx) {
-    const id = ctx.req.param('id');
+    const idParam = ctx.req.param('id');
+    const id = Number.parseInt(idParam, 10);
+    if (!Number.isFinite(id)) {
+        throw new InvalidParameterError(`分类 id 必须为数字，收到: ${idParam}`);
+    }
+
+    const tree = await fetchClassifyTree();
+    const classifyName = findClassifyName(tree, id);
+    if (!classifyName) {
+        throw new InvalidParameterError(`分类 id ${id} 不存在，可访问 ${JIN10_API_BASE}/classify 查看当前分类树`);
+    }
+
     const data = await cache.tryGet(
-        'jin10:aa:${category}',
+        `jin10:category:${id}`,
         async () => {
-            const { data: response } = await got('https://4a735ea38f8146198dc205d2e2d1bd28.z3c.jin10.com/flash', {
-                headers: {
-                    'x-app-id': 'bVBF4FyRTn5NJF5n',
-                    'x-version': '1.0',
-                },
+            const { data: response } = await got(`${JIN10_API_BASE}/flash`, {
+                headers: JIN10_API_HEADERS,
                 searchParams: {
                     channel: '-8200',
                     vip: '1',
@@ -194,27 +122,30 @@ async function handler(ctx) {
 
     const item = data
         .map((item) => {
-            const titleMatch = item.data.content.match(/^【(.*?)】/);
+            const content = item.data?.content ?? '';
+            const titleMatch = content.match(/^【([^】]+)】/s);
             let title;
-            let content = item.data.content;
+            let body = content;
             if (titleMatch) {
                 title = titleMatch[1];
-                content = content.replace(titleMatch[0], '');
+                body = content.replace(titleMatch[0], '');
             } else {
-                title = item.data.vip_title || item.data.content;
+                const fallback = item.data?.vip_title || content;
+                title = fallback.length > 80 ? fallback.slice(0, 80) + '…' : fallback;
             }
 
             return {
                 title,
-                description: renderDescription(content, item.data.pic),
+                description: renderDescription(body, item.data?.pic),
                 pubDate: timezone(parseDate(item.time), 8),
+                link: buildFlashLink(item),
                 guid: `jin10:category:${item.id}`,
             };
         })
         .filter((item) => !isJin10AdFeedItem(item));
 
     return {
-        title: '金十数据',
+        title: `金十数据 - ${classifyName}`,
         link: 'https://www.jin10.com/',
         item,
     };
