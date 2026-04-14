@@ -109,7 +109,7 @@ async function handler(ctx) {
         if (isJin10PromotionalItem(item)) {
             return false;
         }
-        if (channelFilter && !(item.channel?.includes(channelFilter))) {
+        if (channelFilter && !item.channel?.includes(channelFilter)) {
             return false;
         }
         if (importantFilter === 1 && item.important !== 1) {
