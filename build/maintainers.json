@@ -4950,14 +4950,14 @@
   "/jimmyspa/news/:language": [
     "Cedaric"
   ],
+  "/jin10/flash/:channel?": [
+    "laampui"
+  ],
   "/jin10/new/:channel?/:important?": [
     "laampui"
   ],
   "/jin10/topic/:id": [
     "miles170"
-  ],
-  "/jin10/flash/:channel?": [
-    ""
   ],
   "/jin10/category/:id": [
     "laampui"
