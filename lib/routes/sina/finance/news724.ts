@@ -97,6 +97,14 @@ export function pickLink(item: { pageUrl?: string; url?: string; id: number | st
     return raw.replace(/^http:/, 'https:');
 }
 
+// 构造 title：优先取 content 里首个【】内文字，否则取前 100 字符，兜底用 id。color === 1 的加「重要」前缀（与 jin10 路由保持一致）。
+export function buildTitle(item: { color?: number; content?: string; id: number | string }): string {
+    const cleanContent = (item.content ?? '').replaceAll(/<[^>]+>/g, '');
+    const titleMatch = cleanContent.match(/【([^】]+)】/);
+    const base = titleMatch ? titleMatch[1] : cleanContent.slice(0, 100) || `财经快讯 ${item.id}`;
+    return item.color === 1 ? `「重要」${base}` : base;
+}
+
 function formatStockItems(items: Sina724Stock[]): string {
     let result = '';
     for (const stock of items) {
@@ -170,10 +178,7 @@ async function handler(ctx) {
         const newsId = item.id;
         const pubDate = timezone(parseDate(item.ctime), +8);
 
-        // 解析标题（提取【】内的内容，但title不保留【】符号）
-        const cleanContent = content.replaceAll(/<[^>]+>/g, '');
-        const titleMatch = cleanContent.match(/【([^】]+)】/);
-        const title = titleMatch ? titleMatch[1] : cleanContent.slice(0, 100) || `财经快讯 ${newsId}`;
+        const title = buildTitle(item);
 
         // 构建描述（去掉开头的【】部分）
         let description = content.replace(/【[^】]+】/, '').trim();

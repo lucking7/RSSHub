@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { buildImageHtml, classifyStocks, pickLink } from './news724';
+import { buildImageHtml, buildTitle, classifyStocks, pickLink } from './news724';
 
 describe('classifyStocks', () => {
     test('A 股按 stocktype=cn 归入个股', () => {
@@ -97,5 +97,51 @@ describe('pickLink', () => {
 
     test('都没有时退回构造 URL', () => {
         expect(pickLink({ id: 9999 })).toBe('https://news.cj.sina.cn/7x24/9999');
+    });
+});
+
+describe('buildTitle', () => {
+    test('color=1 加「重要」前缀 + 提取【】内文字', () => {
+        expect(
+            buildTitle({
+                color: 1,
+                content: '【午评：创业板指半日涨超2%】三大指数早盘集体上涨',
+                id: 4_814_132,
+            })
+        ).toBe('「重要」午评：创业板指半日涨超2%');
+    });
+
+    test('color=0 不加前缀，仅提取【】内文字', () => {
+        expect(
+            buildTitle({
+                color: 0,
+                content: '【兆易创新与吉利汽车共建联合创新实验室】近日...',
+                id: 4_814_100,
+            })
+        ).toBe('兆易创新与吉利汽车共建联合创新实验室');
+    });
+
+    test('color=1 + 无【】：「重要」+ 前 100 字', () => {
+        expect(
+            buildTitle({
+                color: 1,
+                content: '纽约期银突破77美元/盎司，日内涨1.79%。',
+                id: 4_814_147,
+            })
+        ).toBe('「重要」纽约期银突破77美元/盎司，日内涨1.79%。');
+    });
+
+    test('color 未设置时视为普通快讯', () => {
+        expect(
+            buildTitle({
+                content: '普通快讯',
+                id: 1,
+            })
+        ).toBe('普通快讯');
+    });
+
+    test('空 content 兜底为 "财经快讯 <id>"', () => {
+        expect(buildTitle({ color: 0, content: '', id: 42 })).toBe('财经快讯 42');
+        expect(buildTitle({ color: 1, id: 43 })).toBe('「重要」财经快讯 43');
     });
 });
