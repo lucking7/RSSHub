@@ -4,7 +4,8 @@ import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
-// 分类映射表
+import { renderSectorAndStockCards, type StockItem } from '../_finance/stock-card';
+
 const categories = {
     '100': '焦点',
     '101': '要闻',
@@ -123,10 +124,8 @@ async function handler(ctx) {
 
     const rootUrl = 'https://kuaixun.eastmoney.com';
 
-    // 东方财富快讯API接口
     const apiUrl = 'https://np-weblist.eastmoney.com/comm/web/getFastNewsList';
 
-    // 如果category为'zhibo'则使用直播接口
     const isZhibo = category === 'zhibo';
     const finalApiUrl = isZhibo ? 'https://np-weblist.eastmoney.com/comm/web/getFastNewsZhibo' : apiUrl;
 
@@ -165,7 +164,6 @@ async function handler(ctx) {
         filteredList = list.filter((item) => item.important === 1 || item.importantLevel > 0);
     }
 
-    // 收集所有股票代码，批量获取股票信息
     const allStocks = new Set<string>();
     for (const item of filteredList.slice(0, limit)) {
         if (item.stockList && Array.isArray(item.stockList)) {
@@ -175,7 +173,6 @@ async function handler(ctx) {
         }
     }
 
-    // 批量请求股票信息
     const stockMap: Record<string, any> = {};
     if (allStocks.size > 0) {
         try {
@@ -196,20 +193,19 @@ async function handler(ctx) {
                 },
             });
 
-            // 建立股票代码到详情的映射
             if (stockResponse.data?.data?.diff) {
                 for (const stock of stockResponse.data.data.diff) {
                     const key = `${stock.f13}.${stock.f12}`;
                     stockMap[key] = {
-                        name: stock.f14, // 股票名称
-                        price: stock.f2, // 最新价
-                        change: stock.f3, // 涨跌幅
-                        changeAmount: stock.f4, // 涨跌额
+                        name: stock.f14,
+                        price: stock.f2,
+                        change: stock.f3,
+                        changeAmount: stock.f4,
                     };
                 }
             }
         } catch {
-            // 股票信息获取失败不影响主流程
+            // ignore
         }
     }
 
@@ -249,57 +245,24 @@ async function handler(ctx) {
             description += `<br><br>${images}`;
         }
 
-        // 添加股票信息到描述（统一为两行布局 + 彩色边框）
         if (item.stockList && item.stockList.length > 0) {
-            // 区分板块和股票（东方财富代码格式：市场.代码，如 0.399001 是指数/板块）
-            const sectors: any[] = [];
-            const stocks: any[] = [];
+            const sectors: StockItem[] = [];
+            const stocks: StockItem[] = [];
 
             for (const stockCode of item.stockList) {
                 const info = stockMap[stockCode];
                 if (info) {
                     const [market] = stockCode.split('.');
-                    // 0 开头通常是指数/板块，1/105/106/107 等是股票市场
+                    const si: StockItem = { name: info.name, code: stockCode.split('.')[1], change: info.change };
                     if (market === '0' || market === '90') {
-                        sectors.push({ code: stockCode, ...info });
+                        sectors.push(si);
                     } else {
-                        stocks.push({ code: stockCode, ...info });
+                        stocks.push(si);
                     }
                 }
             }
 
-            // 格式化股票/板块显示
-            const formatStockItems = (items: any[]) => {
-                let result = '';
-                for (const item of items) {
-                    const changeColor = item.change > 0 ? '#f5222d' : item.change < 0 ? '#52c41a' : '#666';
-                    const arrow = item.change > 0 ? '↑' : item.change < 0 ? '↓' : '-';
-                    const sign = item.change > 0 ? '+' : '';
-                    const code = item.code.split('.')[1];
-
-                    result += `• <strong>${item.name}</strong> <span style="color: #999;">(${code})</span><br>`;
-                    result += `<span style="color: ${changeColor}; font-weight: bold;">${arrow} ${sign}${item.change}%</span><br>`;
-                }
-                return result;
-            };
-
-            // 显示板块（蓝色边框）
-            if (sectors.length > 0) {
-                const sectorHtml = formatStockItems(sectors);
-                description += '<br><div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
-                description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关板块</h3>';
-                description += sectorHtml;
-                description += '</div>';
-            }
-
-            // 显示股票（绿色边框）
-            if (stocks.length > 0) {
-                const stockHtml = formatStockItems(stocks);
-                description += '<br><div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
-                description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关股票</h3>';
-                description += stockHtml;
-                description += '</div>';
-            }
+            description += renderSectorAndStockCards(sectors, stocks);
         }
 
         // 添加来源信息

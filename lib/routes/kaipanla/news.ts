@@ -5,6 +5,10 @@ import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
+import { renderSectorAndStockCards, type StockItem } from '../_finance/stock-card';
+
+const toStockTuple = ([code, name, change]: any[]): StockItem => ({ name, code, change });
+
 export const route: Route = {
     path: '/news/:type?',
     name: '新闻快讯',
@@ -95,68 +99,10 @@ async function handler(ctx) {
         description += `<p style="margin: 0; line-height: 1.6; color: #333;">${contentText}</p>`;
         description += '</div>';
 
-        // 2. 相关板块和股票信息（如果有）
         if (item.Stocks && item.Stocks.length > 0) {
-            // 判断代码类型：8开头是板块，其他是股票
-            const plates: any[] = [];
-            const stocks: any[] = [];
-
-            for (const stock of item.Stocks) {
-                const [code] = stock;
-                if (code.startsWith('8')) {
-                    plates.push(stock);
-                } else {
-                    stocks.push(stock);
-                }
-            }
-
-            // 格式化输出函数（HTML格式）
-            const formatItems = (items: any[]) => {
-                let result = '';
-                for (const [code, name, changeStr] of items) {
-                    // 解析涨跌幅
-                    let arrow = '-';
-                    let color = '#666';
-                    let changeDisplay = '0.00%';
-
-                    if (changeStr && changeStr.trim() !== '') {
-                        const changeNum = Number.parseFloat(changeStr.replace('%', ''));
-                        if (changeNum > 0) {
-                            arrow = '↑';
-                            color = '#ff4d4f';
-                            changeDisplay = `+${changeStr}`;
-                        } else if (changeNum < 0) {
-                            arrow = '↓';
-                            color = '#52c41a';
-                            changeDisplay = changeStr;
-                        } else {
-                            arrow = '-';
-                            color = '#666';
-                            changeDisplay = changeStr;
-                        }
-                    }
-
-                    result += `• <strong>${name}</strong> <span style="color: #999;">(${code})</span><br>`;
-                    result += `<span style="color: ${color}; font-weight: bold;">${arrow} ${changeDisplay}</span><br>`;
-                }
-                return result;
-            };
-
-            // 显示板块（下划线标题）
-            if (plates.length > 0) {
-                description += '<br><div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
-                description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">相关板块</h3>';
-                description += formatItems(plates);
-                description += '</div>';
-            }
-
-            // 显示股票（下划线标题）
-            if (stocks.length > 0) {
-                description += '<br><div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
-                description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">相关股票</h3>';
-                description += formatItems(stocks);
-                description += '</div>';
-            }
+            const plates = item.Stocks.filter(([code]: any[]) => code.startsWith('8')).map((s: any[]) => toStockTuple(s));
+            const stocks = item.Stocks.filter(([code]: any[]) => !code.startsWith('8')).map((s: any[]) => toStockTuple(s));
+            description += renderSectorAndStockCards(plates, stocks);
         }
 
         // 构建分类信息：股票名(代码)，不包含涨跌幅（避免动态数据）

@@ -4,6 +4,8 @@ import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
+import { renderSectorAndStockCards, type StockItem } from '../../_finance/stock-card';
+
 export const route: Route = {
     path: '/finance/newslist',
     name: '财经快讯 - 自选股',
@@ -116,7 +118,6 @@ async function handler(ctx) {
         throw new Error(`Failed to fetch news: ${error.message}`, { cause: error });
     }
 
-    // 收集所有股票代码，批量获取股票信息
     const allStocks = new Set<string>();
     for (const item of collected.slice(0, limit)) {
         if (item.relate_stocks && Array.isArray(item.relate_stocks)) {
@@ -128,13 +129,6 @@ async function handler(ctx) {
         }
     }
 
-    // 批量请求股票信息（使用腾讯行情接口）
-    // 优化3测试结果：
-    // ✅ 支持A股: sh600519, sz002533 等
-    // ✅ 支持港股: hk09988, hk09696 等
-    // ✅ 支持美股: usNVDA (英伟达), usBABA (阿里巴巴), usMSFT (微软) 等
-    // ✅ 支持板块: cs931071 (人工智能), pt02GN2162 (钒电池) 等部分板块
-    // ❌ 不支持: 大部分板块代码（pt、bk开头）无法获取实时行情
     const stockMap: Record<string, any> = {};
     if (allStocks.size > 0) {
         try {
@@ -148,7 +142,6 @@ async function handler(ctx) {
                 responseType: 'text',
             });
 
-            // 解析腾讯行情数据格式：v_sh600519="51~贵州茅台~600519~1650.00~1645.50~..."
             const lines = stockResponse.data.split('\n');
             for (const line of lines) {
                 const match = line.match(/v_([^=]+)="([^"]+)"/);
@@ -165,7 +158,7 @@ async function handler(ctx) {
                 }
             }
         } catch {
-            // 股票信息获取失败不影响主流程
+            // ignore
         }
     }
 
@@ -183,85 +176,37 @@ async function handler(ctx) {
                 return titleMatch ? titleMatch[1] : cleanContent.slice(0, 100) || `财经快讯 ${newsId}`;
             })();
 
-        // 构建描述（主内容区域 - 紫色边框）
         let description = '<div style="padding: 15px; background: #f8f9fa; border-left: 4px solid #667eea; border-radius: 5px; margin-bottom: 10px;">';
         description += '<p style="margin: 0; line-height: 1.8; font-size: 15px;">';
-        // 移除【】标题
         let cleanContent = content.replace(/【[^】]+】/, '').trim();
-
-        // 清理 stock:// 协议链接，并为股票名称添加视觉标识
-        // 匹配格式: <a class="xxx" href = "stock://...">股票名</a> (注意 href 前后可能有空格)
         cleanContent = cleanContent.replaceAll(/<a[^>]*href\s*=\s*"stock:\/\/[^"]*"[^>]*>([^<]+)<\/a>/g, '<em><strong>$1</strong></em>');
 
         description += cleanContent;
         description += '</p></div>';
 
-        // 处理股票信息
         const stockList = item.relate_stocks || [];
         if (stockList.length > 0) {
-            // 区分板块和个股
-            const sectors: any[] = [];
-            const individualStocks: any[] = [];
+            const sectors: StockItem[] = [];
+            const individualStocks: StockItem[] = [];
 
             for (const stock of stockList) {
                 const stockCode = stock.symbol || '';
                 const stockInfo = stockMap[stockCode];
+                if (!stockInfo) {
+                    continue;
+                }
 
-                // 根据市场类型判断（板块代码通常包含 cs、pt、bk 等前缀）
                 const isSector = stockCode.startsWith('cs') || stockCode.startsWith('pt') || stockCode.startsWith('bk');
-
-                const stockData = {
-                    code: stockCode,
-                    name: stock.name || (stockInfo ? stockInfo.name : ''),
-                    change: stockInfo ? Number.parseFloat(stockInfo.change) || 0 : null,
-                    hasPrice: !!stockInfo,
-                };
+                const si: StockItem = { name: stock.name || stockInfo.name, code: stockCode.toUpperCase(), change: Number.parseFloat(stockInfo.change) || 0 };
 
                 if (isSector) {
-                    sectors.push(stockData);
+                    sectors.push(si);
                 } else {
-                    individualStocks.push(stockData);
+                    individualStocks.push(si);
                 }
             }
 
-            // 格式化股票/板块显示
-            const formatStockItems = (items: any[]) => {
-                let result = '';
-                for (const item of items) {
-                    // 优化1: 只显示有行情数据的股票/板块
-                    if (!item.hasPrice || item.change === null) {
-                        continue;
-                    }
-
-                    // 优化2: 股票代码统一大写显示
-                    const upperCode = item.code.toUpperCase();
-                    result += `• <strong>${item.name}</strong> <span style="color: #999;">(${upperCode})</span><br>`;
-
-                    const changeColor = item.change > 0 ? '#f5222d' : item.change < 0 ? '#52c41a' : '#666';
-                    const arrow = item.change > 0 ? '↑' : item.change < 0 ? '↓' : '-';
-                    const sign = item.change > 0 ? '+' : '';
-                    result += `<span style="color: ${changeColor}; font-weight: bold;">${arrow} ${sign}${item.change}%</span><br>`;
-                }
-                return result;
-            };
-
-            // 显示板块（蓝色边框）
-            if (sectors.length > 0) {
-                const sectorHtml = formatStockItems(sectors);
-                description += '<br><div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
-                description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关板块</h3>';
-                description += sectorHtml;
-                description += '</div>';
-            }
-
-            // 显示股票（绿色边框）
-            if (individualStocks.length > 0) {
-                const stockHtml = formatStockItems(individualStocks);
-                description += '<br><div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
-                description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关股票</h3>';
-                description += stockHtml;
-                description += '</div>';
-            }
+            description += renderSectorAndStockCards(sectors, individualStocks);
         }
 
         // 构建分类标签

@@ -5,6 +5,8 @@ import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
+import { renderStockCard } from '../_finance/stock-card';
+
 export const route: Route = {
     path: '/dapanzhibo/:category?',
     name: '大盘直播',
@@ -103,41 +105,17 @@ async function handler(ctx) {
         // 2. 主要内容
         description += `<p>${item.Comment}</p>`;
 
-        // 3. 板块信息（下划线标题 + 中间点格式）
         if (item.PlateName && item.PlateName.trim() !== '') {
             const plateZdf = item.PlateZDF ? Number.parseFloat(item.PlateZDF) : null;
-            const arrow = plateZdf !== null && plateZdf > 0 ? '↑' : plateZdf !== null && plateZdf < 0 ? '↓' : '-';
-            const color = plateZdf !== null && plateZdf > 0 ? '#f5222d' : plateZdf !== null && plateZdf < 0 ? '#52c41a' : '#666';
-
-            description += '<div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
-            description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">板块</h3>';
-            description += `• <strong>${item.PlateName}</strong>`;
-            if (plateZdf !== null && !Number.isNaN(plateZdf)) {
-                description += `<br><span style="color: ${color}; font-weight: bold;">${arrow} ${plateZdf > 0 ? '+' : ''}${plateZdf.toFixed(2)}%</span>`;
-            }
-            if (item.PlateJE && item.PlateJE.trim() !== '') {
-                description += ` <span style="color: #999;">成交额: ${item.PlateJE}</span>`;
-            }
-            description += '</div>';
+            description += renderStockCard('板块', '#1890ff', [{ name: item.PlateName, code: item.PlateJE ? `成交额: ${item.PlateJE}` : '', change: plateZdf }]);
         }
 
-        // 4. 相关个股（下划线标题 + 中间点 + 股票名加粗）
         if (item.Stock && item.Stock.length > 0) {
-            description += '<div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
-            description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">相关个股</h3>';
-
-            for (const stock of item.Stock.slice(0, 15)) {
-                const [code, name, change] = stock;
-                const arrow = change > 0 ? '↑' : change < 0 ? '↓' : '-';
-                const color = change > 0 ? '#f5222d' : change < 0 ? '#52c41a' : '#666';
-                description += `• <strong>${name}</strong> <span style="color: #999;">(${code})</span><br>`;
-                description += `<span style="color: ${color}; font-weight: bold;">${arrow} ${change > 0 ? '+' : ''}${change}%</span><br>`;
-            }
-
+            const stockItems = item.Stock.slice(0, 15).map(([code, name, change]: any[]) => ({ name, code, change }));
+            description += renderStockCard('相关个股', '#52c41a', stockItems);
             if (item.Stock.length > 15) {
                 description += `<span style="color: #999;">...还有${item.Stock.length - 15}只</span>`;
             }
-            description += '</div>';
         }
 
         // 5. 解读内容（下划线标题）

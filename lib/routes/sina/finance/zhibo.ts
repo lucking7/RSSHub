@@ -7,6 +7,11 @@ import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
+import { renderSectorAndStockCards, type StockItem } from '../../_finance/stock-card';
+
+const toStockItemsWithQuotes = (items: any[], quotes: Record<string, { name: string; change: number }>): StockItem[] =>
+    items.filter((s) => quotes?.[s.symbol]?.change !== undefined).map((s) => ({ name: s.key, code: s.symbol.toUpperCase(), change: quotes[s.symbol].change }));
+
 const ROOT_URL = 'https://zhibo.sina.com.cn';
 
 export const route: Route = {
@@ -338,21 +343,6 @@ async function handler(ctx) {
     // 批量查询所有股票的实时行情（A股、美股、港股）
     const stockQuotes = await fetchStockQuotes(allStocks);
 
-    // 格式化股票/板块显示的辅助函数
-    const formatStockItems = (items: any[], quotes: Record<string, { name: string; change: number }>) => {
-        const html: string[] = [];
-        for (const s of items) {
-            const quote = quotes?.[s.symbol];
-            if (quote && quote.change !== undefined) {
-                const changeStr = quote.change >= 0 ? `+${quote.change.toFixed(2)}` : quote.change.toFixed(2);
-                const changeColor = quote.change >= 0 ? '#f5222d' : '#52c41a';
-                const arrow = quote.change >= 0 ? '↑' : '↓';
-                html.push(`• <strong>${s.key}</strong> <span style="color: #999;">(${s.symbol.toUpperCase()})</span><br>` + `<span style="color: ${changeColor}; font-weight: bold;">${arrow} ${changeStr}%</span><br>`);
-            }
-        }
-        return html.join('');
-    };
-
     const items = await Promise.all(
         filteredData.map(async (it) => {
             const plain = it.rich_text?.replaceAll(/<[^>]+>/g, '').trim() ?? '';
@@ -457,14 +447,10 @@ async function handler(ctx) {
                 }
             }
 
-            // 构建股票行情信息（区分板块和股票）
             const sectors: any[] = [];
             const individualStocks: any[] = [];
-
-            // 分类：8开头是板块，其他是股票
             for (const s of stockInfo) {
-                const code = s.symbol.toUpperCase();
-                if (code.startsWith('8')) {
+                if (s.symbol.toUpperCase().startsWith('8')) {
                     sectors.push(s);
                 } else {
                     individualStocks.push(s);
@@ -473,28 +459,8 @@ async function handler(ctx) {
 
             const stockCategories = stockInfo.map((s) => `${s.key}(${s.symbol.toUpperCase()})`);
 
-            // 生成完整描述（不限制字符长度），包含行情信息
             let description = `${plainBody}<br>`;
-
-            // 显示板块（蓝色边框）
-            if (sectors.length > 0) {
-                const sectorHtml = formatStockItems(sectors, stockQuotes);
-                if (sectorHtml) {
-                    description += '<br><div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
-                    description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关板块</h3>${sectorHtml}`;
-                    description += '</div>';
-                }
-            }
-
-            // 显示股票（绿色边框）
-            if (individualStocks.length > 0) {
-                const stockHtml = formatStockItems(individualStocks, stockQuotes);
-                if (stockHtml) {
-                    description += '<br><div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
-                    description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关股票</h3>${stockHtml}`;
-                    description += '</div>';
-                }
-            }
+            description += renderSectorAndStockCards(toStockItemsWithQuotes(sectors, stockQuotes), toStockItemsWithQuotes(individualStocks, stockQuotes));
 
             // 构建多媒体HTML内容
             const mediaHtml: string[] = [];

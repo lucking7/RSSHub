@@ -2,7 +2,10 @@ import type { Route } from '@/types';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
+import { renderSectorAndStockCards, type StockItem } from '../_finance/stock-card';
 import { getSearchParams } from './utils';
+
+const toStockItem = (s: any): StockItem => ({ name: s.name, code: s.StockID || '', change: s.RiseRange });
 
 const categories = {
     watch: '看盘',
@@ -15,22 +18,7 @@ const categories = {
     hk_us: '港美股',
 };
 
-function renderStockItems(items: any[]) {
-    let html = '';
-    for (const stock of items) {
-        html += `• <strong style="color: #333;">${stock.name}</strong> <span style="color: #999;">(${stock.StockID})</span><br>`;
-        if (stock.RiseRange > 0) {
-            html += `<span style="color: #ff4d4f; font-weight: bold;">↑ +${stock.RiseRange}%</span><br>`;
-        } else if (stock.RiseRange < 0) {
-            html += `<span style="color: #52c41a; font-weight: bold;">↓ ${stock.RiseRange}%</span><br>`;
-        } else {
-            html += '<span style="color: #666; font-weight: bold;">- 0.00%</span><br>';
-        }
-    }
-    return html;
-}
-
-function renderDescription({ item, images, sectors, stocks, level, assocArticleUrl }) {
+function renderDescription({ item, images, sectors, stocks, level, assocArticleUrl }: { item: any; images: string[]; sectors: StockItem[]; stocks: StockItem[]; level: string; assocArticleUrl: string }) {
     let html = '';
 
     if (level === 'A') {
@@ -43,28 +31,14 @@ function renderDescription({ item, images, sectors, stocks, level, assocArticleU
         html += item.content;
     }
 
-    if (images && images.length > 0) {
+    if (images.length > 0) {
         html += '<br>';
         for (const img of images) {
             html += `<img src="${img}" style="max-width: 100%; height: auto;">`;
         }
     }
 
-    if (sectors && sectors.length > 0) {
-        html += '<br>';
-        html += '<div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
-        html += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关板块</h3>';
-        html += renderStockItems(sectors);
-        html += '</div>';
-    }
-
-    if (stocks && stocks.length > 0) {
-        html += '<br>';
-        html += '<div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
-        html += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关股票</h3>';
-        html += renderStockItems(stocks);
-        html += '</div>';
-    }
+    html += renderSectorAndStockCards(sectors, stocks);
 
     if (assocArticleUrl) {
         html += '<br>';
@@ -143,8 +117,8 @@ async function handler(ctx) {
             StockID: stock.StockID ? stock.StockID.toUpperCase() : stock.StockID,
         }));
 
-        const sectors = processedStockList.filter((stock) => stock.StockID && stock.StockID.includes('801'));
-        const stocks = processedStockList.filter((stock) => !stock.StockID || !stock.StockID.includes('801'));
+        const sectors = processedStockList.filter((s) => s.StockID?.includes('801')).map((s) => toStockItem(s));
+        const stocks = processedStockList.filter((s) => !s.StockID?.includes('801')).map((s) => toStockItem(s));
 
         const subjectCategories = item.subjects?.map((s) => s.subject_name) || [];
         const stockNameCategories = processedStockList.map((stock) => stock.name);
