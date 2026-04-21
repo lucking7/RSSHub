@@ -7,7 +7,7 @@ import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
 import { isJin10AdFeedItem, isJin10PromotionalItem, type Jin10RawItem } from './filters';
-import { CHANNEL_MAP, buildFlashDescription, buildFlashLink, collectFlashImages } from './utils';
+import { buildFlashDescription, buildFlashLink, CHANNEL_MAP, collectFlashImages } from './utils';
 
 export const route: Route = {
     path: '/flash/:channel?',

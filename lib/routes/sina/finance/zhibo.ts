@@ -116,8 +116,8 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
                 apiSymbol = s.symbol.toLowerCase();
             } else if (s.symbol.toLowerCase().startsWith('nf_') || s.symbol.toLowerCase().startsWith('hf_')) {
                 // 期货：前缀小写(nf_/hf_)，代码大写(SC0/CL等)
-                const prefix = s.symbol.substring(0, 3).toLowerCase();
-                const code = s.symbol.substring(3).toUpperCase();
+                const prefix = s.symbol.slice(0, 3).toLowerCase();
+                const code = s.symbol.slice(3).toUpperCase();
                 apiSymbol = prefix + code;
             } else if (s.symbol.toLowerCase().startsWith('si') || s.symbol.toLowerCase().startsWith('znb_')) {
                 // 指数：si 开头（国内指数）或 znb_ 开头（国际指数）
@@ -480,9 +480,9 @@ async function handler(ctx) {
             if (sectors.length > 0) {
                 const sectorHtml = formatStockItems(sectors, stockQuotes);
                 if (sectorHtml) {
-                    description += `<br><div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">`;
+                    description += '<br><div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
                     description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关板块</h3>${sectorHtml}`;
-                    description += `</div>`;
+                    description += '</div>';
                 }
             }
 
@@ -490,9 +490,9 @@ async function handler(ctx) {
             if (individualStocks.length > 0) {
                 const stockHtml = formatStockItems(individualStocks, stockQuotes);
                 if (stockHtml) {
-                    description += `<br><div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">`;
+                    description += '<br><div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
                     description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关股票</h3>${stockHtml}`;
-                    description += `</div>`;
+                    description += '</div>';
                 }
             }
 

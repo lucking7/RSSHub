@@ -197,17 +197,17 @@ async function handler(ctx) {
             // 显示板块（蓝色边框）
             if (sectors.length > 0) {
                 const sectorHtml = formatStockItems(sectors);
-                description += `<br><div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">`;
+                description += '<br><div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
                 description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关板块</h3>${sectorHtml}`;
-                description += `</div>`;
+                description += '</div>';
             }
 
             // 显示股票（绿色边框）
             if (individualStocks.length > 0) {
                 const stockHtml = formatStockItems(individualStocks);
-                description += `<br><div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">`;
+                description += '<br><div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
                 description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333;">相关股票</h3>${stockHtml}`;
-                description += `</div>`;
+                description += '</div>';
             }
         }
 

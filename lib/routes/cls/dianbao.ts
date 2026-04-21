@@ -24,7 +24,7 @@ function renderStockItems(items: any[]) {
         } else if (stock.RiseRange < 0) {
             html += `<span style="color: #52c41a; font-weight: bold;">↓ ${stock.RiseRange}%</span><br>`;
         } else {
-            html += `<span style="color: #666; font-weight: bold;">- 0.00%</span><br>`;
+            html += '<span style="color: #666; font-weight: bold;">- 0.00%</span><br>';
         }
     }
     return html;

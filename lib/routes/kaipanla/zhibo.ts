@@ -109,8 +109,8 @@ async function handler(ctx) {
             const arrow = plateZdf !== null && plateZdf > 0 ? '↑' : plateZdf !== null && plateZdf < 0 ? '↓' : '-';
             const color = plateZdf !== null && plateZdf > 0 ? '#f5222d' : plateZdf !== null && plateZdf < 0 ? '#52c41a' : '#666';
 
-            description += `<div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">`;
-            description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">板块</h3>`;
+            description += '<div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
+            description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">板块</h3>';
             description += `• <strong>${item.PlateName}</strong>`;
             if (plateZdf !== null && !Number.isNaN(plateZdf)) {
                 description += `<br><span style="color: ${color}; font-weight: bold;">${arrow} ${plateZdf > 0 ? '+' : ''}${plateZdf.toFixed(2)}%</span>`;
@@ -118,13 +118,13 @@ async function handler(ctx) {
             if (item.PlateJE && item.PlateJE.trim() !== '') {
                 description += ` <span style="color: #999;">成交额: ${item.PlateJE}</span>`;
             }
-            description += `</div>`;
+            description += '</div>';
         }
 
         // 4. 相关个股（下划线标题 + 中间点 + 股票名加粗）
         if (item.Stock && item.Stock.length > 0) {
-            description += `<div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">`;
-            description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">相关个股</h3>`;
+            description += '<div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
+            description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">相关个股</h3>';
 
             for (const stock of item.Stock.slice(0, 15)) {
                 const [code, name, change] = stock;
@@ -137,20 +137,20 @@ async function handler(ctx) {
             if (item.Stock.length > 15) {
                 description += `<span style="color: #999;">...还有${item.Stock.length - 15}只</span>`;
             }
-            description += `</div>`;
+            description += '</div>';
         }
 
         // 5. 解读内容（下划线标题）
         if (item.Interpretation && item.Interpretation.trim() !== '') {
-            description += `<div style="background: #f5f5f5; border-left: 3px solid #722ed1; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">`;
-            description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">解读</h3>`;
+            description += '<div style="background: #f5f5f5; border-left: 3px solid #722ed1; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
+            description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">解读</h3>';
             description += `<p style="margin: 0;">${item.Interpretation}</p></div>`;
         }
 
         // 6. 爆发原因（下划线标题）
         if (item.BoomReason && item.BoomReason.trim() !== '') {
-            description += `<div style="background: #f5f5f5; border-left: 3px solid #faad14; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">`;
-            description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">爆发原因</h3>`;
+            description += '<div style="background: #f5f5f5; border-left: 3px solid #faad14; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
+            description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">爆发原因</h3>';
             description += `<p style="margin: 0;">${item.BoomReason}</p></div>`;
         }
 

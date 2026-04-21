@@ -91,9 +91,9 @@ async function handler(ctx) {
         let description = '';
 
         // 1. 新闻正文（HTML卡片样式）
-        description += `<div style="padding: 15px; background: #f8f9fa; border-left: 4px solid #1890ff; border-radius: 5px; margin-bottom: 10px;">`;
+        description += '<div style="padding: 15px; background: #f8f9fa; border-left: 4px solid #1890ff; border-radius: 5px; margin-bottom: 10px;">';
         description += `<p style="margin: 0; line-height: 1.6; color: #333;">${contentText}</p>`;
-        description += `</div>`;
+        description += '</div>';
 
         // 2. 相关板块和股票信息（如果有）
         if (item.Stocks && item.Stocks.length > 0) {
@@ -144,18 +144,18 @@ async function handler(ctx) {
 
             // 显示板块（下划线标题）
             if (plates.length > 0) {
-                description += `<br><div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">`;
-                description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">相关板块</h3>`;
+                description += '<br><div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
+                description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">相关板块</h3>';
                 description += formatItems(plates);
-                description += `</div>`;
+                description += '</div>';
             }
 
             // 显示股票（下划线标题）
             if (stocks.length > 0) {
-                description += `<br><div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">`;
-                description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">相关股票</h3>`;
+                description += '<br><div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
+                description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">相关股票</h3>';
                 description += formatItems(stocks);
-                description += `</div>`;
+                description += '</div>';
             }
         }
 

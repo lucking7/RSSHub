@@ -113,7 +113,7 @@ async function handler(ctx) {
         const newsList = data.data || [];
         collected = newsList.slice(0, Math.min(limit, 10)); // 最多返回10条
     } catch (error) {
-        throw new Error(`Failed to fetch news: ${error.message}`);
+        throw new Error(`Failed to fetch news: ${error.message}`, { cause: error });
     }
 
     // 收集所有股票代码，批量获取股票信息
@@ -184,8 +184,8 @@ async function handler(ctx) {
             })();
 
         // 构建描述（主内容区域 - 紫色边框）
-        let description = `<div style="padding: 15px; background: #f8f9fa; border-left: 4px solid #667eea; border-radius: 5px; margin-bottom: 10px;">`;
-        description += `<p style="margin: 0; line-height: 1.8; font-size: 15px;">`;
+        let description = '<div style="padding: 15px; background: #f8f9fa; border-left: 4px solid #667eea; border-radius: 5px; margin-bottom: 10px;">';
+        description += '<p style="margin: 0; line-height: 1.8; font-size: 15px;">';
         // 移除【】标题
         let cleanContent = content.replace(/【[^】]+】/, '').trim();
 
@@ -194,7 +194,7 @@ async function handler(ctx) {
         cleanContent = cleanContent.replaceAll(/<a[^>]*href\s*=\s*"stock:\/\/[^"]*"[^>]*>([^<]+)<\/a>/g, '<em><strong>$1</strong></em>');
 
         description += cleanContent;
-        description += `</p></div>`;
+        description += '</p></div>';
 
         // 处理股票信息
         const stockList = item.relate_stocks || [];

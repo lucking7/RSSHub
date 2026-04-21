@@ -72,25 +72,25 @@ async function handler() {
     let description = '';
 
     // 市场综合强度（下划线标题）
-    description += `<div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 0 0 15px 0; border-radius: 4px;">`;
-    description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">市场综合强度</h3>`;
+    description += '<div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 0 0 15px 0; border-radius: 4px;">';
+    description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">市场综合强度</h3>';
     description += `<p style="font-size: 24px; font-weight: bold; text-align: center; margin: 0; color: #333;">${strong}分 - ${sentiment}</p>`;
-    description += `</div>`;
+    description += '</div>';
 
     // 盘面点评（下划线标题）
-    description += `<div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 0 0 15px 0; border-radius: 4px;">`;
-    description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">盘面点评</h3>`;
+    description += '<div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 0 0 15px 0; border-radius: 4px;">';
+    description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">盘面点评</h3>';
     description += `<p style="margin: 0; line-height: 1.6;">${sign}</p>`;
-    description += `</div>`;
+    description += '</div>';
 
     // 强度评分说明（下划线标题）
-    description += `<div style="background: #f5f5f5; border-left: 3px solid #faad14; padding: 10px 15px; margin: 0; border-radius: 4px;">`;
-    description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">强度评分说明</h3>`;
-    description += `• <strong>80-100分</strong>：市场情绪极强，可积极参与<br>`;
-    description += `• <strong>60-79分</strong>：市场情绪偏强，适度参与<br>`;
-    description += `• <strong>40-59分</strong>：市场情绪中性，谨慎观望<br>`;
-    description += `• <strong>0-39分</strong>：市场情绪偏弱，控制仓位`;
-    description += `</div>`;
+    description += '<div style="background: #f5f5f5; border-left: 3px solid #faad14; padding: 10px 15px; margin: 0; border-radius: 4px;">';
+    description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">强度评分说明</h3>';
+    description += '• <strong>80-100分</strong>：市场情绪极强，可积极参与<br>';
+    description += '• <strong>60-79分</strong>：市场情绪偏强，适度参与<br>';
+    description += '• <strong>40-59分</strong>：市场情绪中性，谨慎观望<br>';
+    description += '• <strong>0-39分</strong>：市场情绪偏弱，控制仓位';
+    description += '</div>';
 
     return {
         title: '开盘啦 - 盘面点评',
