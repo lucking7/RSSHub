@@ -10,7 +10,7 @@ export const route: Route = {
     path: '/flash',
     name: '金融快讯',
     url: 'longbridge.com/zh-CN/news/live',
-    maintainers: [''],
+    maintainers: ['luck'],
     handler,
     example: '/longbridge/flash',
     description: '长桥金融快讯（stock flash），实时市场动态',
@@ -40,7 +40,10 @@ async function handler(ctx) {
         async () => {
             const { data } = await got.post(`${API_BASE}/content/stock_flash/posts`, {
                 json: { limit },
-                headers: { ...API_HEADERS, 'content-type': 'application/json' },
+                headers: {
+                    ...API_HEADERS,
+                    'content-type': 'application/json',
+                },
             });
             return data?.data?.articles ?? [];
         },

@@ -13,23 +13,29 @@ const TYPE_MAP: Record<string, { types: string[]; name: string }> = {
     closed: { types: ['closed'], name: '休市' },
 };
 
-const MARKET_NAMES: Record<string, string> = { HK: '港股', US: '美股', SG: '新加坡', CN: '沪深' };
+const MARKET_NAMES: Record<string, string> = {
+    HK: '港股',
+    US: '美股',
+    SG: '新加坡',
+    CN: '沪深',
+};
 
 export const route: Route = {
-    path: '/calendar/:type?',
+    path: '/calendar/:type?/:market?',
     name: '财经日历',
     url: 'longbridge.com/zh-CN/calendar/report',
-    maintainers: [''],
+    maintainers: ['luck'],
     handler,
     example: '/longbridge/calendar/report',
     parameters: {
         type: `日历类型，默认 \`report\`。可选：${Object.entries(TYPE_MAP)
             .map(([k, v]) => `\`${k}\`（${v.name}）`)
             .join('、')}`,
+        market: `市场筛选，可选：${Object.entries(MARKET_NAMES)
+            .map(([k, v]) => `\`${k}\`（${v}）`)
+            .join('、')}；多个用逗号分隔，如 \`HK,US\`；留空为全部`,
     },
-    description: `长桥财经日历，支持查询参数：
-- \`market=HK\` 市场筛选（HK/US/SG/CN，可逗号分隔多个）
-- \`days=7\` 查询天数（默认7天）`,
+    description: '长桥财经日历，覆盖未来 7 天窗口。',
     categories: ['finance'],
     features: {
         requireConfig: false,
@@ -40,11 +46,26 @@ export const route: Route = {
         supportScihub: false,
     },
     radar: [
-        { source: ['longbridge.com/zh-CN/calendar/report'], target: '/calendar/report' },
-        { source: ['longbridge.com/zh-CN/calendar/dividend'], target: '/calendar/dividend' },
-        { source: ['longbridge.com/zh-CN/calendar/split'], target: '/calendar/split' },
-        { source: ['longbridge.com/zh-CN/calendar/ipo'], target: '/calendar/ipo' },
-        { source: ['longbridge.com/zh-CN/calendar/closed'], target: '/calendar/closed' },
+        {
+            source: ['longbridge.com/zh-CN/calendar/report'],
+            target: '/calendar/report',
+        },
+        {
+            source: ['longbridge.com/zh-CN/calendar/dividend'],
+            target: '/calendar/dividend',
+        },
+        {
+            source: ['longbridge.com/zh-CN/calendar/split'],
+            target: '/calendar/split',
+        },
+        {
+            source: ['longbridge.com/zh-CN/calendar/ipo'],
+            target: '/calendar/ipo',
+        },
+        {
+            source: ['longbridge.com/zh-CN/calendar/closed'],
+            target: '/calendar/closed',
+        },
     ],
 };
 
@@ -88,18 +109,19 @@ function renderInfo(info: any): string {
     return html;
 }
 
+const DEFAULT_DAYS = 7;
+
 async function handler(ctx) {
     const typeKey = ctx.req.param('type') || 'report';
     const typeConfig = TYPE_MAP[typeKey] || TYPE_MAP.report;
-    const days = ctx.req.query('days') ? Number.parseInt(ctx.req.query('days')) : 7;
-    const marketParam = ctx.req.query('market');
+    const marketParam = ctx.req.param('market');
     const markets = marketParam ? marketParam.split(',').map((m) => m.trim().toUpperCase()) : [];
 
     const now = new Date();
     const end = new Date(now);
-    end.setDate(end.getDate() + days);
+    end.setDate(end.getDate() + DEFAULT_DAYS);
 
-    const cacheKey = `longbridge:calendar:${typeKey}:${markets.join(',')}:${formatDate(now)}:${days}`;
+    const cacheKey = `longbridge:calendar:${typeKey}:${markets.join(',')}:${formatDate(now)}`;
     const dayList = await cache.tryGet(
         cacheKey,
         async () => {
@@ -112,18 +134,18 @@ async function handler(ctx) {
             };
             const { data } = await got.post(`${API_BASE}/v2/stock_info/finance_calendar`, {
                 json: body,
-                headers: { ...API_HEADERS, 'content-type': 'application/json' },
+                headers: {
+                    ...API_HEADERS,
+                    'content-type': 'application/json',
+                },
             });
             return data?.data?.list ?? [];
         },
         300
     );
 
-    const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 200;
-
     const items = dayList
         .flatMap((day) => day.infos ?? [])
-        .slice(0, limit)
         .map((info) => ({
             title: `[${info.market || ''}] ${info.counter_name || ''} - ${info.content}`,
             description: renderInfo(info),

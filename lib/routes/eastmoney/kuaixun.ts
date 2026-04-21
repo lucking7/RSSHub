@@ -66,7 +66,7 @@ export const route: Route = {
         },
     ],
     name: '全球财经快讯',
-    maintainers: [''],
+    maintainers: ['luck'],
     handler,
     description: `获取东方财富全球财经快讯的实时信息。
 
@@ -253,7 +253,11 @@ async function handler(ctx) {
                 const info = stockMap[stockCode];
                 if (info) {
                     const [market] = stockCode.split('.');
-                    const si: StockItem = { name: info.name, code: stockCode.split('.')[1], change: info.change };
+                    const si: StockItem = {
+                        name: info.name,
+                        code: stockCode.split('.')[1],
+                        change: info.change,
+                    };
                     if (market === '0' || market === '90') {
                         sectors.push(si);
                     } else {

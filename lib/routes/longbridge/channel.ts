@@ -14,7 +14,7 @@ export const route: Route = {
     path: '/channel/:slug?',
     name: '资讯频道',
     url: 'longbridge.com/zh-CN/news',
-    maintainers: [''],
+    maintainers: ['luck'],
     handler,
     example: '/longbridge/channel/mp-lb-daily',
     parameters: {
@@ -35,6 +35,10 @@ export const route: Route = {
         {
             source: ['longbridge.com/zh-CN/news/node/daily'],
             target: '/channel/mp-lb-daily',
+        },
+        {
+            source: ['longbridge.com/zh-CN/news/node/dolphin'],
+            target: '/channel/dolphin',
         },
     ],
 };

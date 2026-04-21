@@ -10,7 +10,13 @@ import { parseDate } from '@/utils/parse-date';
 import { renderSectorAndStockCards, type StockItem } from '../../_finance/stock-card';
 
 const toStockItemsWithQuotes = (items: any[], quotes: Record<string, { name: string; change: number }>): StockItem[] =>
-    items.filter((s) => quotes?.[s.symbol]?.change !== undefined).map((s) => ({ name: s.key, code: s.symbol.toUpperCase(), change: quotes[s.symbol].change }));
+    items
+        .filter((s) => quotes?.[s.symbol]?.change !== undefined)
+        .map((s) => ({
+            name: s.key,
+            code: s.symbol.toUpperCase(),
+            change: quotes[s.symbol].change,
+        }));
 
 const ROOT_URL = 'https://zhibo.sina.com.cn';
 
@@ -277,8 +283,8 @@ async function handler(ctx) {
     const collected: ZhiboFeedItem[] = [];
     const pageNumbers = Array.from({ length: maxPages }, (_, i) => i + 1);
     const pages = await Promise.all(
-        pageNumbers.map((page) =>
-            got(apiUrl, {
+        pageNumbers.map(async (page) => {
+            const res = await got(apiUrl, {
                 searchParams: {
                     zhibo_id: zhiboId,
                     pagesize: pageSize,
@@ -292,8 +298,12 @@ async function handler(ctx) {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 },
                 timeout: 30000, // 30秒超时
-            }).then((res) => ({ page, list: (res.data?.result?.data?.feed?.list as ZhiboFeedItem[]) ?? [] }))
-        )
+            });
+            return {
+                page,
+                list: (res.data?.result?.data?.feed?.list as ZhiboFeedItem[]) ?? [],
+            };
+        })
     );
     pages.sort((a, b) => a.page - b.page);
     for (const p of pages) {
@@ -366,7 +376,11 @@ async function handler(ctx) {
 
             // 解析ext字段获取完整信息
             let detailLink = 'https://finance.sina.com.cn/7x24/';
-            let stockInfo: Array<{ market: string; symbol: string; key: string }> = [];
+            let stockInfo: Array<{
+                market: string;
+                symbol: string;
+                key: string;
+            }> = [];
 
             if (it.ext) {
                 try {

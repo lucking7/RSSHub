@@ -10,7 +10,7 @@ export const route: Route = {
     path: '/finance/newslist',
     name: '财经快讯 - 自选股',
     url: 'gu.qq.com',
-    maintainers: [''],
+    maintainers: ['luck'],
     handler,
     example: '/tencent/finance/newslist',
     description: `使用腾讯自选股移动端接口获取实时财经快讯
@@ -115,7 +115,9 @@ async function handler(ctx) {
         const newsList = data.data || [];
         collected = newsList.slice(0, Math.min(limit, 10)); // 最多返回10条
     } catch (error) {
-        throw new Error(`Failed to fetch news: ${error.message}`, { cause: error });
+        throw new Error(`Failed to fetch news: ${error.message}`, {
+            cause: error,
+        });
     }
 
     const allStocks = new Set<string>();
@@ -197,7 +199,11 @@ async function handler(ctx) {
                 }
 
                 const isSector = stockCode.startsWith('cs') || stockCode.startsWith('pt') || stockCode.startsWith('bk');
-                const si: StockItem = { name: stock.name || stockInfo.name, code: stockCode.toUpperCase(), change: Number.parseFloat(stockInfo.change) || 0 };
+                const si: StockItem = {
+                    name: stock.name || stockInfo.name,
+                    code: stockCode.toUpperCase(),
+                    change: Number.parseFloat(stockInfo.change) || 0,
+                };
 
                 if (isSector) {
                     sectors.push(si);

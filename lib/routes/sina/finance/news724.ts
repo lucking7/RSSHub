@@ -11,7 +11,7 @@ export const route: Route = {
     path: ['/finance/724/:tag?', '/724/:tag?'],
     name: '财经快讯 - 724接口',
     url: 'finance.sina.com.cn',
-    maintainers: [''],
+    maintainers: ['luck'],
     handler,
     example: '/sina/724',
     parameters: {
@@ -108,7 +108,13 @@ export function buildTitle(item: { color?: number; content?: string; id: number 
 }
 
 function toStockItems(items: Sina724Stock[]): StockItem[] {
-    return items.filter((s) => s.range).map((s) => ({ name: s.name || '', code: s.code || '', change: s.range }));
+    return items
+        .filter((s) => s.range)
+        .map((s) => ({
+            name: s.name || '',
+            code: s.code || '',
+            change: s.range,
+        }));
 }
 
 // 分类标签映射
