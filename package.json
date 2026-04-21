@@ -244,6 +244,8 @@
             "wrangler"
         ],
         "overrides": {
+            "bufferutil": "^4.0.0",
+            "utf-8-validate": "^5.0.0",
             "difflib": "https://codeload.github.com/postlight/difflib.js/tar.gz/32e8e38c7fcd935241b9baab71bb432fd9b166ed",
             "es-set-tostringtag": "npm:@nolyfill/es-set-tostringtag@^1",
             "google-play-scraper>got": "^14.6.4",
