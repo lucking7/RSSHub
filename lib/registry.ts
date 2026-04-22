@@ -74,7 +74,10 @@ if (config.isPackage) {
         default:
             modules = (await directoryImport({
                 targetDirectoryPath: path.join(__dirname, './routes'),
-                importPattern: /\.tsx?$/,
+                // Exclude *.test.ts / *.spec.ts so route files won't drag in
+                // vitest's top-level `describe()` calls when loaded outside the
+                // vitest runner (e.g. during `pnpm build:routes`).
+                importPattern: /(?<!\.(?:test|spec))\.tsx?$/,
             })) as typeof modules;
     }
 }
