@@ -5290,18 +5290,16 @@
   },
   "android.com": {
     "_name": "Android",
-    "developer": [
+    "source": [
       {
-        "title": "SDK Platform Tools release notes",
+        "title": "Pixel Update Bulletins",
         "docs": "https://docs.rsshub.app/routes/program-update",
         "source": [
-          "/studio/releases/platform-tools",
+          "/docs/security/bulletin/pixel",
           "/"
         ],
-        "target": "/android/platform-tools-releases"
-      }
-    ],
-    "source": [
+        "target": "/android/pixel-update-bulletin"
+      },
       {
         "title": "Security Bulletins",
         "docs": "https://docs.rsshub.app/routes/program-update",
@@ -5311,6 +5309,17 @@
           "/"
         ],
         "target": "/android/security-bulletin"
+      }
+    ],
+    "developer": [
+      {
+        "title": "SDK Platform Tools release notes",
+        "docs": "https://docs.rsshub.app/routes/program-update",
+        "source": [
+          "/studio/releases/platform-tools",
+          "/"
+        ],
+        "target": "/android/platform-tools-releases"
       }
     ]
   },
@@ -8424,6 +8433,27 @@
           "/"
         ],
         "target": "/cahkms/:category?"
+      }
+    ]
+  },
+  "caicai.me": {
+    "_name": "CaiCai",
+    "www": [
+      {
+        "title": "Blog",
+        "docs": "https://docs.rsshub.app/routes/blog",
+        "source": [
+          "/blogs"
+        ],
+        "target": "/caicai/blog/:lang?"
+      },
+      {
+        "title": "Blog",
+        "docs": "https://docs.rsshub.app/routes/blog",
+        "source": [
+          "/zh/blogs"
+        ],
+        "target": "/caicai/blog/zh"
       }
     ]
   },
@@ -18774,6 +18804,14 @@
           "/"
         ],
         "target": "/go(_,url)=>{const category=new URL(url).href.match(/mhlw\\.go\\.jp\\/(.*)$/)?.[1]??void 0;return`/mhlw/pdf${category?`/${category}`:\"\"}`}"
+      },
+      {
+        "title": "毎月勤労統計調査 全国調査（月別結果）",
+        "docs": "https://docs.rsshub.app/routes/government",
+        "source": [
+          "/toukei/list/30-1a.html"
+        ],
+        "target": "/mhlw/monthly-labour-survey"
       }
     ]
   },
@@ -29030,6 +29068,75 @@
       }
     ]
   },
+  "longbridge.com": {
+    "_name": "长桥 Longbridge",
+    ".": [
+      {
+        "title": "财经日历",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/zh-CN/calendar/report"
+        ],
+        "target": "/longbridge/calendar/report"
+      },
+      {
+        "title": "财经日历",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/zh-CN/calendar/dividend"
+        ],
+        "target": "/longbridge/calendar/dividend"
+      },
+      {
+        "title": "财经日历",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/zh-CN/calendar/split"
+        ],
+        "target": "/longbridge/calendar/split"
+      },
+      {
+        "title": "财经日历",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/zh-CN/calendar/ipo"
+        ],
+        "target": "/longbridge/calendar/ipo"
+      },
+      {
+        "title": "财经日历",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/zh-CN/calendar/closed"
+        ],
+        "target": "/longbridge/calendar/closed"
+      },
+      {
+        "title": "资讯频道",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/zh-CN/news/node/daily"
+        ],
+        "target": "/longbridge/channel/mp-lb-daily"
+      },
+      {
+        "title": "资讯频道",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/zh-CN/news/node/dolphin"
+        ],
+        "target": "/longbridge/channel/dolphin"
+      },
+      {
+        "title": "金融快讯",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/zh-CN/news/live"
+        ],
+        "target": "/longbridge/flash"
+      }
+    ]
+  },
   "loongarch.org": {
     "_name": "LA UOSC社区",
     "bbs": [
@@ -34196,7 +34303,7 @@
           "/:category",
           "/"
         ],
-        "target": "/nikkeiparams=>{if(params.category&&params.type){return`/nikkei/cn/cn/${params.category}/${params.type.replace(\".html\",\"\")}`}else if(params.category&&!params.type){return`/nikkei/cn/cn/${params.category.replace(\".html\",\"\")}`}else{return`/nikkei/cn/cn`}}"
+        "target": "/nikkeiparams=>{if(params.category&&params.type){return`/nikkei/cn/cn/${params.category}/${params.type.replace(\".html\",\"\")}`}else if(params.category&&!params.type){return`/nikkei/cn/cn/${params.category.replace(\".html\",\"\")}`}else{return\"/nikkei/cn/cn\"}}"
       }
     ],
     "zh.cn": [
@@ -34208,7 +34315,7 @@
           "/:category",
           "/"
         ],
-        "target": "/nikkeiparams=>{if(params.category&&params.type){return`/nikkei/cn/zh/${params.category}/${params.type.replace(\".html\",\"\")}`}else if(params.category&&!params.type){return`/nikkei/cn/zh/${params.category.replace(\".html\",\"\")}`}else{return`/nikkei/cn/zh`}}"
+        "target": "/nikkeiparams=>{if(params.category&&params.type){return`/nikkei/cn/zh/${params.category}/${params.type.replace(\".html\",\"\")}`}else if(params.category&&!params.type){return`/nikkei/cn/zh/${params.category.replace(\".html\",\"\")}`}else{return\"/nikkei/cn/zh\"}}"
       }
     ],
     "www": [
@@ -49993,7 +50100,7 @@
       }
     ]
   },
-  "zxcs.info": {
+  "zxcs.click": {
     "_name": "知轩藏书",
     ".": [
       {

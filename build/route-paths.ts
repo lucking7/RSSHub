@@ -180,6 +180,7 @@ export type RoutePath =
   | `/amazon/awsblogs/:locale?`
   | `/amazon/kindle/software-updates`
   | `/amz123/kx`
+  | `/android/pixel-update-bulletin`
   | `/android/platform-tools-releases`
   | `/android/security-bulletin`
   | `/anime1anime/:category/:name`
@@ -438,6 +439,7 @@ export type RoutePath =
   | `/caareviews/exhibition`
   | `/cags/edu/:category`
   | `/cahkms/:category?`
+  | `/caicai/blog/:lang?`
   | `/caijing/roll`
   | `/caixin/:column/:category`
   | `/caixin/article`
@@ -1789,6 +1791,9 @@ export type RoutePath =
   | `/logonews/work/tags/:tag`
   | `/logrocket/:type`
   | `/loltw/news/:category?`
+  | `/longbridge/calendar/:type?/:market?`
+  | `/longbridge/channel/:slug?`
+  | `/longbridge/flash`
   | `/loongarch/post/:type?`
   | `/lorientlejour/:category?`
   | `/lovelive-anime/news/:abbr?/:category?/:option?`
@@ -1865,6 +1870,7 @@ export type RoutePath =
   | `/meteor/:board?`
   | `/meteor/boards`
   | `/metmuseum/exhibitions/:state?`
+  | `/mhlw/monthly-labour-survey`
   | `/mi/crowdfunding`
   | `/mi/golden`
   | `/microsoft/edge/addon/:crxid`

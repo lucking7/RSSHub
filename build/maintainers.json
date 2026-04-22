@@ -542,6 +542,9 @@
   "/amz123/kx": [
     "defp"
   ],
+  "/android/pixel-update-bulletin": [
+    "TonyRL"
+  ],
   "/android/platform-tools-releases": [
     "nczitzk"
   ],
@@ -1332,6 +1335,9 @@
   ],
   "/cahkms/:category?": [
     "nczitzk"
+  ],
+  "/caicai/blog/:lang?": [
+    "TonyRL"
   ],
   "/caijing/roll": [
     "TonyRL"
@@ -2669,7 +2675,7 @@
     "AwesomeDog"
   ],
   "/eastmoney/kuaixun/:category?": [
-    ""
+    "luck"
   ],
   "/eastmoney/search/:keyword": [
     "drgnchan"
@@ -5445,6 +5451,15 @@
   "/loltw/news/:category?": [
     "hoilc"
   ],
+  "/longbridge/calendar/:type?/:market?": [
+    "luck"
+  ],
+  "/longbridge/channel/:slug?": [
+    "luck"
+  ],
+  "/longbridge/flash": [
+    "luck"
+  ],
   "/loongarch/post/:type?": [
     "ladeng07",
     "3401797899"
@@ -5676,6 +5691,9 @@
     "TonyRL"
   ],
   "/metmuseum/exhibitions/:state?": [],
+  "/mhlw/monthly-labour-survey": [
+    "TonyRL"
+  ],
   "/mi/golden": [
     "nczitzk"
   ],
@@ -7852,10 +7870,10 @@
     "haukeng"
   ],
   "/sina/finance/724/:tag?": [
-    ""
+    "luck"
   ],
   "/sina/724/:tag?": [
-    ""
+    "luck"
   ],
   "/sina/finance/zhibo/:zhibo_id?": [
     "nczitzk"
@@ -8450,7 +8468,7 @@
     "lyling"
   ],
   "/tencent/finance/newslist": [
-    ""
+    "luck"
   ],
   "/tencent/pvp/newsindex/:type": [
     "Jeason0228",
