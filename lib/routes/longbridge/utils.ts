@@ -6,3 +6,8 @@ export const API_HEADERS = {
     'accept-language': 'zh-CN',
     'x-prefer-language': 'zh-CN',
 };
+
+export const API_HEADERS_JSON = {
+    ...API_HEADERS,
+    'content-type': 'application/json',
+};

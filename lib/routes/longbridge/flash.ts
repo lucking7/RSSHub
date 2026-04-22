@@ -4,7 +4,9 @@ import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
-import { API_BASE, API_HEADERS } from './utils';
+import { API_BASE, API_HEADERS_JSON } from './utils';
+
+const UPSTREAM_LIMIT = 100;
 
 export const route: Route = {
     path: '/flash',
@@ -32,18 +34,13 @@ export const route: Route = {
     view: ViewType.Notifications,
 };
 
-async function handler(ctx) {
-    const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 30;
-
+async function handler() {
     const list = await cache.tryGet(
-        `longbridge:flash:${limit}`,
+        'longbridge:flash',
         async () => {
             const { data } = await got.post(`${API_BASE}/content/stock_flash/posts`, {
-                json: { limit },
-                headers: {
-                    ...API_HEADERS,
-                    'content-type': 'application/json',
-                },
+                json: { limit: UPSTREAM_LIMIT },
+                headers: API_HEADERS_JSON,
             });
             return data?.data?.articles ?? [];
         },

@@ -3,7 +3,7 @@ import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
-import { API_BASE, API_HEADERS } from './utils';
+import { API_BASE, API_HEADERS_JSON } from './utils';
 
 const TYPE_MAP: Record<string, { types: string[]; name: string }> = {
     report: { types: ['report', 'financial'], name: '财报' },
@@ -110,12 +110,25 @@ function renderInfo(info: any): string {
 }
 
 const DEFAULT_DAYS = 7;
+const DEFAULT_MAX_ITEMS = 100;
 
 async function handler(ctx) {
     const typeKey = ctx.req.param('type') || 'report';
     const typeConfig = TYPE_MAP[typeKey] || TYPE_MAP.report;
     const marketParam = ctx.req.param('market');
-    const markets = marketParam ? marketParam.split(',').map((m) => m.trim().toUpperCase()) : [];
+    // Whitelist markets against MARKET_NAMES; unknown tokens are dropped so they
+    // don't pollute the cache key or leak into the upstream payload. Sorted for
+    // a stable cache key (HK,US and US,HK share an entry).
+    const markets = marketParam
+        ? [
+              ...new Set(
+                  marketParam
+                      .split(',')
+                      .map((m) => m.trim().toUpperCase())
+                      .filter((m) => m in MARKET_NAMES)
+              ),
+          ].toSorted()
+        : [];
 
     const now = new Date();
     const end = new Date(now);
@@ -134,10 +147,7 @@ async function handler(ctx) {
             };
             const { data } = await got.post(`${API_BASE}/v2/stock_info/finance_calendar`, {
                 json: body,
-                headers: {
-                    ...API_HEADERS,
-                    'content-type': 'application/json',
-                },
+                headers: API_HEADERS_JSON,
             });
             return data?.data?.list ?? [];
         },
@@ -146,12 +156,15 @@ async function handler(ctx) {
 
     const items = dayList
         .flatMap((day) => day.infos ?? [])
+        .slice(0, DEFAULT_MAX_ITEMS)
         .map((info) => ({
             title: `[${info.market || ''}] ${info.counter_name || ''} - ${info.content}`,
             description: renderInfo(info),
-            link: info.counter_id ? `https://longbridge.com/zh-CN/stock/${info.counter_id.replace('ST/', '')}` : `https://longbridge.com/zh-CN/calendar/${typeKey}`,
-            pubDate: parseDate(Number.parseInt(info.datetime) * 1000),
-            guid: `longbridge-calendar-${info.id || info.counter_id}-${info.datetime}`,
+            link: info.counter_id ? `https://longbridge.com/zh-CN/stock/${info.counter_id}` : `https://longbridge.com/zh-CN/calendar/${typeKey}`,
+            pubDate: parseDate(Number.parseInt(info.datetime, 10) * 1000),
+            // Prefer upstream id; otherwise combine counter_id+datetime+content
+            // so same-ticker/same-time events with different content don't collide.
+            guid: info.id ? `longbridge-calendar-${info.id}` : `longbridge-calendar-${info.counter_id || ''}-${info.datetime}-${(info.content || '').slice(0, 32)}`,
             author: '长桥',
             ...(info.icon ? { image: info.icon } : {}),
             ...(info.market ? { category: [info.market, typeConfig.name] } : { category: [typeConfig.name] }),
