@@ -6,7 +6,10 @@ import { parseDate } from '@/utils/parse-date';
 
 import { API_BASE, API_HEADERS_JSON } from './utils';
 
-const UPSTREAM_LIMIT = 100;
+// Upstream enforces limit ∈ [0, 50]; values outside the range get rejected with
+// code 1901400 and an empty data payload, which would silently produce an empty
+// feed.
+const UPSTREAM_LIMIT = 50;
 
 export const route: Route = {
     path: '/flash',
@@ -42,7 +45,10 @@ async function handler() {
                 json: { limit: UPSTREAM_LIMIT },
                 headers: API_HEADERS_JSON,
             });
-            return data?.data?.articles ?? [];
+            if (data?.code !== 0) {
+                throw new Error(`Longbridge flash API error ${data?.code}: ${data?.message}`);
+            }
+            return data.data?.articles ?? [];
         },
         60
     );
