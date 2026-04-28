@@ -18,6 +18,8 @@ const categories = {
     hk_us: '港美股',
 };
 
+const VIP_TYPE_CODE = 20015;
+
 function renderDescription({ item, images, sectors, stocks, level, assocArticleUrl }: { item: any; images: string[]; sectors: StockItem[]; stocks: StockItem[]; level: string; assocArticleUrl: string }) {
     let html = '';
 
@@ -90,7 +92,7 @@ async function handler(ctx) {
 
     const params = {
         last_time: lastTime,
-        rn: limit,
+        rn: limit * 2,
         hasFirstVipArticle: 1,
     };
 
@@ -111,52 +113,55 @@ async function handler(ctx) {
         },
     });
 
-    const items = response.data.data.roll_data.slice(0, limit).map((item) => {
-        const processedStockList = (item.stock_list || []).map((stock) => ({
-            ...stock,
-            StockID: stock.StockID ? stock.StockID.toUpperCase() : stock.StockID,
-        }));
+    const items = response.data.data.roll_data
+        .filter((item) => Number(item.type) !== VIP_TYPE_CODE)
+        .slice(0, limit)
+        .map((item) => {
+            const processedStockList = (item.stock_list || []).map((stock) => ({
+                ...stock,
+                StockID: stock.StockID ? stock.StockID.toUpperCase() : stock.StockID,
+            }));
 
-        const sectors = processedStockList.filter((s) => s.StockID?.includes('801')).map((s) => toStockItem(s));
-        const stocks = processedStockList.filter((s) => !s.StockID?.includes('801')).map((s) => toStockItem(s));
+            const sectors = processedStockList.filter((s) => s.StockID?.includes('801')).map((s) => toStockItem(s));
+            const stocks = processedStockList.filter((s) => !s.StockID?.includes('801')).map((s) => toStockItem(s));
 
-        const subjectCategories = item.subjects?.map((s) => s.subject_name) || [];
-        const stockNameCategories = processedStockList.map((stock) => stock.name);
-        const allCategories = [...subjectCategories, ...stockNameCategories];
+            const subjectCategories = item.subjects?.map((s) => s.subject_name) || [];
+            const stockNameCategories = processedStockList.map((stock) => stock.name);
+            const allCategories = [...subjectCategories, ...stockNameCategories];
 
-        const levelPrefix = item.level === 'A' ? '【重要】' : '';
-        const title = levelPrefix + (item.title || item.brief || item.content);
+            const levelPrefix = item.level === 'A' ? '【重要】' : '';
+            const title = levelPrefix + (item.title || item.brief || item.content);
 
-        const processedItem = {
-            ...item,
-            content: item.content.replace(/^【[^】]+】/, '').trim(),
-            stock_list: processedStockList,
-        };
+            const processedItem = {
+                ...item,
+                content: item.content.replace(/^【[^】]+】/, '').trim(),
+                stock_list: processedStockList,
+            };
 
-        const rssItem: any = {
-            title,
-            link: item.shareurl,
-            description: renderDescription({
-                item: processedItem,
-                images: item.images || [],
-                sectors,
-                stocks,
-                level: item.level || '',
-                assocArticleUrl: item.assocArticleUrl || '',
-            }),
-            pubDate: parseDate(item.ctime * 1000),
-            category: allCategories,
-            author: item.author || '',
-        };
+            const rssItem: any = {
+                title,
+                link: item.shareurl,
+                description: renderDescription({
+                    item: processedItem,
+                    images: item.images || [],
+                    sectors,
+                    stocks,
+                    level: item.level || '',
+                    assocArticleUrl: item.assocArticleUrl || '',
+                }),
+                pubDate: parseDate(item.ctime * 1000),
+                category: allCategories,
+                author: item.author || '',
+            };
 
-        if (item.audio_url && item.audio_url.length > 0) {
-            rssItem.enclosure_url = item.audio_url[0];
-            rssItem.enclosure_type = 'audio/mpeg';
-            rssItem.enclosure_title = title;
-        }
+            if (item.audio_url && item.audio_url.length > 0) {
+                rssItem.enclosure_url = item.audio_url[0];
+                rssItem.enclosure_type = 'audio/mpeg';
+                rssItem.enclosure_title = title;
+            }
 
-        return rssItem;
-    });
+            return rssItem;
+        });
 
     return {
         title: `财联社 - 电报（API3）${category === '' ? '' : ` - ${categories[category]}`}`,

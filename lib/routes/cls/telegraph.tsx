@@ -17,6 +17,8 @@ const categories = {
     hk: '港股',
 };
 
+const VIP_TYPE_CODE = 20015;
+
 const renderTelegraphDescription = (item) =>
     renderToString(
         <>
@@ -80,13 +82,16 @@ async function handler(ctx) {
         }),
     });
 
-    const items = response.data.data.roll_data.slice(0, limit).map((item) => ({
-        title: item.title || item.content,
-        link: item.shareurl,
-        description: renderTelegraphDescription(item),
-        pubDate: parseDate(item.ctime * 1000),
-        category: item.subjects?.map((s) => s.subject_name),
-    }));
+    const items = response.data.data.roll_data
+        .filter((item) => Number(item.type) !== VIP_TYPE_CODE)
+        .slice(0, limit)
+        .map((item) => ({
+            title: item.title || item.content,
+            link: item.shareurl,
+            description: renderTelegraphDescription(item),
+            pubDate: parseDate(item.ctime * 1000),
+            category: item.subjects?.map((s) => s.subject_name),
+        }));
 
     return {
         title: `财联社 - 电报${category === '' ? '' : ` - ${categories[category]}`}`,
