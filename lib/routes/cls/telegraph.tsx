@@ -4,6 +4,8 @@ import type { Route } from '@/types';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
+import type { StockItem } from '../_finance/stock-card';
+import { renderSectorAndStockCards } from '../_finance/stock-card';
 import { getSearchParams, rootUrl } from './utils';
 
 const categories = {
@@ -19,20 +21,58 @@ const categories = {
 
 const VIP_TYPE_CODE = 20015;
 
-const renderTelegraphDescription = (item) =>
-    renderToString(
+const toStockItem = (s: any): StockItem => ({
+    name: s.name,
+    code: s.StockID || '',
+    change: s.RiseRange,
+});
+
+function extractTitle(content: string): string {
+    const match = content.match(/^【([^】]+)】/);
+    return match ? match[1] : '';
+}
+
+function stripTitlePrefix(content: string): string {
+    return content.replace(/^【[^】]+】/, '').trim();
+}
+
+function renderTelegraphDescription(item: any) {
+    const titleFromContent = extractTitle(item.content || '');
+    const bodyContent = stripTitlePrefix(item.content || '');
+
+    return renderToString(
         <>
-            {item.content ? <>{item.content}</> : null}
+            {item.level === 'A' ? (
+                <div style="background: #fff1f0; border-left: 3px solid #ff4d4f; padding: 8px 12px; margin-bottom: 10px; border-radius: 3px;">
+                    <strong style="color: #ff4d4f;">【重要】</strong>
+                </div>
+            ) : null}
+            {titleFromContent ? <h1 style="font-size: 18px; font-weight: bold; margin: 0 0 10px 0; color: #222; line-height: 1.5;">【{titleFromContent}】</h1> : null}
+            {bodyContent ? <p style="font-size: 15px; line-height: 1.8; color: #333; margin: 0 0 10px 0; max-width: 800px;">{bodyContent}</p> : null}
             {item.images?.length ? (
                 <>
-                    <br />
-                    {item.images.map((image) => (
-                        <img src={image} key={image} />
+                    {item.images.map((image: string) => (
+                        <img src={image} key={image} style="max-width: 100%; height: auto; margin: 5px 0;" />
                     ))}
                 </>
             ) : null}
+            <div style="display: flex; gap: 16px; margin: 12px 0; font-size: 13px; color: #999; flex-wrap: wrap;">
+                {item.reading_num === undefined ? null : <span>阅读 {item.reading_num}</span>}
+                {item.comment_num === undefined ? null : <span>评论 {item.comment_num}</span>}
+                {item.share_num === undefined ? null : <span>分享 {item.share_num}</span>}
+            </div>
+            {item.subjects?.length ? (
+                <div style="margin: 10px 0; display: flex; gap: 6px; flex-wrap: wrap;">
+                    {item.subjects.map((s: any) => (
+                        <span key={s.subject_id} style="background: #f0f5ff; color: #1890ff; padding: 2px 8px; border-radius: 3px; font-size: 12px;">
+                            {s.subject_name}
+                        </span>
+                    ))}
+                </div>
+            ) : null}
         </>
     );
+}
 
 export const route: Route = {
     path: '/telegraph/:category?',
@@ -85,13 +125,46 @@ async function handler(ctx) {
     const items = response.data.data.roll_data
         .filter((item) => Number(item.type) !== VIP_TYPE_CODE)
         .slice(0, limit)
-        .map((item) => ({
-            title: item.title || item.content,
-            link: item.shareurl,
-            description: renderTelegraphDescription(item),
-            pubDate: parseDate(item.ctime * 1000),
-            category: item.subjects?.map((s) => s.subject_name),
-        }));
+        .map((item) => {
+            const processedStockList = (item.stock_list || []).map((stock: any) => ({
+                ...stock,
+                StockID: stock.StockID ? stock.StockID.toUpperCase() : stock.StockID,
+            }));
+
+            const sectors = processedStockList.filter((s: any) => s.StockID?.includes('801')).map((s: any) => toStockItem(s));
+            const stocks = processedStockList.filter((s: any) => !s.StockID?.includes('801')).map((s: any) => toStockItem(s));
+
+            const subjectCategories = item.subjects?.map((s: any) => s.subject_name) || [];
+            const stockNameCategories = processedStockList.map((stock: any) => stock.name);
+
+            const titleFromContent = extractTitle(item.content || '');
+            const levelPrefix = item.level === 'A' ? '【重要】' : '';
+            const title = levelPrefix + (item.title || titleFromContent || item.brief || item.content);
+
+            let description = renderTelegraphDescription(item);
+
+            const stockCards = renderSectorAndStockCards(sectors, stocks);
+            if (stockCards) {
+                description += stockCards;
+            }
+
+            const rssItem: any = {
+                title,
+                link: item.shareurl,
+                description,
+                pubDate: parseDate(item.ctime * 1000),
+                category: [...subjectCategories, ...stockNameCategories],
+                author: item.author || '',
+            };
+
+            if (item.audio_url && item.audio_url.length > 0) {
+                rssItem.enclosure_url = item.audio_url[0];
+                rssItem.enclosure_type = 'audio/mpeg';
+                rssItem.enclosure_title = title;
+            }
+
+            return rssItem;
+        });
 
     return {
         title: `财联社 - 电报${category === '' ? '' : ` - ${categories[category]}`}`,
