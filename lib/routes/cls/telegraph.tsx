@@ -4,9 +4,10 @@ import type { Route } from '@/types';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
+import { applySourceImportance } from '../_finance/source-importance';
 import type { StockItem } from '../_finance/stock-card';
 import { renderSectorAndStockCards } from '../_finance/stock-card';
-import { getSearchParams, rootUrl } from './utils';
+import { getClsImportanceSignals, getSearchParams, rootUrl } from './utils';
 
 const categories = {
     watch: '看盘',
@@ -138,8 +139,7 @@ async function handler(ctx) {
             const stockNameCategories = processedStockList.map((stock: any) => stock.name);
 
             const titleFromContent = extractTitle(item.content || '');
-            const levelPrefix = item.level === 'A' ? '【重要】' : '';
-            const title = levelPrefix + (item.title || titleFromContent || item.brief || item.content);
+            const title = item.title || titleFromContent || item.brief || item.content;
 
             let description = renderTelegraphDescription(item);
 
@@ -148,14 +148,17 @@ async function handler(ctx) {
                 description += stockCards;
             }
 
-            const rssItem: any = {
-                title,
-                link: item.shareurl,
-                description,
-                pubDate: parseDate(item.ctime * 1000),
-                category: [...subjectCategories, ...stockNameCategories],
-                author: item.author || '',
-            };
+            const rssItem: any = applySourceImportance(
+                {
+                    title,
+                    link: item.shareurl,
+                    description,
+                    pubDate: parseDate(item.ctime * 1000),
+                    category: [...subjectCategories, ...stockNameCategories],
+                    author: item.author || '',
+                },
+                getClsImportanceSignals(item)
+            );
 
             if (item.audio_url && item.audio_url.length > 0) {
                 rssItem.enclosure_url = item.audio_url[0];

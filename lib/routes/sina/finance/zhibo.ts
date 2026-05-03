@@ -7,6 +7,7 @@ import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
+import { applySourceImportance } from '../../_finance/source-importance';
 import { renderSectorAndStockCards, type StockItem } from '../../_finance/stock-card';
 
 const toStockItemsWithQuotes = (items: any[], quotes: Record<string, { name: string; change: number }>): StockItem[] =>
@@ -26,7 +27,7 @@ export const route: Route = {
     view: ViewType.Articles,
     example: '/sina/zhibo',
     parameters: {
-        zhibo_id: '直播频道 id，默认为 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业。特殊值：focus（仅显示焦点新闻🔥）',
+        zhibo_id: '直播频道 id，默认为 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业。特殊值：focus（仅显示重要新闻）',
     },
     features: {
         requireConfig: false,
@@ -43,7 +44,7 @@ export const route: Route = {
     description:
         '对接新浪财经直播接口（zhibo）。\n\n' +
         '参数：\n' +
-        '- `zhibo_id`: 频道 ID，默认 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业。**特殊值：`focus`（仅显示焦点新闻🔥）**\n' +
+        '- `zhibo_id`: 频道 ID，默认 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业。**特殊值：`focus`（仅显示重要新闻）**\n' +
         '- `limit`: 返回条数，默认 20。接口单页最多 10 条，超过会自动分页抓取\n' +
         '- `pagesize`: 单页条数（1-10），默认 10\n' +
         '- `tag`: 标签过滤，支持标签名或ID。如：市场、公司、A股、美股等，留空表示不过滤\n' +
@@ -51,8 +52,8 @@ export const route: Route = {
         '- `dpc`: 客户端标记，默认 1\n\n' +
         '**焦点新闻功能：**\n' +
         '- 使用 `/sina/zhibo/focus` 可仅获取焦点新闻（is_focus=1 的新闻）\n' +
-        '- 焦点新闻标题前会显示 🔥 标记\n' +
-        '- RSS feed标题将显示 "🔥 焦点新闻"\n\n' +
+        '- 重要新闻标题前会显示「重要」标记\n' +
+        '- RSS feed标题将显示 "重要新闻"\n\n' +
         '**作者信息：**\n' +
         '- 优先使用主播/主持人名称（anchor、compere_info）\n' +
         '- 否则使用编辑账号（creator）\n\n' +
@@ -78,6 +79,7 @@ interface ZhiboFeedItem {
     }>;
     ext?: string; // JSON string containing docurl, docid, etc.
     is_focus?: number; // 焦点新闻标记：1=焦点，0=普通
+    top_value?: number;
     anchor?: string; // 主播/作者名称
     compere_info?: string; // 主持人信息
     like_nums?: number; // 点赞数
@@ -367,9 +369,7 @@ async function handler(ctx) {
             } else {
                 titleText = `直播快讯 #${it.id}`;
             }
-            // 焦点新闻标记：is_focus=1时在标题前添加🔥
             const isFocus = it.is_focus === 1;
-            const title = isFocus ? `🔥 ${titleText}` : titleText;
             // 去除正文中的【…】前缀，避免标题重复出现在正文
             const plainBody = bracketMatch ? plain.replace(/^【[^】]+】\s*/, '') : plain;
             const richBodyHtml = typeof it.rich_text === 'string' && bracketMatch ? it.rich_text.replace(/^【[^】]+】\s*/, '') : it.rich_text || '';
@@ -497,7 +497,6 @@ async function handler(ctx) {
             // 生成完整HTML内容，不包含【…】前缀
             const contentHtml = `${richBodyHtml}<br>${mediaHtml.join('<br>')}<br>`;
 
-            // 构建分类信息：标签 + 股票名称（不含涨跌幅）
             const tagCategories = it.tag?.map((t) => t.name) || [];
             const categories = [...tagCategories, ...stockCategories];
             const uniqueCategories = [...new Set(categories)].filter(Boolean);
@@ -531,22 +530,39 @@ async function handler(ctx) {
                 };
             }
 
-            return {
-                title,
-                link: detailLink,
-                description,
-                author: authorName,
-                pubDate: parseDate(it.create_time),
-                guid: `sina-finance-zhibo-${it.id}`,
-                category: uniqueCategories,
-                image: images[0], // 主图片
-                banner: images[0], // 横幅图片（与主图相同）
-                enclosure, // 媒体附件
-                content: {
-                    html: contentHtml,
-                    text: plainBody,
+            return applySourceImportance(
+                {
+                    title: titleText,
+                    link: detailLink,
+                    description,
+                    author: authorName,
+                    pubDate: parseDate(it.create_time),
+                    guid: `sina-finance-zhibo-${it.id}`,
+                    category: uniqueCategories,
+                    image: images[0], // 主图片
+                    banner: images[0], // 横幅图片（与主图相同）
+                    enclosure, // 媒体附件
+                    content: {
+                        html: contentHtml,
+                        text: plainBody,
+                    },
                 },
-            };
+                [
+                    {
+                        source: 'sina',
+                        field: 'is_focus',
+                        value: it.is_focus,
+                        label: '焦点',
+                        normalized: isFocus ? 'important' : 'normal',
+                    },
+                    {
+                        source: 'sina',
+                        field: 'top_value',
+                        value: it.top_value,
+                        label: '置顶值',
+                    },
+                ]
+            );
         })
     );
 
@@ -563,7 +579,7 @@ async function handler(ctx) {
 
     const channelTitle = CHANNELS[zhiboId] || '财经';
     const tagSuffix = tagFilter ? ` - ${tagFilter}` : '';
-    const focusSuffix = isFocusMode ? ' 🔥 焦点新闻' : '';
+    const focusSuffix = isFocusMode ? ' - 重要新闻' : '';
 
     return {
         title: `新浪财经 - 7×24直播 - ${channelTitle}${focusSuffix}${tagSuffix}`,

@@ -101,14 +101,14 @@ describe('pickLink', () => {
 });
 
 describe('buildTitle', () => {
-    test('color=1 加「重要」前缀 + 提取【】内文字', () => {
+    test('color=1 只提取【】内文字，重要前缀由 source importance helper 添加', () => {
         expect(
             buildTitle({
                 color: 1,
                 content: '【午评：创业板指半日涨超2%】三大指数早盘集体上涨',
                 id: 4_814_132,
             })
-        ).toBe('「重要」午评：创业板指半日涨超2%');
+        ).toBe('午评：创业板指半日涨超2%');
     });
 
     test('color=0 不加前缀，仅提取【】内文字', () => {
@@ -121,14 +121,14 @@ describe('buildTitle', () => {
         ).toBe('兆易创新与吉利汽车共建联合创新实验室');
     });
 
-    test('color=1 + 无【】：「重要」+ 前 100 字', () => {
+    test('color=1 + 无【】：取前 100 字', () => {
         expect(
             buildTitle({
                 color: 1,
                 content: '纽约期银突破77美元/盎司，日内涨1.79%。',
                 id: 4_814_147,
             })
-        ).toBe('「重要」纽约期银突破77美元/盎司，日内涨1.79%。');
+        ).toBe('纽约期银突破77美元/盎司，日内涨1.79%。');
     });
 
     test('color 未设置时视为普通快讯', () => {
@@ -142,6 +142,6 @@ describe('buildTitle', () => {
 
     test('空 content 兜底为 "财经快讯 <id>"', () => {
         expect(buildTitle({ color: 0, content: '', id: 42 })).toBe('财经快讯 42');
-        expect(buildTitle({ color: 1, id: 43 })).toBe('「重要」财经快讯 43');
+        expect(buildTitle({ color: 1, id: 43 })).toBe('财经快讯 43');
     });
 });

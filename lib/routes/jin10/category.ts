@@ -7,6 +7,7 @@ import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
+import { applySourceImportance } from '../_finance/source-importance';
 import { isJin10AdFeedItem, isJin10PromotionalItem } from './filters';
 import { renderDescription } from './templates/description';
 import { buildFlashLink } from './utils';
@@ -134,13 +135,24 @@ async function handler(ctx) {
                 title = fallback.length > 80 ? fallback.slice(0, 80) + '…' : fallback;
             }
 
-            return {
-                title,
-                description: renderDescription(body, item.data?.pic),
-                pubDate: timezone(parseDate(item.time), 8),
-                link: buildFlashLink(item),
-                guid: `jin10:category:${item.id}`,
-            };
+            return applySourceImportance(
+                {
+                    title,
+                    description: renderDescription(body, item.data?.pic),
+                    pubDate: timezone(parseDate(item.time), 8),
+                    link: buildFlashLink(item),
+                    guid: `jin10:category:${item.id}`,
+                },
+                [
+                    {
+                        source: 'jin10',
+                        field: 'important',
+                        value: item.important,
+                        label: '重要',
+                        normalized: item.important === 1 ? 'important' : 'normal',
+                    },
+                ]
+            );
         })
         .filter((item) => !isJin10AdFeedItem(item));
 

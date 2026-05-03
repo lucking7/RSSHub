@@ -5,6 +5,7 @@ import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
+import { applySourceImportance } from '../../_finance/source-importance';
 import { renderSectorAndStockCards, type StockItem } from '../../_finance/stock-card';
 
 export const route: Route = {
@@ -99,12 +100,12 @@ export function pickLink(item: { pageUrl?: string; url?: string; id: number | st
     return raw.replace(/^http:/, 'https:');
 }
 
-// 构造 title：优先取 content 里首个【】内文字，否则取前 100 字符，兜底用 id。color === 1 的加「重要」前缀（与 jin10 路由保持一致）。
+// Prefer the first bracketed phrase, then the first 100 characters, then id.
 export function buildTitle(item: { color?: number; content?: string; id: number | string }): string {
     const cleanContent = (item.content ?? '').replaceAll(/<[^>]+>/g, '');
     const titleMatch = cleanContent.match(/【([^】]+)】/);
     const base = titleMatch ? titleMatch[1] : cleanContent.slice(0, 100) || `财经快讯 ${item.id}`;
-    return item.color === 1 ? `「重要」${base}` : base;
+    return base;
 }
 
 function toStockItems(items: Sina724Stock[]): StockItem[] {
@@ -189,25 +190,34 @@ async function handler(ctx) {
             description += renderSectorAndStockCards(toStockItems(sectors), toStockItems(individualStocks));
         }
 
-        // 构建分类
         const categories: string[] = [];
 
-        // 添加股票信息到分类（只显示股票名称）
         for (const stock of stocks) {
             if (stock.name) {
                 categories.push(stock.name);
             }
         }
 
-        return {
-            title,
-            description,
-            link: pickLink(item),
-            guid: `sina-724-${newsId}`,
-            pubDate,
-            category: categories,
-            author: '新浪财经',
-        };
+        return applySourceImportance(
+            {
+                title,
+                description,
+                link: pickLink(item),
+                guid: `sina-724-${newsId}`,
+                pubDate,
+                category: categories,
+                author: '新浪财经',
+            },
+            [
+                {
+                    source: 'sina',
+                    field: 'color',
+                    value: item.color,
+                    label: '颜色',
+                    normalized: item.color === 1 ? 'important' : 'normal',
+                },
+            ]
+        );
     });
 
     return {

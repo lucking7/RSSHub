@@ -6,6 +6,7 @@ import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
+import { applySourceImportance } from '../_finance/source-importance';
 import { isJin10AdFeedItem, isJin10PromotionalItem, type Jin10RawItem } from './filters';
 import { buildFlashDescription, buildFlashLink, CHANNEL_MAP, collectFlashImages } from './utils';
 
@@ -107,12 +108,10 @@ async function handler(ctx) {
             }
 
             const isImportant = item.important === 1;
-            const isVip = (item.data?.vip_level ?? 0) > 0;
             const channels = (item.channel ?? []).map((ch) => CHANNEL_MAP[ch]).filter(Boolean);
-            const category = [...new Set([...(isImportant ? ['重要'] : []), ...(isVip ? ['VIP'] : []), ...channels, ...extractRemarkTags(item.remark)])];
+            const category = [...new Set([...channels, ...extractRemarkTags(item.remark)])];
             const images = collectFlashImages(item);
 
-            const title = isImportant ? `「重要」${baseTitle}` : baseTitle;
             const description = buildFlashDescription({
                 baseTitle,
                 body,
@@ -123,20 +122,31 @@ async function handler(ctx) {
             });
             const [firstImage] = images;
 
-            return {
-                title,
-                description,
-                link: buildFlashLink(item),
-                pubDate: timezone(parseDate(item.time!), +8),
-                category,
-                guid: item.id,
-                author: item.data?.source || '金十数据',
-                ...(firstImage && {
-                    image: firstImage,
-                    enclosure_url: firstImage,
-                    enclosure_type: 'image/jpeg',
-                }),
-            };
+            return applySourceImportance(
+                {
+                    title: baseTitle,
+                    description,
+                    link: buildFlashLink(item),
+                    pubDate: timezone(parseDate(item.time!), +8),
+                    category,
+                    guid: item.id,
+                    author: item.data?.source || '金十数据',
+                    ...(firstImage && {
+                        image: firstImage,
+                        enclosure_url: firstImage,
+                        enclosure_type: 'image/jpeg',
+                    }),
+                },
+                [
+                    {
+                        source: 'jin10',
+                        field: 'important',
+                        value: item.important,
+                        label: '重要',
+                        normalized: isImportant ? 'important' : 'normal',
+                    },
+                ]
+            );
         })
         .filter((item) => !isJin10AdFeedItem(item));
 

@@ -5,6 +5,7 @@ import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
+import { applySourceImportance } from '../_finance/source-importance';
 import { renderDescription } from './templates/description';
 
 export const route: Route = {
@@ -37,16 +38,44 @@ async function handler(ctx) {
         url: apiUrl,
     });
 
-    let items = response.data.data.list.map((item) => ({
-        title: item.title,
-        link: item.url.split('?')[0],
-        author: item.source,
-        pubDate: parseDate(item.timestamp * 1000),
-        description: renderDescription({
-            abs: item.abstract,
-            pic: item.pic,
-        }),
-    }));
+    let items = response.data.data.list.map((item) =>
+        applySourceImportance(
+            {
+                title: item.title,
+                link: item.url.split('?')[0],
+                author: item.source,
+                pubDate: parseDate(item.timestamp * 1000),
+                description: renderDescription({
+                    abs: item.abstract,
+                    pic: item.pic,
+                }),
+            },
+            [
+                ...(item.isTop
+                    ? [
+                          {
+                              source: 'futunn',
+                              field: 'isTop',
+                              value: item.isTop,
+                              label: '置顶',
+                              normalized: 'important',
+                          },
+                      ]
+                    : []),
+                ...(item.imptTag
+                    ? [
+                          {
+                              source: 'futunn',
+                              field: 'imptTag',
+                              value: item.imptTag,
+                              label: '重要标签',
+                              normalized: 'important',
+                          },
+                      ]
+                    : []),
+            ]
+        )
+    );
 
     items = await Promise.all(
         items.map((item) =>
@@ -65,7 +94,7 @@ async function handler(ctx) {
                     });
 
                     item.description = content('.origin_content').html();
-                    item.category = [
+                    const detailCategories = [
                         ...content('.news__from-topic__title')
                             .toArray()
                             .map((a) => content(a).text().trim()),
@@ -73,6 +102,7 @@ async function handler(ctx) {
                             .toArray()
                             .map((s) => content(s).text().trim()),
                     ];
+                    item.category = [...new Set([...(item.category ?? []), ...detailCategories])];
                 }
 
                 return item;

@@ -6,6 +6,7 @@ import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
+import { applySourceImportance } from '../_finance/source-importance';
 import { isJin10AdFeedItem, isJin10PromotionalItem } from './filters';
 import { renderDescription } from './templates/description';
 
@@ -56,7 +57,9 @@ async function handler(ctx) {
         false
     );
 
-    const item = data
+    const filteredData = important ? data.filter((item) => item.important === 1) : data;
+
+    const item = filteredData
         .map((item) => {
             const titleMatch = item.data.content.match(/^【([^】]+)】/s);
             let title;
@@ -68,20 +71,30 @@ async function handler(ctx) {
                 title = item.data.vip_title || item.data.content;
             }
 
-            return {
-                title,
-                description: renderDescription(content, item.data.pic),
-                pubDate: timezone(parseDate(item.time), 8),
-                link: item.data.link,
-                guid: `jin10:index:${item.id}`,
-                important: item.important,
-            };
+            return applySourceImportance(
+                {
+                    title,
+                    description: renderDescription(content, item.data.pic),
+                    pubDate: timezone(parseDate(item.time), 8),
+                    link: item.data.link,
+                    guid: `jin10:index:${item.id}`,
+                },
+                [
+                    {
+                        source: 'jin10',
+                        field: 'important',
+                        value: item.important,
+                        label: '重要',
+                        normalized: item.important === 1 ? 'important' : 'normal',
+                    },
+                ]
+            );
         })
         .filter((item) => !isJin10AdFeedItem(item));
 
     return {
         title: '金十数据',
         link: 'https://www.jin10.com/',
-        item: important ? item.filter((item) => item.important) : item,
+        item,
     };
 }

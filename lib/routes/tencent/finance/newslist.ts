@@ -4,6 +4,7 @@ import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
+import { applySourceImportance } from '../../_finance/source-importance';
 import { renderSectorAndStockCards, type StockItem } from '../../_finance/stock-card';
 
 export const route: Route = {
@@ -233,15 +234,33 @@ async function handler(ctx) {
             }
         }
 
-        return {
-            title,
-            description,
-            link: item.url || `https://gu.qq.com/news/${newsId}`,
-            guid: `tencent-zxg-${newsId}`,
-            pubDate,
-            category: [...new Set(categories)],
-            author: item.source || '腾讯自选股', // 使用API返回的来源作为作者，如"财联社"、"央视新闻"等
-        };
+        return applySourceImportance(
+            {
+                title,
+                description,
+                link: item.url || `https://gu.qq.com/news/${newsId}`,
+                guid: `tencent-zxg-${newsId}`,
+                pubDate,
+                category: [...new Set(categories)],
+                author: item.source || '腾讯自选股', // 使用API返回的来源作为作者，如"财联社"、"央视新闻"等
+            },
+            [
+                {
+                    source: 'tencent',
+                    field: 'is_top',
+                    value: item.is_top,
+                    label: '置顶',
+                    normalized: Number(item.is_top) === 1 ? 'important' : 'normal',
+                },
+                {
+                    source: 'tencent',
+                    field: 'is_red',
+                    value: item.is_red,
+                    label: '加红',
+                    normalized: Number(item.is_red) === 1 ? 'important' : 'normal',
+                },
+            ]
+        );
     });
 
     // 构建标题

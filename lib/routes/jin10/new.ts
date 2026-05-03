@@ -6,6 +6,7 @@ import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
+import { applySourceImportance } from '../_finance/source-importance';
 import { isJin10AdFeedItem, isJin10PromotionalItem, type Jin10RawItem } from './filters';
 import { buildFlashDescription, buildFlashLink, CHANNEL_MAP, collectFlashImages } from './utils';
 
@@ -136,11 +137,7 @@ async function handler(ctx) {
             const isImportant = item.important === 1;
             const channels = (item.channel ?? []).map((ch) => CHANNEL_MAP[ch]).filter(Boolean);
             const category = [...new Set([...channels, ...extractRemarkTags(item.remark)])];
-            if (isImportant) {
-                category.push('重要');
-            }
 
-            const title = isImportant ? `「重要」${baseTitle}` : baseTitle;
             const description = buildFlashDescription({
                 baseTitle,
                 body,
@@ -150,15 +147,26 @@ async function handler(ctx) {
                 images: collectFlashImages(item),
             });
 
-            return {
-                title,
-                description,
-                pubDate: timezone(parseDate(item.time!), 8),
-                link: buildFlashLink(item),
-                guid: `jin10:new:${item.id}`,
-                category,
-                author: item.data?.source || '金十数据',
-            };
+            return applySourceImportance(
+                {
+                    title: baseTitle,
+                    description,
+                    pubDate: timezone(parseDate(item.time!), 8),
+                    link: buildFlashLink(item),
+                    guid: `jin10:new:${item.id}`,
+                    category,
+                    author: item.data?.source || '金十数据',
+                },
+                [
+                    {
+                        source: 'jin10',
+                        field: 'important',
+                        value: item.important,
+                        label: '重要',
+                        normalized: isImportant ? 'important' : 'normal',
+                    },
+                ]
+            );
         })
         .filter((item) => !isJin10AdFeedItem(item));
 

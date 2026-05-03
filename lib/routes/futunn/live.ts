@@ -2,6 +2,8 @@ import type { Route } from '@/types';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
+import { applySourceImportance } from '../_finance/source-importance';
+
 export const route: Route = {
     path: '/live/:lang?',
     categories: ['finance'],
@@ -66,28 +68,43 @@ async function handler(ctx) {
 
     const items = response.data.data.data.news.map((item) => {
         const audio = item.audioInfos.find((audio) => audio.language === lang);
-        return {
-            title: item.title || item.content,
-            description: item.content,
-            link: item.detailUrl,
-            pubDate: parseDate(item.time * 1000),
-            category: item.quote.map((quote) => quote.name),
-            itunes_item_image: item.pic,
-            itunes_duration: audio.duration,
-            enclosure_url: audio.audioUrl,
-            enclosure_type: 'audio/mpeg',
-            media: {
-                content: {
-                    url: audio.audioUrl,
-                    type: 'audio/mpeg',
-                    duration: audio.duration,
-                    language: lang === 'Mandarin' ? 'zh-CN' : lang === 'Cantonese' ? 'zh-HK' : 'en',
-                },
-                thumbnail: {
-                    url: item.pic,
+        const title = item.title || item.content;
+        const category = item.quote.map((quote) => quote.name);
+        return applySourceImportance(
+            {
+                title,
+                description: item.content,
+                link: item.detailUrl,
+                pubDate: parseDate(item.time * 1000),
+                category,
+                itunes_item_image: item.pic,
+                itunes_duration: audio.duration,
+                enclosure_url: audio.audioUrl,
+                enclosure_type: 'audio/mpeg',
+                media: {
+                    content: {
+                        url: audio.audioUrl,
+                        type: 'audio/mpeg',
+                        duration: audio.duration,
+                        language: lang === 'Mandarin' ? 'zh-CN' : lang === 'Cantonese' ? 'zh-HK' : 'en',
+                    },
+                    thumbnail: {
+                        url: item.pic,
+                    },
                 },
             },
-        };
+            item.level === undefined
+                ? []
+                : [
+                      {
+                          source: 'futunn',
+                          field: 'level',
+                          value: item.level,
+                          label: '新闻等级',
+                          normalized: item.level === 1 ? 'important' : 'normal',
+                      },
+                  ]
+        );
     });
 
     return {

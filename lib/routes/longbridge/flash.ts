@@ -4,6 +4,7 @@ import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
+import { applySourceImportance } from '../_finance/source-importance';
 import { API_BASE, API_HEADERS_JSON } from './utils';
 
 // Upstream enforces limit ∈ [0, 50]; values outside the range get rejected with
@@ -55,15 +56,25 @@ async function handler() {
 
     const items = list.map((item) => {
         const description = item.description_html || item.title;
-        return {
-            title: item.title,
-            description,
-            link: item.detail_url || `https://m.lbctrl.com/news/post/${item.id}`,
-            pubDate: parseDate(Number.parseInt(item.published_at) * 1000),
-            guid: `longbridge-flash-${item.id}`,
-            author: item.post_source?.name || '长桥快讯',
-            ...(item.important ? { category: ['重要'] } : {}),
-        };
+        return applySourceImportance(
+            {
+                title: item.title,
+                description,
+                link: item.detail_url || `https://m.lbctrl.com/news/post/${item.id}`,
+                pubDate: parseDate(Number.parseInt(item.published_at) * 1000),
+                guid: `longbridge-flash-${item.id}`,
+                author: item.post_source?.name || '长桥快讯',
+            },
+            [
+                {
+                    source: 'longbridge',
+                    field: 'important',
+                    value: item.important,
+                    label: '重要',
+                    normalized: item.important ? 'important' : 'normal',
+                },
+            ]
+        );
     });
 
     return {

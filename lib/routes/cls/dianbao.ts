@@ -2,8 +2,9 @@ import type { Route } from '@/types';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
+import { applySourceImportance } from '../_finance/source-importance';
 import { renderSectorAndStockCards, type StockItem } from '../_finance/stock-card';
-import { getSearchParams } from './utils';
+import { getClsImportanceSignals, getSearchParams } from './utils';
 
 const toStockItem = (s: any): StockItem => ({ name: s.name, code: s.StockID || '', change: s.RiseRange });
 
@@ -25,7 +26,11 @@ function renderDescription({ item, images, sectors, stocks, level, assocArticleU
 
     if (level === 'A') {
         html += '<div style="background: #fff1f0; border-left: 3px solid #ff4d4f; padding: 8px 12px; margin-bottom: 10px; border-radius: 3px;">';
-        html += '<strong style="color: #ff4d4f;">【重要】</strong>';
+        html += '<strong style="color: #ff4d4f;">「重要」</strong>';
+        html += '</div>';
+    } else if (level === 'B') {
+        html += '<div style="background: #fff7e6; border-left: 3px solid #fa8c16; padding: 8px 12px; margin-bottom: 10px; border-radius: 3px;">';
+        html += '<strong style="color: #fa8c16;">「关注」</strong>';
         html += '</div>';
     }
 
@@ -127,10 +132,7 @@ async function handler(ctx) {
 
             const subjectCategories = item.subjects?.map((s) => s.subject_name) || [];
             const stockNameCategories = processedStockList.map((stock) => stock.name);
-            const allCategories = [...subjectCategories, ...stockNameCategories];
-
-            const levelPrefix = item.level === 'A' ? '【重要】' : '';
-            const title = levelPrefix + (item.title || item.brief || item.content);
+            const title = item.title || item.brief || item.content;
 
             const processedItem = {
                 ...item,
@@ -138,21 +140,24 @@ async function handler(ctx) {
                 stock_list: processedStockList,
             };
 
-            const rssItem: any = {
-                title,
-                link: item.shareurl,
-                description: renderDescription({
-                    item: processedItem,
-                    images: item.images || [],
-                    sectors,
-                    stocks,
-                    level: item.level || '',
-                    assocArticleUrl: item.assocArticleUrl || '',
-                }),
-                pubDate: parseDate(item.ctime * 1000),
-                category: allCategories,
-                author: item.author || '',
-            };
+            const rssItem: any = applySourceImportance(
+                {
+                    title,
+                    link: item.shareurl,
+                    description: renderDescription({
+                        item: processedItem,
+                        images: item.images || [],
+                        sectors,
+                        stocks,
+                        level: item.level || '',
+                        assocArticleUrl: item.assocArticleUrl || '',
+                    }),
+                    pubDate: parseDate(item.ctime * 1000),
+                    category: [...subjectCategories, ...stockNameCategories],
+                    author: item.author || '',
+                },
+                getClsImportanceSignals(item)
+            );
 
             if (item.audio_url && item.audio_url.length > 0) {
                 rssItem.enclosure_url = item.audio_url[0];
