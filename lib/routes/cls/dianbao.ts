@@ -136,7 +136,7 @@ async function handler(ctx) {
 
             const processedItem = {
                 ...item,
-                content: item.content.replace(/^【[^】]+】/, '').trim(),
+                content: (item.content || '').replace(/^【[^】]+】/, '').trim(),
                 stock_list: processedStockList,
             };
 
@@ -158,12 +158,6 @@ async function handler(ctx) {
                 },
                 getClsImportanceSignals(item)
             );
-
-            if (item.audio_url && item.audio_url.length > 0) {
-                rssItem.enclosure_url = item.audio_url[0];
-                rssItem.enclosure_type = 'audio/mpeg';
-                rssItem.enclosure_title = title;
-            }
 
             return rssItem;
         });

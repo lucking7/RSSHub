@@ -160,12 +160,6 @@ async function handler(ctx) {
                 getClsImportanceSignals(item)
             );
 
-            if (item.audio_url && item.audio_url.length > 0) {
-                rssItem.enclosure_url = item.audio_url[0];
-                rssItem.enclosure_type = 'audio/mpeg';
-                rssItem.enclosure_title = title;
-            }
-
             return rssItem;
         });
 
