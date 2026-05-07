@@ -61,4 +61,32 @@ const getClsImportanceSignals = (item): SourceImportanceSignal[] => {
     return signals;
 };
 
-export { getClsImportanceSignals, getSearchParams, rootUrl };
+const isClsPromotionalContent = (item): boolean => {
+    const content = item.content || '';
+
+    // Live-stream promo with call-to-action keywords
+    if (content.includes('直播') && (content.includes('点击') || content.includes('立即') || content.includes('扫码') || content.includes('预约'))) {
+        return true;
+    }
+
+    // Community / social-group join prompt
+    if (content.includes('加入') && content.includes('社群')) {
+        return true;
+    }
+
+    // Content dominated by links or pure redirect stubs
+    const hasLink = /<a\s|https?:\/\//i.test(content);
+    if (hasLink) {
+        const textOnly = content
+            .replace(/<[^>]+>/g, '')
+            .replace(/https?:\/\/\S+/g, '')
+            .trim();
+        if (textOnly.length < 20) {
+            return true;
+        }
+    }
+
+    return false;
+};
+
+export { getClsImportanceSignals, getSearchParams, isClsPromotionalContent, rootUrl };

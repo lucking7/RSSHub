@@ -4,7 +4,7 @@ import { parseDate } from '@/utils/parse-date';
 
 import { applySourceImportance } from '../_finance/source-importance';
 import { renderSectorAndStockCards, type StockItem } from '../_finance/stock-card';
-import { getClsImportanceSignals, getSearchParams } from './utils';
+import { getClsImportanceSignals, getSearchParams, isClsPromotionalContent } from './utils';
 
 const toStockItem = (s: any): StockItem => ({ name: s.name, code: s.StockID || '', change: s.RiseRange });
 
@@ -120,6 +120,7 @@ async function handler(ctx) {
 
     const items = response.data.data.roll_data
         .filter((item) => Number(item.type) !== VIP_TYPE_CODE)
+        .filter((item) => !isClsPromotionalContent(item))
         .slice(0, limit)
         .map((item) => {
             const processedStockList = (item.stock_list || []).map((stock) => ({

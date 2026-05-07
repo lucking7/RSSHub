@@ -7,7 +7,7 @@ import { parseDate } from '@/utils/parse-date';
 import { applySourceImportance } from '../_finance/source-importance';
 import type { StockItem } from '../_finance/stock-card';
 import { renderSectorAndStockCards } from '../_finance/stock-card';
-import { getClsImportanceSignals, getSearchParams, rootUrl } from './utils';
+import { getClsImportanceSignals, getSearchParams, isClsPromotionalContent, rootUrl } from './utils';
 
 const categories = {
     watch: '看盘',
@@ -43,11 +43,6 @@ function renderTelegraphDescription(item: any) {
 
     return renderToString(
         <>
-            {item.level === 'A' ? (
-                <div style="background: #fff1f0; border-left: 3px solid #ff4d4f; padding: 8px 12px; margin-bottom: 10px; border-radius: 3px;">
-                    <strong style="color: #ff4d4f;">【重要】</strong>
-                </div>
-            ) : null}
             {titleFromContent ? <h1 style="font-size: 18px; font-weight: bold; margin: 0 0 10px 0; color: #222; line-height: 1.5;">【{titleFromContent}】</h1> : null}
             {bodyContent ? <p style="font-size: 15px; line-height: 1.8; color: #333; margin: 0 0 10px 0; max-width: 800px;">{bodyContent}</p> : null}
             {item.images?.length ? (
@@ -125,6 +120,7 @@ async function handler(ctx) {
 
     const items = response.data.data.roll_data
         .filter((item) => Number(item.type) !== VIP_TYPE_CODE)
+        .filter((item) => !isClsPromotionalContent(item))
         .slice(0, limit)
         .map((item) => {
             const processedStockList = (item.stock_list || []).map((stock: any) => ({
