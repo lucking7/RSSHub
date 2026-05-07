@@ -13,14 +13,25 @@ export type Jin10RawItem = {
     tags?: unknown[];
     channel?: number[];
     remark?: Array<{
+        id?: number;
         type?: string;
         title?: string;
+        link?: string;
+        url?: string;
+        content?: string;
         symbol?: string;
         category_name?: string;
         pic?: string;
     }>;
+    extras?: {
+        ad?: boolean;
+        ad_info?: {
+            show_ad_label?: boolean;
+        };
+    };
     data?: {
         content?: string;
+        link?: string;
         title?: string;
         source?: string;
         source_link?: string;
@@ -49,8 +60,22 @@ const getRawTitle = (item: Jin10RawItem) => {
     return titleMatch?.[1] ?? item.data?.title ?? item.data?.vip_title ?? item.title ?? content ?? '';
 };
 
+const isPromotionalRemarkLink = (value?: string) => {
+    if (!value) {
+        return false;
+    }
+
+    return value.startsWith('https://tv.jin10.com/') || value.startsWith('https://qihuo.jin10.com/articleDetail.html');
+};
+
+const hasPromotionalRemarkLink = (item: Jin10RawItem) => item.remark?.some((remark) => isPromotionalRemarkLink(remark.link) || isPromotionalRemarkLink(remark.url)) ?? false;
+
 export const isJin10PromotionalItem = (item: Jin10RawItem) => {
     if (item.type === 1 || item.type === 2) {
+        return true;
+    }
+
+    if (item.extras?.ad || hasPromotionalRemarkLink(item)) {
         return true;
     }
 

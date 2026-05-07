@@ -85,9 +85,10 @@ export const handler = async (ctx) => {
                 };
                 item.image = image;
                 item.banner = image;
-                item.enclosure_url = data.audioUrl;
-                item.enclosure_type = item.enclosure_url ? `audio/${item.enclosure_url.split(/\./).pop()}` : undefined;
-                item.enclosure_title = title;
+                // Audio enclosure is disabled for now; keep this block for later reuse.
+                // item.enclosure_url = data.audioUrl;
+                // item.enclosure_type = item.enclosure_url ? `audio/${item.enclosure_url.split(/\./).pop()}` : undefined;
+                // item.enclosure_title = title;
 
                 return item;
             })

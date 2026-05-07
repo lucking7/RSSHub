@@ -37,8 +37,31 @@ function stripTitlePrefix(content: string): string {
     return content.replace(/^【[^】]+】/, '').trim();
 }
 
+function isPromotionalContent(content: string): boolean {
+    if (!content) {
+        return false;
+    }
+
+    const strongKeywords = ['点击阅读', '点击查看', '点击观看', '正在直播中', '正在直播', '直播中', '扫码', '进群', '下载APP', '下载app', '安装客户端', '扫码领取', '限时免费', '立即加入', '戳这里', '››', '《《'];
+
+    const promotionalPatterns = [/点击.*(阅读|观看|查看)/, /(阅读|观看).*直播中/, /›\s*还有.*行情.*直播/, /直播中.*点击/, /扫码.*(进群|关注|下载)/];
+
+    if (strongKeywords.some((kw) => content.includes(kw))) {
+        return true;
+    }
+
+    if (promotionalPatterns.some((pattern) => pattern.test(content))) {
+        return true;
+    }
+
+    if (content.includes('›') && /(直播|点击|阅读|观看)/.test(content)) {
+        return true;
+    }
+
+    return false;
+}
+
 function renderTelegraphDescription(item: any) {
-    const titleFromContent = extractTitle(item.content || '');
     const bodyContent = stripTitlePrefix(item.content || '');
 
     return renderToString(
@@ -48,7 +71,6 @@ function renderTelegraphDescription(item: any) {
                     <strong style="color: #ff4d4f;">【重要】</strong>
                 </div>
             ) : null}
-            {titleFromContent ? <h1 style="font-size: 18px; font-weight: bold; margin: 0 0 10px 0; color: #222; line-height: 1.5;">【{titleFromContent}】</h1> : null}
             {bodyContent ? <p style="font-size: 15px; line-height: 1.8; color: #333; margin: 0 0 10px 0; max-width: 800px;">{bodyContent}</p> : null}
             {item.images?.length ? (
                 <>
@@ -125,6 +147,7 @@ async function handler(ctx) {
 
     const items = response.data.data.roll_data
         .filter((item) => Number(item.type) !== VIP_TYPE_CODE)
+        .filter((item) => !isPromotionalContent(item.content || ''))
         .slice(0, limit)
         .map((item) => {
             const processedStockList = (item.stock_list || []).map((stock: any) => ({
@@ -160,11 +183,12 @@ async function handler(ctx) {
                 getClsImportanceSignals(item)
             );
 
-            if (item.audio_url && item.audio_url.length > 0) {
-                rssItem.enclosure_url = item.audio_url[0];
-                rssItem.enclosure_type = 'audio/mpeg';
-                rssItem.enclosure_title = title;
-            }
+            // Audio enclosure is disabled for now; keep this block for later reuse.
+            // if (item.audio_url && item.audio_url.length > 0) {
+            //     rssItem.enclosure_url = item.audio_url[0];
+            //     rssItem.enclosure_type = 'audio/mpeg';
+            //     rssItem.enclosure_title = title;
+            // }
 
             return rssItem;
         });
