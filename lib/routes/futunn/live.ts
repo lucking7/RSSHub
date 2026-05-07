@@ -69,6 +69,9 @@ async function handler(ctx) {
     const items = response.data.data.data.news.map((item) => {
         const title = item.title || item.content;
         const category = (item.quote || []).map((quote) => quote.name);
+        // Audio enclosure — disabled for now, upstream API provides TTS audio per language
+        // const audioInfo = (item.audioInfos || []).find((a) => a.language === lang);
+        // const audioUrl = audioInfo?.audioUrl;
         return applySourceImportance(
             {
                 title,
@@ -76,6 +79,7 @@ async function handler(ctx) {
                 link: item.detailUrl,
                 pubDate: parseDate(item.time * 1000),
                 category,
+                // ...(audioUrl ? { enclosure_url: audioUrl, enclosure_type: 'audio/mpeg', itunes_duration: audioInfo.audioDuration } : {}),
             },
             item.level === undefined
                 ? []
