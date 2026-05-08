@@ -79,20 +79,6 @@ function renderTelegraphDescription(item: any) {
                     ))}
                 </>
             ) : null}
-            <div style="display: flex; gap: 16px; margin: 12px 0; font-size: 13px; color: #999; flex-wrap: wrap;">
-                {item.reading_num === undefined ? null : <span>阅读 {item.reading_num}</span>}
-                {item.comment_num === undefined ? null : <span>评论 {item.comment_num}</span>}
-                {item.share_num === undefined ? null : <span>分享 {item.share_num}</span>}
-            </div>
-            {item.subjects?.length ? (
-                <div style="margin: 10px 0; display: flex; gap: 6px; flex-wrap: wrap;">
-                    {item.subjects.map((s: any) => (
-                        <span key={s.subject_id} style="background: #f0f5ff; color: #1890ff; padding: 2px 8px; border-radius: 3px; font-size: 12px;">
-                            {s.subject_name}
-                        </span>
-                    ))}
-                </div>
-            ) : null}
         </>
     );
 }
