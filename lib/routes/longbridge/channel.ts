@@ -49,13 +49,18 @@ const UPSTREAM_SIZE = 50;
 async function handler(ctx) {
     const slug = ctx.req.param('slug') || 'mp-lb-daily';
 
-    const list = await cache.tryGet(`longbridge:channel:${slug}`, async () => {
-        const { data } = await got(`${API_BASE}/news/channels/${slug}`, {
-            searchParams: { size: UPSTREAM_SIZE, has_derivatives: true },
-            headers: API_HEADERS,
-        });
-        return data?.data?.news_list ?? [];
-    });
+    const list = await cache.tryGet(
+        `longbridge:channel:${slug}`,
+        async () => {
+            const { data } = await got(`${API_BASE}/news/channels/${slug}`, {
+                searchParams: { size: UPSTREAM_SIZE, has_derivatives: true },
+                headers: API_HEADERS,
+            });
+            return data?.data?.news_list ?? [];
+        },
+        30,
+        false
+    );
 
     const items = list.map((item) =>
         applySourceImportance(

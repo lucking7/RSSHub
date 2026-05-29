@@ -1,6 +1,7 @@
 import { renderToString } from 'hono/jsx/dom/server';
 
 import type { Route } from '@/types';
+import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
@@ -122,16 +123,24 @@ async function handler(ctx) {
 
     const currentUrl = `${rootUrl}/telegraph`;
 
-    const response = await got({
-        method: 'get',
-        url: apiUrl,
-        searchParams: getSearchParams({
-            category,
-            hasFirstVipArticle: 1,
-        }),
-    });
+    const rawData = await cache.tryGet(
+        `cls:telegraph:${category}`,
+        async () => {
+            const response = await got({
+                method: 'get',
+                url: apiUrl,
+                searchParams: getSearchParams({
+                    category,
+                    hasFirstVipArticle: 1,
+                }),
+            });
+            return response.data?.data?.roll_data ?? [];
+        },
+        30,
+        false
+    );
 
-    const items = response.data.data.roll_data
+    const items = rawData
         .filter((item) => Number(item.type) !== VIP_TYPE_CODE)
         .filter((item) => !isPromotionalContent(item.content || ''))
         .slice(0, limit)

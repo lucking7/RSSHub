@@ -1,4 +1,3 @@
-import { config } from '@/config';
 import type { Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
@@ -102,7 +101,7 @@ async function handler(ctx) {
             });
             return parseFlashData(response);
         },
-        config.cache.routeExpire,
+        30,
         false
     );
 
