@@ -1,14 +1,16 @@
 import type { Route } from '@/types';
-import cache from '@/utils/cache';
-import got from '@/utils/got';
-import { parseDate } from '@/utils/parse-date';
 
-import { applySourceImportance } from '../_finance/source-importance';
-import { API_BASE, API_HEADERS } from './utils';
+import { fetchChannelNewsList, fetchInitArticles, isChannelListStale, isDolphinArticle, LONGBRIDGE_CACHE_TTL, mapChannelArticle, mapInitArticle, WEB_BASE } from './utils';
 
-const CHANNELS: Record<string, string> = {
-    'mp-lb-daily': '长桥每日精选',
-    dolphin: '海豚投研',
+const CHANNELS: Record<string, { name: string; linkPath: string }> = {
+    'mp-lb-daily': {
+        name: '长桥每日精选',
+        linkPath: 'daily',
+    },
+    dolphin: {
+        name: '海豚投研',
+        linkPath: 'dolphin',
+    },
 };
 
 export const route: Route = {
@@ -20,9 +22,10 @@ export const route: Route = {
     example: '/longbridge/channel/mp-lb-daily',
     parameters: {
         slug: `频道 slug，默认 \`mp-lb-daily\`。已知频道：${Object.entries(CHANNELS)
-            .map(([k, v]) => `\`${k}\`（${v}）`)
+            .map(([k, v]) => `\`${k}\`（${v.name}）`)
             .join('、')}`,
     },
+    description: '长桥资讯频道。当频道 API 超过 3 天未更新时，会自动回退到官网资讯首页数据，避免 feed 长期停更。',
     categories: ['finance'],
     features: {
         requireConfig: false,
@@ -42,56 +45,31 @@ export const route: Route = {
             target: '/channel/dolphin',
         },
     ],
+    cacheTtl: LONGBRIDGE_CACHE_TTL,
 };
-
-const UPSTREAM_SIZE = 50;
 
 async function handler(ctx) {
     const slug = ctx.req.param('slug') || 'mp-lb-daily';
+    const channelConfig = CHANNELS[slug] || { name: slug, linkPath: slug };
 
-    const list = await cache.tryGet(
-        `longbridge:channel:${slug}`,
-        async () => {
-            const { data } = await got(`${API_BASE}/news/channels/${slug}`, {
-                searchParams: { size: UPSTREAM_SIZE, has_derivatives: true },
-                headers: API_HEADERS,
-            });
-            return data?.data?.news_list ?? [];
-        },
-        30,
-        false
-    );
-
-    const items = list.map((item) =>
-        applySourceImportance(
-            {
-                title: item.title,
-                description: item.description || '',
-                link: item.url || `https://m.lbctrl.com/news/post/${item.id}`,
-                pubDate: parseDate(Number.parseInt(item.publish_at) * 1000),
-                guid: `longbridge-channel-${item.id}`,
-                author: item.post_source?.name || '长桥资讯',
-                ...(item.image ? { image: item.image } : {}),
-                ...(item.markets?.length ? { category: item.markets } : {}),
-            },
-            [
-                {
-                    source: 'longbridge',
-                    field: 'important',
-                    value: item.important,
-                    label: '重要',
-                    normalized: item.important ? 'important' : 'normal',
-                },
-            ]
-        )
-    );
-
-    const channelName = CHANNELS[slug] || slug;
+    let items;
+    if (slug === 'dolphin') {
+        const articles = await fetchInitArticles();
+        items = articles.filter((item) => isDolphinArticle(item)).map((item) => mapInitArticle(item));
+    } else {
+        const list = await fetchChannelNewsList(slug);
+        if (isChannelListStale(list)) {
+            const articles = await fetchInitArticles();
+            items = articles.map((item) => mapInitArticle(item));
+        } else {
+            items = list.map((item) => mapChannelArticle(item));
+        }
+    }
 
     return {
-        title: `长桥 - ${channelName}`,
-        link: `https://longbridge.com/zh-CN/news/node/${slug === 'mp-lb-daily' ? 'daily' : slug}`,
-        description: `长桥${channelName}`,
+        title: `长桥 - ${channelConfig.name}`,
+        link: `${WEB_BASE}/zh-CN/news/node/${channelConfig.linkPath}`,
+        description: `长桥${channelConfig.name}`,
         item: items,
     };
 }

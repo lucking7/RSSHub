@@ -1,16 +1,9 @@
 import type { Route } from '@/types';
 import { ViewType } from '@/types';
-import cache from '@/utils/cache';
-import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
 import { applySourceImportance } from '../_finance/source-importance';
-import { API_BASE, API_HEADERS_JSON } from './utils';
-
-// Upstream enforces limit ∈ [0, 50]; values outside the range get rejected with
-// code 1901400 and an empty data payload, which would silently produce an empty
-// feed.
-const UPSTREAM_LIMIT = 50;
+import { fetchFlashFeed, LONGBRIDGE_CACHE_TTL, WEB_BASE } from './utils';
 
 export const route: Route = {
     path: '/flash',
@@ -19,7 +12,7 @@ export const route: Route = {
     maintainers: ['luck'],
     handler,
     example: '/longbridge/flash',
-    description: '长桥金融快讯（stock flash），实时市场动态',
+    description: '长桥金融快讯，数据源为官网 `/news/live/feed` RSS。',
     categories: ['finance'],
     features: {
         requireConfig: false,
@@ -36,51 +29,46 @@ export const route: Route = {
         },
     ],
     view: ViewType.Notifications,
+    cacheTtl: LONGBRIDGE_CACHE_TTL,
 };
 
 async function handler() {
-    const list = await cache.tryGet(
-        'longbridge:flash',
-        async () => {
-            const { data } = await got.post(`${API_BASE}/content/stock_flash/posts`, {
-                json: { limit: UPSTREAM_LIMIT },
-                headers: API_HEADERS_JSON,
-            });
-            if (data?.code !== 0) {
-                throw new Error(`Longbridge flash API error ${data?.code}: ${data?.message}`);
-            }
-            return data.data?.articles ?? [];
-        },
-        60
-    );
+    const feed = await fetchFlashFeed();
 
-    const items = list.map((item) => {
-        const description = item.description_html || item.title;
+    const items = feed.items.map((item) => {
+        const categories = item.categories?.length ? item.categories : undefined;
+        const description = item.contentSnippet || item.content || '';
+        const title = item.title?.trim() || description.slice(0, 80);
+        const pubDateRaw = item.isoDate || item.pubDate;
         return applySourceImportance(
             {
-                title: item.title,
+                title,
                 description,
-                link: item.detail_url || `https://m.lbctrl.com/news/post/${item.id}`,
-                pubDate: parseDate(Number.parseInt(item.published_at) * 1000),
-                guid: `longbridge-flash-${item.id}`,
-                author: item.post_source?.name || '长桥快讯',
+                link: item.link ?? `${WEB_BASE}/news/live`,
+                pubDate: pubDateRaw ? parseDate(pubDateRaw) : undefined,
+                guid: item.guid || item.link || `longbridge-flash-${item.link}`,
+                author: item.creator || item.author || '长桥快讯',
+                ...(categories ? { category: categories } : {}),
             },
-            [
-                {
-                    source: 'longbridge',
-                    field: 'important',
-                    value: item.important,
-                    label: '重要',
-                    normalized: item.important ? 'important' : 'normal',
-                },
-            ]
+            categories?.includes('重要')
+                ? [
+                      {
+                          source: 'longbridge',
+                          field: 'important',
+                          value: true,
+                          label: '重要',
+                          normalized: 'important',
+                      },
+                  ]
+                : []
         );
     });
 
     return {
         title: '长桥 - 金融快讯',
-        link: 'https://longbridge.com/zh-CN/news/live',
+        link: `${WEB_BASE}/zh-CN/news/live`,
         description: '长桥金融快讯',
+        language: 'zh-CN',
         item: items,
     };
 }
