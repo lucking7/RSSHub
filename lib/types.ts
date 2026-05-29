@@ -362,6 +362,11 @@ interface RouteItem {
      * The [Follow](https://github.com/RSSNext/follow) default view of the route, default to `ViewType.Articles`
      */
     view?: ViewType;
+
+    /**
+     * Route response cache lifetime in seconds, defaults to `CACHE_EXPIRE`
+     */
+    cacheTtl?: number;
 }
 
 export interface Route extends RouteItem {

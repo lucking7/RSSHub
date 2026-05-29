@@ -199,6 +199,9 @@ for (const namespace in namespaces) {
     for (const [path, routeData] of sortedRoutes) {
         const wrappedHandler: Handler = async (ctx) => {
             logger.debug(`Matched route: ${routePath(ctx)}`);
+            if (routeData.cacheTtl) {
+                ctx.set('routeCacheTtl', routeData.cacheTtl);
+            }
             if (!ctx.get('data')) {
                 if (typeof routeData.handler !== 'function') {
                     if (process.env.NODE_ENV === 'test') {

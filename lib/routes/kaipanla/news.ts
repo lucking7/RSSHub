@@ -1,4 +1,3 @@
-import { config } from '@/config';
 import type { Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
@@ -8,6 +7,7 @@ import { parseDate } from '@/utils/parse-date';
 import { renderSectorAndStockCards, type StockItem } from '../_finance/stock-card';
 
 const toStockTuple = ([code, name, change]: any[]): StockItem => ({ name, code, change });
+const KAIPANLA_CACHE_TTL = 30;
 
 export const route: Route = {
     path: '/news/:type?',
@@ -31,6 +31,7 @@ export const route: Route = {
         supportPodcast: false,
         supportScihub: false,
     },
+    cacheTtl: KAIPANLA_CACHE_TTL,
 };
 
 async function handler(ctx) {
@@ -67,7 +68,7 @@ async function handler(ctx) {
             });
             return data;
         },
-        config.cache.routeExpire,
+        KAIPANLA_CACHE_TTL,
         false
     );
 

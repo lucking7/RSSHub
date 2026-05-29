@@ -1,9 +1,10 @@
-import { config } from '@/config';
 import type { Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
+
+const KAIPANLA_CACHE_TTL = 30;
 
 export const route: Route = {
     path: '/zt',
@@ -24,6 +25,7 @@ export const route: Route = {
         supportPodcast: false,
         supportScihub: false,
     },
+    cacheTtl: KAIPANLA_CACHE_TTL,
 };
 
 async function handler() {
@@ -46,7 +48,7 @@ async function handler() {
             });
             return data;
         },
-        config.cache.routeExpire,
+        KAIPANLA_CACHE_TTL,
         false
     );
 

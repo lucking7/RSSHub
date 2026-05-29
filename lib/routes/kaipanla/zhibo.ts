@@ -1,4 +1,3 @@
-import { config } from '@/config';
 import type { Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
@@ -6,6 +5,8 @@ import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
 import { renderStockCard } from '../_finance/stock-card';
+
+const KAIPANLA_CACHE_TTL = 30;
 
 export const route: Route = {
     path: '/dapanzhibo/:category?',
@@ -18,7 +19,7 @@ export const route: Route = {
     parameters: {
         category: '可选筛选：板块名（如"人工智能"）、分析师名（如"Livermore"）、"个股"（含个股的直播）、"板块"（含板块的直播）',
     },
-    description: '开盘啦大盘直播，AI+资深分析师实时解读市场，包含个股异动、板块轮动、大盘走势分析',
+    description: '开盘啦大盘直播，AI + 资深分析师实时解读市场，包含个股异动、板块轮动、大盘走势分析',
     categories: ['finance'],
     features: {
         requireConfig: false,
@@ -29,6 +30,7 @@ export const route: Route = {
         supportPodcast: false,
         supportScihub: false,
     },
+    cacheTtl: KAIPANLA_CACHE_TTL,
 };
 
 async function handler(ctx) {
@@ -53,7 +55,7 @@ async function handler(ctx) {
             });
             return data;
         },
-        config.cache.routeExpire,
+        KAIPANLA_CACHE_TTL,
         false
     );
 

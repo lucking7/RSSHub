@@ -1,11 +1,14 @@
 import type { Route } from '@/types';
 import { ViewType } from '@/types';
+import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
 import { applySourceImportance } from '../../_finance/source-importance';
 import { renderSectorAndStockCards, type StockItem } from '../../_finance/stock-card';
+
+const NEWSLIST_CACHE_TTL = 30;
 
 export const route: Route = {
     path: '/finance/newslist',
@@ -17,22 +20,26 @@ export const route: Route = {
     description: `使用腾讯自选股移动端接口获取实时财经快讯
 
 ⚠️ **重要说明**：
-- 由于API需要签名验证，当前使用固定签名（可能会过期）
-- 每次固定返回最新10条快讯
+
+- 由于 API 需要签名验证，当前使用固定签名（可能会过期）
+- 每次固定返回最新 10 条快讯
 - 如签名过期，需要更新代码中的 fixedParams
 
 支持查询参数：
-- \`limit=10\` - 限制返回数量（最多10条，默认10条）
+
+- \`limit=10\` - 限制返回数量（最多 10 条，默认 10 条）
 
 特点：
+
 - 📱 移动端专用接口
 - 📊 包含股票涨跌幅数据
 - 🏷️ 支持热门标签分类
 - ⏱️ 实时性强
 
 示例：
-- \`/tencent/finance/newslist\` - 获取最新10条财经快讯
-- \`/tencent/finance/newslist?limit=5\` - 获取最新5条快讯`,
+
+- \`/tencent/finance/newslist\` - 获取最新 10 条财经快讯
+- \`/tencent/finance/newslist?limit=5\` - 获取最新 5 条快讯`,
     categories: ['finance'],
     features: {
         requireConfig: false,
@@ -49,6 +56,7 @@ export const route: Route = {
         },
     ],
     view: ViewType.Notifications,
+    cacheTtl: NEWSLIST_CACHE_TTL,
 };
 
 async function handler(ctx) {
@@ -83,29 +91,36 @@ async function handler(ctx) {
         _isChId: '1',
     };
 
-    // 只请求一次，获取10条数据
     let hotLabels: any[] = [];
     let collected: any[] = [];
 
     try {
-        const response = await got(apiUrl, {
-            searchParams: fixedParams,
-            headers: {
-                'User-Agent': 'QQStock/11.32.0 (iPhone; iOS 26.0.1; Scale/3.00)',
-                Referer: 'http://zixuanguapp.finance.qq.com',
-                Accept: '*/*',
-                'Accept-Language': 'en-US;q=1, zh-Hans-US;q=0.9',
-                'Accept-Encoding': 'gzip,deflate',
+        const data = await cache.tryGet(
+            'tencent:finance:newslist',
+            async () => {
+                const response = await got(apiUrl, {
+                    searchParams: fixedParams,
+                    headers: {
+                        'User-Agent': 'QQStock/11.32.0 (iPhone; iOS 26.0.1; Scale/3.00)',
+                        Referer: 'http://zixuanguapp.finance.qq.com',
+                        Accept: '*/*',
+                        'Accept-Language': 'en-US;q=1, zh-Hans-US;q=0.9',
+                        'Accept-Encoding': 'gzip,deflate',
+                    },
+                    timeout: 30000,
+                });
+
+                const data = response.data;
+
+                if (data.retcode !== '0') {
+                    throw new Error(`API Error: ${data.retmsg || 'Unknown error'}`);
+                }
+
+                return data;
             },
-            timeout: 30000,
-        });
-
-        const data = response.data;
-
-        // 检查返回码
-        if (data.retcode !== '0') {
-            throw new Error(`API Error: ${data.retmsg || 'Unknown error'}`);
-        }
+            NEWSLIST_CACHE_TTL,
+            false
+        );
 
         // 保存热门标签
         if (data.hot_label && data.hot_label.length > 0) {

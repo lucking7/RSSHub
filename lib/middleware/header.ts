@@ -1,5 +1,5 @@
 import etagCalculate from 'etag';
-import type { MiddlewareHandler } from 'hono';
+import type { Context, MiddlewareHandler } from 'hono';
 import { routePath } from 'hono/route';
 
 import { config } from '@/config';
@@ -15,6 +15,11 @@ if (config.nodeName) {
     headers['RSSHub-Node'] = config.nodeName;
 }
 
+const getRouteCacheTtl = (ctx: Context) => {
+    const routeCacheTtl = ctx.get('routeCacheTtl');
+    return typeof routeCacheTtl === 'number' && Number.isFinite(routeCacheTtl) && routeCacheTtl > 0 ? routeCacheTtl : undefined;
+};
+
 function etagMatches(etag: string, ifNoneMatch: string | null) {
     return ifNoneMatch !== null && ifNoneMatch.split(/,\s*/).includes(etag);
 }
@@ -27,6 +32,10 @@ const middleware: MiddlewareHandler = async (ctx, next) => {
 
     await next();
     const rPath = routePath(ctx);
+    const routeCacheTtl = getRouteCacheTtl(ctx);
+    if (routeCacheTtl) {
+        ctx.header('Cache-Control', `public, max-age=${routeCacheTtl}`);
+    }
 
     if (rPath !== '/*') {
         ctx.header('X-RSSHub-Route', rPath);

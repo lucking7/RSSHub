@@ -1,4 +1,4 @@
-import type { MiddlewareHandler } from 'hono';
+import type { Context, MiddlewareHandler } from 'hono';
 
 import { config } from '@/config';
 import type { Data } from '@/types';
@@ -6,13 +6,18 @@ import cacheModule from '@/utils/cache/index';
 import { collapseWhitespace, convertDateToISO8601 } from '@/utils/common-utils';
 import { Atom, json, RSS, rss3 } from '@/utils/render';
 
+const getRouteCacheTtl = (ctx: Context) => {
+    const routeCacheTtl = ctx.get('routeCacheTtl');
+    return typeof routeCacheTtl === 'number' && Number.isFinite(routeCacheTtl) && routeCacheTtl > 0 ? routeCacheTtl : config.cache.routeExpire;
+};
+
 const middleware: MiddlewareHandler = async (ctx, next) => {
     // Set RSS <ttl> (minute) according to the availability of cache
-    // * available: max(config.cache.routeExpire / 60, 1)
+    // * available: max(route cache ttl / 60, 1)
     // * unavailable: 1
     // The minimum <ttl> is limited to 1 minute to prevent potential misuse
-    const ttl = (cacheModule.status.available && Math.trunc(config.cache.routeExpire / 60)) || 1;
     await next();
+    const ttl = (cacheModule.status.available && Math.trunc(getRouteCacheTtl(ctx) / 60)) || 1;
 
     const apiData = ctx.get('apiData');
     if (apiData) {

@@ -1,4 +1,4 @@
-import type { MiddlewareHandler } from 'hono';
+import type { Context, MiddlewareHandler } from 'hono';
 import xxhash from 'xxhash-wasm';
 
 import { config } from '@/config';
@@ -10,6 +10,11 @@ const bypassList = new Set(['/', '/robots.txt', '/logo.png', '/favicon.ico']);
 // only give cache string, as the `!` condition tricky
 // XXH64 is used to shrink key size
 // plz, write these tips in comments!
+const getRouteCacheTtl = (ctx: Context) => {
+    const routeCacheTtl = ctx.get('routeCacheTtl');
+    return typeof routeCacheTtl === 'number' && Number.isFinite(routeCacheTtl) && routeCacheTtl > 0 ? routeCacheTtl : config.cache.routeExpire;
+};
+
 const middleware: MiddlewareHandler = async (ctx, next) => {
     if (!cacheModule.status.available || bypassList.has(ctx.req.path)) {
         await next();
@@ -72,7 +77,7 @@ const middleware: MiddlewareHandler = async (ctx, next) => {
         data.lastBuildDate = new Date().toUTCString();
         ctx.set('data', data);
         const body = JSON.stringify(data);
-        await cacheModule.globalCache.set(key, body, config.cache.routeExpire);
+        await cacheModule.globalCache.set(key, body, getRouteCacheTtl(ctx));
     }
 
     // We need to let it go, even no cache set.
