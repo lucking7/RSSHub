@@ -1,8 +1,11 @@
 import type { Route } from '@/types';
+import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
 import { applySourceImportance } from '../_finance/source-importance';
+
+const FUTUNN_CACHE_TTL = 30;
 
 export const route: Route = {
     path: '/live/:lang?',
@@ -48,6 +51,7 @@ export const route: Route = {
     name: '快讯',
     maintainers: ['kennyfong19931'],
     handler,
+    cacheTtl: FUTUNN_CACHE_TTL,
 };
 
 async function handler(ctx) {
@@ -58,15 +62,23 @@ async function handler(ctx) {
     const link = `${rootUrl}/main${lang === 'Mandarin' ? '' : lang === 'Cantonese' ? '/hk' : '/en'}/live`;
     const apiUrl = `${rootUrl}/news-site-api/main/get-flash-list?pageSize=${limit}`;
 
-    const response = await got({
-        method: 'get',
-        url: apiUrl,
-        headers: {
-            'x-news-site-lang': lang === 'Mandarin' ? 0 : lang === 'Cantonese' ? 1 : 2,
+    const newsList = await cache.tryGet(
+        `futunn:live:${lang}`,
+        async () => {
+            const response = await got({
+                method: 'get',
+                url: apiUrl,
+                headers: {
+                    'x-news-site-lang': lang === 'Mandarin' ? 0 : lang === 'Cantonese' ? 1 : 2,
+                },
+            });
+            return response.data.data.data.news;
         },
-    });
+        FUTUNN_CACHE_TTL,
+        false
+    );
 
-    const items = response.data.data.data.news.map((item) => {
+    const items = newsList.map((item) => {
         // Audio output is disabled for now; keep the upstream mapping here for later reuse.
         // const audio = item.audioInfos.find((audio) => audio.language === lang);
         const title = item.title || item.content;
