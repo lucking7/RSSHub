@@ -25,6 +25,7 @@ const categories = {
 const VIP_TYPE_CODE = 20015;
 const apiUrl = 'https://api3.cls.cn/v1/roll/get_roll_list';
 const rollListSize = 50;
+const CLS_TELEGRAPH_CACHE_TTL = 30;
 
 const toStockItem = (s: any): StockItem => ({
     name: s.name,
@@ -110,6 +111,7 @@ export const route: Route = {
     maintainers: ['nczitzk'],
     handler,
     url: 'cls.cn/telegraph',
+    cacheTtl: CLS_TELEGRAPH_CACHE_TTL,
     description: `| 看盘  | 公司         | 解读    | 加红 | 推送  | 提醒   | 基金 | 港股 |
 | ----- | ------------ | ------- | ---- | ----- | ------ | ---- | ---- |
 | watch | announcement | explain | red  | jpush | remind | fund | hk   |`,
@@ -143,7 +145,7 @@ async function handler(ctx) {
             });
             return response.data?.data?.roll_data ?? [];
         },
-        30,
+        CLS_TELEGRAPH_CACHE_TTL,
         false
     );
 

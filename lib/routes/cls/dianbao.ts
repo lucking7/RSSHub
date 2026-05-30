@@ -22,6 +22,7 @@ const categories = {
 
 const VIP_TYPE_CODE = 20015;
 const maxRollListSize = 50;
+const CLS_DIANBAO_CACHE_TTL = 30;
 
 function renderDescription({ item, images, sectors, stocks, level, assocArticleUrl }: { item: any; images: string[]; sectors: StockItem[]; stocks: StockItem[]; level: string; assocArticleUrl: string }) {
     let html = '';
@@ -82,6 +83,7 @@ export const route: Route = {
     maintainers: ['nczitzk'],
     handler,
     url: 'cls.cn/telegraph',
+    cacheTtl: CLS_DIANBAO_CACHE_TTL,
     description: `获取财联社电报快讯，使用 api3.cls.cn 接口
 
 | 看盘  | 公司         | 解读    | 加红 | 推送  | 提醒   | 基金 | 港美股 |

@@ -4,6 +4,8 @@ import { parseDate } from '@/utils/parse-date';
 
 import { applySourceImportance } from '../_finance/source-importance';
 
+const FUTUNN_LIVE_CACHE_TTL = 30;
+
 export const route: Route = {
     path: '/live/:lang?',
     categories: ['finance'],
@@ -48,6 +50,7 @@ export const route: Route = {
     name: '快讯',
     maintainers: ['kennyfong19931'],
     handler,
+    cacheTtl: FUTUNN_LIVE_CACHE_TTL,
 };
 
 async function handler(ctx) {
