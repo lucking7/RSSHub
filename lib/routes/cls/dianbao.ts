@@ -1,3 +1,4 @@
+import { config } from '@/config';
 import type { Route } from '@/types';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
@@ -20,6 +21,7 @@ const categories = {
 };
 
 const VIP_TYPE_CODE = 20015;
+const maxRollListSize = 50;
 
 function renderDescription({ item, images, sectors, stocks, level, assocArticleUrl }: { item: any; images: string[]; sectors: StockItem[]; stocks: StockItem[]; level: string; assocArticleUrl: string }) {
     let html = '';
@@ -80,11 +82,11 @@ export const route: Route = {
     maintainers: ['nczitzk'],
     handler,
     url: 'cls.cn/telegraph',
-    description: `获取财联社电报快讯，使用api3.cls.cn接口
+    description: `获取财联社电报快讯，使用 api3.cls.cn 接口
 
-| 看盘  | 公司         | 解读    | 加红 | 推送  | 提醒   | 基金 | 港美股  |
-| ----- | ------------ | ------- | ---- | ----- | ------ | ---- | ------- |
-| watch | announcement | explain | red  | jpush | remind | fund | hk_us   |`,
+| 看盘  | 公司         | 解读    | 加红 | 推送  | 提醒   | 基金 | 港美股 |
+| ----- | ------------ | ------- | ---- | ----- | ------ | ---- | ------ |
+| watch | announcement | explain | red  | jpush | remind | fund | hk\\_us |`,
 };
 
 async function handler(ctx) {
@@ -93,11 +95,9 @@ async function handler(ctx) {
 
     const apiUrl = 'https://api3.cls.cn/v1/roll/get_roll_list';
 
-    const lastTime = Math.floor(Date.now() / 1000);
-
     const params = {
-        last_time: lastTime,
-        rn: limit * 2,
+        last_time: 0,
+        rn: Math.min(limit * 2, maxRollListSize),
         hasFirstVipArticle: 1,
     };
 
@@ -110,11 +110,11 @@ async function handler(ctx) {
         url: apiUrl,
         searchParams: getSearchParams(params),
         headers: {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            Referer: 'https://www.cls.cn/telegraph',
-            Accept: 'application/json, text/plain, */*',
-            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-            Origin: 'https://www.cls.cn',
+            accept: 'application/json, text/plain, */*',
+            'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            origin: 'https://www.cls.cn',
+            referer: 'https://www.cls.cn/telegraph',
+            'user-agent': config.trueUA,
         },
     });
 

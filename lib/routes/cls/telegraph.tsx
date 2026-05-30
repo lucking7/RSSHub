@@ -1,5 +1,6 @@
 import { renderToString } from 'hono/jsx/dom/server';
 
+import { config } from '@/config';
 import type { Route } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
@@ -22,6 +23,8 @@ const categories = {
 };
 
 const VIP_TYPE_CODE = 20015;
+const apiUrl = 'https://api3.cls.cn/v1/roll/get_roll_list';
+const rollListSize = 50;
 
 const toStockItem = (s: any): StockItem => ({
     name: s.name,
@@ -116,11 +119,6 @@ async function handler(ctx) {
     const category = ctx.req.param('category') ?? '';
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 50;
 
-    let apiUrl = `${rootUrl}/nodeapi/updateTelegraphList`;
-    if (category) {
-        apiUrl = `${rootUrl}/v1/roll/get_roll_list`;
-    }
-
     const currentUrl = `${rootUrl}/telegraph`;
 
     const rawData = await cache.tryGet(
@@ -130,9 +128,18 @@ async function handler(ctx) {
                 method: 'get',
                 url: apiUrl,
                 searchParams: getSearchParams({
-                    category,
+                    ...(category ? { category } : {}),
+                    last_time: 0,
+                    rn: rollListSize,
                     hasFirstVipArticle: 1,
                 }),
+                headers: {
+                    accept: 'application/json, text/plain, */*',
+                    'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8',
+                    origin: rootUrl,
+                    referer: currentUrl,
+                    'user-agent': config.trueUA,
+                },
             });
             return response.data?.data?.roll_data ?? [];
         },

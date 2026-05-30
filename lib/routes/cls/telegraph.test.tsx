@@ -50,5 +50,20 @@ describe('/cls/telegraph', () => {
         expect(result.item[0].description).not.toContain('分享 2');
         expect(result.item[0].description).not.toContain('货币政策动向');
         expect(result.item[0].category).toContain('货币政策动向');
+        expect(mockedGot).toHaveBeenCalledWith(
+            expect.objectContaining({
+                url: 'https://api3.cls.cn/v1/roll/get_roll_list',
+                searchParams: expect.any(URLSearchParams),
+            })
+        );
+        expect(Object.fromEntries((mockedGot.mock.calls[0][0] as any).searchParams)).toMatchObject({
+            app: 'CailianpressWeb',
+            hasFirstVipArticle: '1',
+            last_time: '0',
+            os: 'web',
+            rn: '50',
+            sv: '8.4.6',
+        });
+        expect(Object.fromEntries((mockedGot.mock.calls[0][0] as any).searchParams)).not.toHaveProperty('category');
     });
 });
