@@ -21,6 +21,7 @@ const MARKET_MAP: Record<string, { name: string; composite?: string[] }> = {
 };
 
 const BASE_URL = 'https://longbridge.com/zh-CN/news/node/daily';
+const LONG_BRIDGE_NEWS_CACHE_TTL = 30;
 
 export const route: Route = {
     path: '/flash/:market?',
@@ -55,6 +56,7 @@ export const route: Route = {
         },
     ],
     view: ViewType.Notifications,
+    cacheTtl: LONG_BRIDGE_NEWS_CACHE_TTL,
 };
 
 function normalizeMarket(raw?: string): string {
@@ -108,7 +110,7 @@ async function handler(ctx) {
             }
             return merged;
         },
-        60
+        LONG_BRIDGE_NEWS_CACHE_TTL
     );
 
     const items = list.map((item) => {

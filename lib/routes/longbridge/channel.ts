@@ -11,6 +11,8 @@ const CHANNELS: Record<string, string> = {
     dolphin: '海豚投研',
 };
 
+const LONG_BRIDGE_NEWS_CACHE_TTL = 30;
+
 export const route: Route = {
     path: '/channel/:slug?',
     name: '资讯频道',
@@ -38,6 +40,7 @@ export const route: Route = {
             target: '/channel/dolphin',
         },
     ],
+    cacheTtl: LONG_BRIDGE_NEWS_CACHE_TTL,
 };
 
 const UPSTREAM_SIZE = 50;
@@ -54,7 +57,7 @@ async function handler(ctx) {
             });
             return data?.data?.news_list ?? [];
         },
-        30,
+        LONG_BRIDGE_NEWS_CACHE_TTL,
         false
     );
 
