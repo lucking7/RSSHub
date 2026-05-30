@@ -34,10 +34,6 @@ export const route: Route = {
     },
     radar: [
         {
-            source: ['longbridge.com/zh-CN/news/node/daily'],
-            target: '/channel/mp-lb-daily',
-        },
-        {
             source: ['longbridge.com/zh-CN/news/node/dolphin'],
             target: '/channel/dolphin',
         },
