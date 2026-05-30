@@ -22,6 +22,7 @@ const MARKET_MAP: Record<string, { name: string; composite?: string[] }> = {
 
 const BASE_URL = 'https://longbridge.com/zh-CN/news/node/daily';
 const LONG_BRIDGE_NEWS_CACHE_TTL = 30;
+const LONG_BRIDGE_FLASH_CACHE_KEY_VERSION = 'v2';
 
 export const route: Route = {
     path: '/flash/:market?',
@@ -70,7 +71,7 @@ async function handler(ctx) {
     const marketConfig = MARKET_MAP[marketKey];
 
     const list = await cache.tryGet(
-        `longbridge:flash:${marketKey}`,
+        `longbridge:flash:${LONG_BRIDGE_FLASH_CACHE_KEY_VERSION}:${marketKey}`,
         async () => {
             const markets = marketConfig.composite ?? [marketKey];
             const responses = await Promise.all(
@@ -110,7 +111,8 @@ async function handler(ctx) {
             }
             return merged;
         },
-        LONG_BRIDGE_NEWS_CACHE_TTL
+        LONG_BRIDGE_NEWS_CACHE_TTL,
+        false
     );
 
     const items = list.map((item) => {
