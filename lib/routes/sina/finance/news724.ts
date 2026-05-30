@@ -8,6 +8,8 @@ import timezone from '@/utils/timezone';
 import { applySourceImportance } from '../../_finance/source-importance';
 import { renderSectorAndStockCards, type StockItem } from '../../_finance/stock-card';
 
+const SINA_NEWS_CACHE_TTL = 30;
+
 export const route: Route = {
     path: ['/finance/724/:tag?', '/724/:tag?'],
     name: '财经快讯 - 724接口',
@@ -18,22 +20,25 @@ export const route: Route = {
     parameters: {
         tag: '分类标签，默认全部，可选：macro（宏观）、stock（股市）、international（国际）、opinion（观点）',
     },
-    description: `使用新浪财经724移动端接口获取实时财经快讯
+    description: `使用新浪财经 724 移动端接口获取实时财经快讯
 
 支持查询参数：
-- \`limit=20\` - 限制返回数量（默认20条）
+
+- \`limit=20\` - 限制返回数量（默认 20 条）
 
 特点：
+
 - 📱 移动端专用接口
 - 📊 包含股票涨跌幅数据
-- ⏱️ 实时性强（平均30秒/条）
+- ⏱️ 实时性强（平均 30 秒 / 条）
 - 🔄 单次最多 100 条
 
 示例：
+
 - \`/sina/724\` - 所有财经快讯（简短别名）
 - \`/sina/finance/724\` - 所有财经快讯（完整路径）
 - \`/sina/724/stock\` - 股市快讯
-- \`/sina/724?limit=50\` - 获取50条快讯
+- \`/sina/724?limit=50\` - 获取 50 条快讯
 
 别名路径：\`/sina/finance/724/:tag?\` 与 \`/sina/724/:tag?\` 均可使用。`,
     categories: ['finance'],
@@ -52,6 +57,7 @@ export const route: Route = {
         },
     ],
     view: ViewType.Notifications,
+    cacheTtl: SINA_NEWS_CACHE_TTL,
 };
 
 // 股票分类辅助：根据 stocktype 字段把 item.stock[] 分成个股和非个股
@@ -162,7 +168,7 @@ async function handler(ctx) {
             });
             return response.data?.result?.data?.data ?? [];
         },
-        30,
+        SINA_NEWS_CACHE_TTL,
         false
     );
 

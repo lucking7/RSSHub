@@ -3,6 +3,8 @@ import cache from '@/utils/cache';
 
 import { getRollNewsList, parseArticle, parseRollNewsList } from '../utils';
 
+const SINA_NEWS_CACHE_TTL = 30;
+
 export const route: Route = {
     path: '/finance/rollnews/:lid?',
     categories: ['new-media'],
@@ -26,6 +28,7 @@ export const route: Route = {
     maintainers: ['betterandbetterii'],
     handler,
     url: 'finance.sina.com.cn/roll',
+    cacheTtl: SINA_NEWS_CACHE_TTL,
     description: `| 财经 | 股市 | 美股 | 中国概念股 | 港股 | 研究报告 | 全球市场 | 外汇 |
 | ---- | ---- | ---- | ---------- | ---- | -------- | -------- | ---- |
 | 2519 | 2671 | 2672 | 2673       | 2674 | 2675     | 2676     | 2487 |`,
