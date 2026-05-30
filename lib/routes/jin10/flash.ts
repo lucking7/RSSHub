@@ -36,20 +36,23 @@ export const route: Route = {
     description: `获取金十数据（美港电讯）的实时财经快讯。
 
 频道（路径参数）：
+
 - 留空 = 全部快讯（综合，更新最快）
-- \`1\` = 美股盘前/盘后异动
-- \`2\` = 港股盘前/盘后异动
+- \`1\` = 美股盘前 / 盘后异动
+- \`2\` = 港股盘前 / 盘后异动
 
 查询参数：
+
 - \`important_only=1\` 仅返回重要快讯
-- \`limit=50\` 限制返回数量（默认50条）
+- \`limit=50\` 限制返回数量（默认 50 条）
 
 示例：
+
 - \`/jin10/flash\` - 所有快讯
-- \`/jin10/flash/1\` - 美股盘前/盘后异动
-- \`/jin10/flash/2\` - 港股盘前/盘后异动
+- \`/jin10/flash/1\` - 美股盘前 / 盘后异动
+- \`/jin10/flash/2\` - 港股盘前 / 盘后异动
 - \`/jin10/flash?important_only=1\` - 全部快讯中仅重要
-- \`/jin10/flash/1?limit=20\` - 美港频道前20条`,
+- \`/jin10/flash/1?limit=20\` - 美港频道前 20 条`,
 };
 
 const extractRemarkTags = (remark: Jin10RawItem['remark']): string[] => {
