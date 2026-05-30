@@ -1,8 +1,9 @@
-import type { Route } from '@/types';
+import type { DataItem, Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
+import parser from '@/utils/rss-parser';
 
 import { applySourceImportance } from '../_finance/source-importance';
 import { API_BASE, API_HEADERS_JSON } from './utils';
@@ -21,8 +22,9 @@ const MARKET_MAP: Record<string, { name: string; composite?: string[] }> = {
 };
 
 const BASE_URL = 'https://longbridge.com/zh-CN/news/node/daily';
+const OFFICIAL_FEED_URL = 'https://longbridge.com/news/live/feed';
 const LONG_BRIDGE_NEWS_CACHE_TTL = 30;
-const LONG_BRIDGE_FLASH_CACHE_KEY_VERSION = 'v2';
+const LONG_BRIDGE_FLASH_CACHE_KEY_VERSION = 'v3';
 
 export const route: Route = {
     path: '/flash/:market?',
@@ -69,6 +71,17 @@ async function handler(ctx) {
     const rawMarket = ctx.req.param('market');
     const marketKey = normalizeMarket(rawMarket);
     const marketConfig = MARKET_MAP[marketKey];
+
+    if (marketKey === 'all') {
+        const items = await cache.tryGet(`longbridge:flash:${LONG_BRIDGE_FLASH_CACHE_KEY_VERSION}:official-feed`, getOfficialFeedItems, LONG_BRIDGE_NEWS_CACHE_TTL, false);
+
+        return {
+            title: '长桥 - 金融快讯',
+            link: BASE_URL,
+            description: '长桥金融快讯',
+            item: items,
+        };
+    }
 
     const list = await cache.tryGet(
         `longbridge:flash:${LONG_BRIDGE_FLASH_CACHE_KEY_VERSION}:${marketKey}`,
@@ -144,4 +157,17 @@ async function handler(ctx) {
         description: `长桥金融快讯${marketKey === 'all' ? '' : ` - ${marketConfig.name}`}`,
         item: items,
     };
+}
+
+async function getOfficialFeedItems(): Promise<DataItem[]> {
+    const feed = await parser.parseURL(OFFICIAL_FEED_URL);
+
+    return feed.items.map((item) => ({
+        title: item.title,
+        description: item.contentSnippet || item.content || item.title,
+        link: item.link,
+        pubDate: parseDate(item.isoDate || item.pubDate),
+        guid: item.guid || item.link,
+        author: item.creator?.trim() || item.author?.trim() || '长桥快讯',
+    }));
 }
