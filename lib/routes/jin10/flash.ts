@@ -9,6 +9,8 @@ import { applySourceImportance } from '../_finance/source-importance';
 import { isJin10AdFeedItem, isJin10PromotionalItem, type Jin10RawItem } from './filters';
 import { buildFlashDescription, buildFlashLink, CHANNEL_MAP, collectFlashImages } from './utils';
 
+const JIN10_FLASH_CACHE_TTL = 30;
+
 export const route: Route = {
     path: '/flash/:channel?',
     categories: ['finance'],
@@ -33,6 +35,7 @@ export const route: Route = {
     name: '快讯 - 美港电讯',
     maintainers: ['laampui'],
     handler,
+    cacheTtl: JIN10_FLASH_CACHE_TTL,
     description: `获取金十数据（美港电讯）的实时财经快讯。
 
 频道（路径参数）：
@@ -87,7 +90,7 @@ async function handler(ctx) {
             });
             return response.data ?? [];
         },
-        30,
+        JIN10_FLASH_CACHE_TTL,
         false
     );
 
