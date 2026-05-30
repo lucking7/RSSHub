@@ -31,21 +31,21 @@ const sign = CryptoJS.MD5(CryptoJS.SHA1(raw).toString()).toString();
 
 ## 接口列表
 
-### 1. 电报列表（增量轮询）
+### 1. 电报列表（当前）
 
 ```
-GET https://www.cls.cn/nodeapi/updateTelegraphList
+GET https://api3.cls.cn/v1/roll/get_roll_list
 ```
 
 **参数：**
 
-| 参数                  | 值             | 说明                                       |
-| --------------------- | -------------- | ------------------------------------------ |
-| `hasFirstVipArticle`  | `1`            | 是否包含 VIP 首条                          |
-| `lastTime`            | Unix timestamp | 上次轮询时间，服务端返回此时间之后的新数据 |
-| `rn`                  | `20`           | 每次返回条数                               |
-| `subscribedColumnIds` | `""`           | 已订阅栏目 ID，可为空                      |
-| `sign`                | 不需要         | 此接口无需签名                             |
+| 参数                 | 值             | 说明         |
+| -------------------- | -------------- | ------------ |
+| `hasFirstVipArticle` | `1`            | 是否包含 VIP |
+| `last_time`          | Unix timestamp | 上次轮询时间 |
+| `rn`                 | `50`           | 每次返回条数 |
+| `category`           | 分类 ID        | 可为空       |
+| `sign`               | 自动生成       | 需要签名     |
 
 **返回结构：**
 
@@ -82,6 +82,7 @@ GET https://www.cls.cn/nodeapi/updateTelegraphList
 
 **注意：**
 
+- `www.cls.cn/nodeapi/updateTelegraphList` 已返回 404，不再作为 `/cls/telegraph` 的数据源
 - `type === 20015` 且顶层 `vipData`/`vipGlobal` 中的条目均为 VIP 付费内容，不应包含在 RSS feed 中
 - `item.shareurl` 域名固定为 `api3.cls.cn`，用作 item.link
 - `content` 开头通常包含 `【xxx】` 标题标记，建议用 `item.title || item.content` 作为 title
@@ -277,13 +278,13 @@ GET https://www.cls.cn/v2/web/ad
 
 ## 现有路由对应的 API
 
-| 路由文件        | 使用的 API                                                                                  |
-| --------------- | ------------------------------------------------------------------------------------------- |
-| `telegraph.tsx` | `nodeapi/updateTelegraphList` (category=全部) / `v1/roll/get_roll_list` (category=特定分类) |
-| `dianbao.ts`    | `api3.cls.cn/v1/roll/get_roll_list`（旧接口，数据格式兼容）                                 |
-| `hot.ts`        | `v2/article/hot/list`                                                                       |
-| `subject.ts`    | `api/subject/:id/article`                                                                   |
-| `depth.ts`      | 深度文章相关                                                                                |
+| 路由文件        | 使用的 API                          |
+| --------------- | ----------------------------------- |
+| `telegraph.tsx` | `api3.cls.cn/v1/roll/get_roll_list` |
+| `dianbao.ts`    | `api3.cls.cn/v1/roll/get_roll_list` |
+| `hot.ts`        | `v2/article/hot/list`               |
+| `subject.ts`    | `api/subject/:id/article`           |
+| `depth.ts`      | 深度文章相关                        |
 
 ## 其他发现的 API（需进一步探索）
 
