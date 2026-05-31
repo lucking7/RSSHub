@@ -7,9 +7,9 @@ import timezone from '@/utils/timezone';
 
 import { applySourceImportance } from '../_finance/source-importance';
 import { isJin10AdFeedItem, isJin10PromotionalItem, type Jin10RawItem } from './filters';
-import { buildFlashDescription, buildFlashLink, CHANNEL_MAP, collectFlashImages } from './utils';
+import { buildFlashDescription, buildFlashLink, CHANNEL_MAP, collectFlashImages, getImageMimeType } from './utils';
 
-const JIN10_FLASH_CACHE_TTL = 30;
+const JIN10_FLASH_CACHE_TTL = 1;
 
 export const route: Route = {
     path: '/flash/:channel?',
@@ -86,6 +86,9 @@ async function handler(ctx) {
                     'x-app-id': 'brCYec5s1ova317e',
                     'x-version': '1.0.0',
                     referer: 'https://www.ushknews.com/',
+                    'X-Forwarded-For': '116.228.111.18',
+                    'X-Real-IP': '116.228.111.18',
+                    'Client-IP': '116.228.111.18',
                 },
             });
             return response.data ?? [];
@@ -134,12 +137,12 @@ async function handler(ctx) {
                     link: buildFlashLink(item),
                     pubDate: timezone(parseDate(item.time!), +8),
                     category,
-                    guid: item.id,
+                    guid: `jin10:flash:${item.id}`,
                     author: item.data?.source || '金十数据',
                     ...(firstImage && {
                         image: firstImage,
                         enclosure_url: firstImage,
-                        enclosure_type: 'image/jpeg',
+                        enclosure_type: getImageMimeType(firstImage),
                     }),
                 },
                 [

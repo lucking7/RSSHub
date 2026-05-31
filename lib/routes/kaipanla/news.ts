@@ -7,7 +7,7 @@ import { parseDate } from '@/utils/parse-date';
 import { renderSectorAndStockCards, type StockItem } from '../_finance/stock-card';
 
 const toStockTuple = ([code, name, change]: any[]): StockItem => ({ name, code, change });
-const KAIPANLA_CACHE_TTL = 30;
+const KAIPANLA_CACHE_TTL = 1;
 
 export const route: Route = {
     path: '/news/:type?',
@@ -64,6 +64,9 @@ async function handler(ctx) {
                 headers: {
                     'User-Agent': 'lhb/5.21.3 (com.kaipanla.www; build:0; iOS 26.0.1) Alamofire/4.9.1',
                     Accept: '*/*',
+                    'X-Forwarded-For': '116.228.111.18',
+                    'X-Real-IP': '116.228.111.18',
+                    'Client-IP': '116.228.111.18',
                 },
             });
             return data;

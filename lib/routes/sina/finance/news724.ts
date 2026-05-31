@@ -8,7 +8,7 @@ import timezone from '@/utils/timezone';
 import { applySourceImportance } from '../../_finance/source-importance';
 import { renderSectorAndStockCards, type StockItem } from '../../_finance/stock-card';
 
-const SINA_NEWS_CACHE_TTL = 30;
+const SINA_NEWS_CACHE_TTL = 1;
 
 export const route: Route = {
     path: ['/finance/724/:tag?', '/724/:tag?'],
@@ -163,6 +163,9 @@ async function handler(ctx) {
                 headers: {
                     'User-Agent': `sinafinance__9.0.1__iOS__${deviceId}__26.0.1__iPhone18,2`,
                     Cookie: 'vt=4; wm=b122',
+                    'X-Forwarded-For': '116.228.111.18',
+                    'X-Real-IP': '116.228.111.18',
+                    'Client-IP': '116.228.111.18',
                 },
                 timeout: 30000,
             });

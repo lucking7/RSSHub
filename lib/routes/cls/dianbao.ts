@@ -22,7 +22,7 @@ const categories = {
 
 const VIP_TYPE_CODE = 20015;
 const maxRollListSize = 50;
-const CLS_DIANBAO_CACHE_TTL = 30;
+const CLS_DIANBAO_CACHE_TTL = 1;
 
 function renderDescription({ item, images, sectors, stocks, level, assocArticleUrl }: { item: any; images: string[]; sectors: StockItem[]; stocks: StockItem[]; level: string; assocArticleUrl: string }) {
     let html = '';
@@ -117,6 +117,9 @@ async function handler(ctx) {
             origin: 'https://www.cls.cn',
             referer: 'https://www.cls.cn/telegraph',
             'user-agent': config.trueUA,
+            'X-Forwarded-For': '116.228.111.18',
+            'X-Real-IP': '116.228.111.18',
+            'Client-IP': '116.228.111.18',
         },
     });
 

@@ -25,7 +25,7 @@ const categories = {
 const VIP_TYPE_CODE = 20015;
 const apiUrl = 'https://api3.cls.cn/v1/roll/get_roll_list';
 const rollListSize = 50;
-const CLS_TELEGRAPH_CACHE_TTL = 30;
+const CLS_TELEGRAPH_CACHE_TTL = 1;
 
 const toStockItem = (s: any): StockItem => ({
     name: s.name,
@@ -141,6 +141,9 @@ async function handler(ctx) {
                     origin: rootUrl,
                     referer: currentUrl,
                     'user-agent': config.trueUA,
+                    'X-Forwarded-For': '116.228.111.18',
+                    'X-Real-IP': '116.228.111.18',
+                    'Client-IP': '116.228.111.18',
                 },
             });
             return response.data?.data?.roll_data ?? [];
