@@ -1,13 +1,14 @@
 import { config } from '@/config';
+import InvalidParameterError from '@/errors/types/invalid-parameter';
 import type { Route } from '@/types';
+import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
 import { applySourceImportance } from '../_finance/source-importance';
-import { renderSectorAndStockCards, type StockItem } from '../_finance/stock-card';
-import { getClsImportanceSignals, getSearchParams } from './utils';
-
-const toStockItem = (s: any): StockItem => ({ name: s.name, code: s.StockID || '', change: s.RiseRange });
+import { renderSectorAndStockCards } from '../_finance/stock-card';
+import type { StockItem } from './utils';
+import { cleanAndFilter, getClsImportanceSignals, getSearchParams, stripTitlePrefix, toStockItem } from './utils';
 
 const categories = {
     watch: '看盘',
@@ -20,7 +21,6 @@ const categories = {
     hk_us: '港美股',
 };
 
-const VIP_TYPE_CODE = 20015;
 const maxRollListSize = 50;
 const CLS_DIANBAO_CACHE_TTL = 1;
 
@@ -93,38 +93,44 @@ export const route: Route = {
 
 async function handler(ctx) {
     const category = ctx.req.param('category') ?? '';
+    if (category && !categories[category]) {
+        throw new InvalidParameterError(`Invalid category: "${category}". Supported categories are: ${Object.keys(categories).join(', ')}.`);
+    }
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 20;
 
     const apiUrl = 'https://api3.cls.cn/v1/roll/get_roll_list';
 
-    const params = {
-        last_time: 0,
-        rn: Math.min(limit * 2, maxRollListSize),
-        hasFirstVipArticle: 1,
-    };
-
-    if (category) {
-        params.category = category;
-    }
-
-    const response = await got({
-        method: 'get',
-        url: apiUrl,
-        searchParams: getSearchParams(params),
-        headers: {
-            accept: 'application/json, text/plain, */*',
-            'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8',
-            origin: 'https://www.cls.cn',
-            referer: 'https://www.cls.cn/telegraph',
-            'user-agent': config.trueUA,
-            'X-Forwarded-For': '116.228.111.18',
-            'X-Real-IP': '116.228.111.18',
-            'Client-IP': '116.228.111.18',
+    const rawData = await cache.tryGet(
+        `cls:dianbao:${category || 'all'}`,
+        async () => {
+            const apiParams = {
+                last_time: 0,
+                rn: maxRollListSize,
+                hasFirstVipArticle: 1,
+                ...(category ? { category } : {}),
+            };
+            const response = await got({
+                method: 'get',
+                url: apiUrl,
+                searchParams: getSearchParams(apiParams),
+                headers: {
+                    accept: 'application/json, text/plain, */*',
+                    'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8',
+                    origin: 'https://www.cls.cn',
+                    referer: 'https://www.cls.cn/telegraph',
+                    'user-agent': config.trueUA,
+                    'X-Forwarded-For': '116.228.111.18',
+                    'X-Real-IP': '116.228.111.18',
+                    'Client-IP': '116.228.111.18',
+                },
+            });
+            return response.data?.data?.roll_data ?? [];
         },
-    });
+        CLS_DIANBAO_CACHE_TTL,
+        false
+    );
 
-    const items = response.data.data.roll_data
-        .filter((item) => Number(item.type) !== VIP_TYPE_CODE)
+    const items = cleanAndFilter(rawData)
         .slice(0, limit)
         .map((item) => {
             const processedStockList = (item.stock_list || []).map((stock) => ({
@@ -132,8 +138,8 @@ async function handler(ctx) {
                 StockID: stock.StockID ? stock.StockID.toUpperCase() : stock.StockID,
             }));
 
-            const sectors = processedStockList.filter((s) => s.StockID?.includes('801')).map((s) => toStockItem(s));
-            const stocks = processedStockList.filter((s) => !s.StockID?.includes('801')).map((s) => toStockItem(s));
+            const sectors = processedStockList.filter((s) => s.StockID?.startsWith('801')).map((s) => toStockItem(s));
+            const stocks = processedStockList.filter((s) => !s.StockID?.startsWith('801')).map((s) => toStockItem(s));
 
             const subjectCategories = item.subjects?.map((s) => s.subject_name) || [];
             const stockNameCategories = processedStockList.map((stock) => stock.name);
@@ -141,7 +147,7 @@ async function handler(ctx) {
 
             const processedItem = {
                 ...item,
-                content: item.content.replace(/^【[^】]+】/, '').trim(),
+                content: stripTitlePrefix(item.content || ''),
                 stock_list: processedStockList,
             };
 

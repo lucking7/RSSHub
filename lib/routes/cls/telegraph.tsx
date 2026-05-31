@@ -1,15 +1,15 @@
 import { renderToString } from 'hono/jsx/dom/server';
 
 import { config } from '@/config';
+import InvalidParameterError from '@/errors/types/invalid-parameter';
 import type { Route } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
 import { applySourceImportance } from '../_finance/source-importance';
-import type { StockItem } from '../_finance/stock-card';
 import { renderSectorAndStockCards } from '../_finance/stock-card';
-import { getClsImportanceSignals, getSearchParams, rootUrl } from './utils';
+import { cleanAndFilter, extractTitle, getClsImportanceSignals, getSearchParams, rootUrl, stripTitlePrefix, toStockItem } from './utils';
 
 const categories = {
     watch: '看盘',
@@ -22,49 +22,9 @@ const categories = {
     hk: '港股',
 };
 
-const VIP_TYPE_CODE = 20015;
 const apiUrl = 'https://api3.cls.cn/v1/roll/get_roll_list';
 const rollListSize = 50;
 const CLS_TELEGRAPH_CACHE_TTL = 1;
-
-const toStockItem = (s: any): StockItem => ({
-    name: s.name,
-    code: s.StockID || '',
-    change: s.RiseRange,
-});
-
-function extractTitle(content: string): string {
-    const match = content.match(/^【([^】]+)】/);
-    return match ? match[1] : '';
-}
-
-function stripTitlePrefix(content: string): string {
-    return content.replace(/^【[^】]+】/, '').trim();
-}
-
-function isPromotionalContent(content: string): boolean {
-    if (!content) {
-        return false;
-    }
-
-    const strongKeywords = ['点击阅读', '点击查看', '点击观看', '正在直播中', '正在直播', '直播中', '扫码', '进群', '下载APP', '下载app', '安装客户端', '扫码领取', '限时免费', '立即加入', '戳这里', '››', '《《'];
-
-    const promotionalPatterns = [/点击.*(阅读|观看|查看)/, /(阅读|观看).*直播中/, /›\s*还有.*行情.*直播/, /直播中.*点击/, /扫码.*(进群|关注|下载)/];
-
-    if (strongKeywords.some((kw) => content.includes(kw))) {
-        return true;
-    }
-
-    if (promotionalPatterns.some((pattern) => pattern.test(content))) {
-        return true;
-    }
-
-    if (content.includes('›') && /(直播|点击|阅读|观看)/.test(content)) {
-        return true;
-    }
-
-    return false;
-}
 
 function renderTelegraphDescription(item: any) {
     const bodyContent = stripTitlePrefix(item.content || '');
@@ -119,6 +79,9 @@ export const route: Route = {
 
 async function handler(ctx) {
     const category = ctx.req.param('category') ?? '';
+    if (category && !categories[category]) {
+        throw new InvalidParameterError(`Invalid category: "${category}". Supported categories are: ${Object.keys(categories).join(', ')}.`);
+    }
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 50;
 
     const currentUrl = `${rootUrl}/telegraph`;
@@ -152,9 +115,7 @@ async function handler(ctx) {
         false
     );
 
-    const items = rawData
-        .filter((item) => Number(item.type) !== VIP_TYPE_CODE)
-        .filter((item) => !isPromotionalContent(item.content || ''))
+    const items = cleanAndFilter(rawData)
         .slice(0, limit)
         .map((item) => {
             const processedStockList = (item.stock_list || []).map((stock: any) => ({
@@ -162,8 +123,8 @@ async function handler(ctx) {
                 StockID: stock.StockID ? stock.StockID.toUpperCase() : stock.StockID,
             }));
 
-            const sectors = processedStockList.filter((s: any) => s.StockID?.includes('801')).map((s: any) => toStockItem(s));
-            const stocks = processedStockList.filter((s: any) => !s.StockID?.includes('801')).map((s: any) => toStockItem(s));
+            const sectors = processedStockList.filter((s: any) => s.StockID?.startsWith('801')).map((s: any) => toStockItem(s));
+            const stocks = processedStockList.filter((s: any) => !s.StockID?.startsWith('801')).map((s: any) => toStockItem(s));
 
             const subjectCategories = item.subjects?.map((s: any) => s.subject_name) || [];
             const stockNameCategories = processedStockList.map((stock: any) => stock.name);
