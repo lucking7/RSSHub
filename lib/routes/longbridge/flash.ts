@@ -21,8 +21,8 @@ const MARKET_MAP: Record<string, { name: string; composite?: string[] }> = {
 };
 
 const BASE_URL = 'https://longbridge.com/zh-CN/news/node/daily';
-const LONG_BRIDGE_NEWS_CACHE_TTL = 30;
-const LONG_BRIDGE_FLASH_CACHE_KEY_VERSION = 'v5';
+const LONG_BRIDGE_NEWS_CACHE_TTL = 1;
+const LONG_BRIDGE_FLASH_CACHE_KEY_VERSION = 'v6';
 
 export const route: Route = {
     path: '/flash/:market?',

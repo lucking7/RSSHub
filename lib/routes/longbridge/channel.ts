@@ -11,7 +11,7 @@ const CHANNELS: Record<string, string> = {
     dolphin: '海豚投研',
 };
 
-const LONG_BRIDGE_NEWS_CACHE_TTL = 30;
+const LONG_BRIDGE_NEWS_CACHE_TTL = 1;
 
 export const route: Route = {
     path: '/channel/:slug?',
