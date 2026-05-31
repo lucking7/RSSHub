@@ -26,8 +26,27 @@ jobs:
             - run: semgrep ci --sarif > semgrep.sarif
               env:
                   SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+            - name: Validate SARIF file
+              id: validate-sarif
+              run: |
+                  python - <<'PY'
+                  import json
+                  import os
+
+                  valid = False
+                  try:
+                      if os.path.getsize('semgrep.sarif') > 0:
+                          with open('semgrep.sarif') as f:
+                              json.load(f)
+                          valid = True
+                  except Exception as e:
+                      print(f'Skipping SARIF upload: {e}')
+
+                  with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                      f.write(f'valid={str(valid).lower()}\n')
+                  PY
             - name: Upload SARIF file for GitHub Advanced Security Dashboard
               uses: github/codeql-action/upload-sarif@v4
               with:
                   sarif_file: semgrep.sarif
-              if: always()
+              if: steps.validate-sarif.outputs.valid == 'true'
