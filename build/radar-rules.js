@@ -12124,7 +12124,7 @@
         docs:"https://docs.rsshub.app/routes/finance",
         source:[ "/" ],
         target:"/jin10/new" },
-      { title:"外汇",
+      { title:"分类快讯",
         docs:"https://docs.rsshub.app/routes/finance",
         source:[ "/" ],
         target:"/jin10/category/:id" },
