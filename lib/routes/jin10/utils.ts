@@ -9,7 +9,7 @@ export const CHANNEL_MAP: Record<number, string> = {
     4: 'A股',
 };
 
-export const buildFlashLink = (item: Jin10RawItem) => item.data?.source_link || `${FLASH_DETAIL_PREFIX}/${item.id}`;
+export const buildFlashLink = (item: Jin10RawItem) => item.data?.source_link || item.data?.link || (item.id ? `${FLASH_DETAIL_PREFIX}/${item.id}` : undefined);
 
 export const collectFlashImages = (item: Jin10RawItem): string[] => {
     const images: string[] = [];
@@ -22,6 +22,17 @@ export const collectFlashImages = (item: Jin10RawItem): string[] => {
         }
     }
     return images;
+};
+
+const IMAGE_MIME_TYPES: Record<string, string> = {
+    png: 'image/png',
+    gif: 'image/gif',
+    webp: 'image/webp',
+};
+
+export const getImageMimeType = (url: string): string => {
+    const ext = url.replaceAll(/\?.*$/, '').split('.').pop()?.toLowerCase();
+    return IMAGE_MIME_TYPES[ext ?? ''] || 'image/jpeg';
 };
 
 export type FlashDescriptionInput = {
@@ -37,7 +48,7 @@ export const buildFlashDescription = ({ baseTitle, body, isImportant, source, so
     const displayTitle = isImportant ? `「重要」${baseTitle}` : baseTitle;
     const parts = [`<p style="margin: 0 0 10px 0;"><strong><u>${displayTitle}</u></strong></p>`];
     for (const pic of images) {
-        parts.push(`<p style="margin: 0 0 10px 0;"><img src="${pic}" alt="配图" referrerpolicy="no-referrer" style="max-width: 100%; border-radius: 4px;"></p>`);
+        parts.push(`<p style="margin: 0 0 10px 0;"><img src="${pic}" alt="配图" style="max-width: 100%; border-radius: 4px;"></p>`);
     }
     parts.push(`<p style="margin: 0 0 10px 0; line-height: 1.6; color: #333;">${body}</p>`);
     if (source || sourceLink) {
