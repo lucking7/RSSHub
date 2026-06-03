@@ -1,4 +1,3 @@
-import { config } from '@/config';
 import type { Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
@@ -13,6 +12,7 @@ export const route: Route = {
     categories: ['finance'],
     view: ViewType.Notifications,
     example: '/jin10/category/36',
+    cacheTtl: 1,
     parameters: { id: '分类id，见下表' },
     description: `| Name             | ID  |
 | ---------------- | --- |
@@ -185,7 +185,7 @@ async function handler(ctx) {
             });
             return response.data.filter((item) => item.type !== 1);
         },
-        config.cache.routeExpire,
+        1,
         false
     );
 

@@ -3,7 +3,7 @@ import cache from '@/utils/cache';
 
 import { getRollNewsList, parseArticle, parseRollNewsList } from '../utils';
 
-const SINA_NEWS_CACHE_TTL = 30;
+const SINA_NEWS_CACHE_TTL = 1;
 
 export const route: Route = {
     path: '/finance/rollnews/:lid?',

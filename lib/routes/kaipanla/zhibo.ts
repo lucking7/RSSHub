@@ -6,7 +6,7 @@ import { parseDate } from '@/utils/parse-date';
 
 import { renderStockCard } from '../_finance/stock-card';
 
-const KAIPANLA_CACHE_TTL = 30;
+const KAIPANLA_CACHE_TTL = 1;
 
 export const route: Route = {
     path: '/dapanzhibo/:category?',

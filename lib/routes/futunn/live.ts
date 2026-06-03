@@ -4,7 +4,7 @@ import { parseDate } from '@/utils/parse-date';
 
 import { applySourceImportance } from '../_finance/source-importance';
 
-const FUTUNN_LIVE_CACHE_TTL = 30;
+const FUTUNN_LIVE_CACHE_TTL = 1;
 
 export const route: Route = {
     path: '/live/:lang?',

@@ -14,6 +14,7 @@ export const route: Route = {
     categories: ['finance'],
     view: ViewType.Notifications,
     example: '/jin10/new',
+    cacheTtl: 1,
     parameters: {
         channel: '频道分类，可选值见下表，留空则返回所有频道（支持查询参数）',
         important: '只看重要快讯：1=只看重要，留空则返回所有（支持查询参数）',
@@ -101,7 +102,7 @@ async function handler(ctx) {
             });
             return parseFlashData(response);
         },
-        30,
+        1,
         false
     );
 

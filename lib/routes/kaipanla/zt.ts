@@ -4,7 +4,7 @@ import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
-const KAIPANLA_CACHE_TTL = 30;
+const KAIPANLA_CACHE_TTL = 1;
 
 export const route: Route = {
     path: '/zt',

@@ -1,4 +1,3 @@
-import { config } from '@/config';
 import type { Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
@@ -15,6 +14,7 @@ export const route: Route = {
     categories: ['finance'],
     view: ViewType.Notifications,
     example: '/jin10',
+    cacheTtl: 1,
     parameters: { important: '只看重要，任意值开启，留空关闭' },
     features: {
         requireConfig: false,
@@ -53,7 +53,7 @@ async function handler(ctx) {
             });
             return response.data.filter((item) => !isJin10PromotionalItem(item));
         },
-        config.cache.routeExpire,
+        1,
         false
     );
 
