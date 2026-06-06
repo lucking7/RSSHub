@@ -31,7 +31,7 @@ const IMAGE_MIME_TYPES: Record<string, string> = {
 };
 
 export const getImageMimeType = (url: string): string => {
-    const ext = url.replaceAll(/\?.*$/, '').split('.').pop()?.toLowerCase();
+    const ext = url.replace(/\?.*$/, '').split('.').pop()?.toLowerCase();
     return IMAGE_MIME_TYPES[ext ?? ''] || 'image/jpeg';
 };
 
