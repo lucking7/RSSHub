@@ -1,6 +1,6 @@
 import { load } from 'cheerio';
 
-import type { Route } from '@/types';
+import type { DataItem, Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
 import ofetch from '@/utils/ofetch';
@@ -19,10 +19,12 @@ export const route: Route = {
 
 - type 可以从 URL 中的 columnId 获取。
 - 由于源站未提供精确时间，只能抓取日期粒度的时间。
-  :::
-  \\| 组织机构 | 工作职责 | 专业设置 | 教务信箱 | 名师风采 | 热点新闻 | 教务公告 | 教学新闻 | 教学管理 | 教务管理 | 学籍管理 | 实践教学 | 系统使用动画 | 教学管理 | 教务管理 | 学籍管理 | 实验教学 | 实践教学 | 教研论文教材认定 | 教学管理 | 学籍管理 | 实践教学 | 网络教学 | 多媒体教室管理 | 实验教学与实验室管理 | 教学成果 | 国创计划 | 学科竞赛 | 微专业 | 众创空间 | 示范基地 | 学生社团 |
-  \\|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|--------------|----------|----------|----------|----------|----------|------------------|----------|----------|----------|----------|----------------|----------------------|----------|----------|----------|--------|----------|----------|----------|
-  \\| 339      | 340      | 342      | 346      | 351      | 353      | 354      | 355      | 442      | 443      | 444      | 445      | 2106         | 2332     | 2333     | 2334     | 2335     | 2336     | 2730             | 2855     | 2857     | 2859     | 3271     | 3508           | 3519                 | 3981     | 4057     | 4058     | 4059   | 4060     | 4061     | 4062     |`,
+
+:::
+
+| 组织机构 | 工作职责 | 专业设置 | 教务信箱 | 名师风采 | 热点新闻 | 教务公告 | 教学新闻 | 教学管理 | 教务管理 | 学籍管理 | 实践教学 | 系统使用动画 | 教学管理 | 教务管理 | 学籍管理 | 实验教学 | 实践教学 | 教研论文教材认定 | 教学管理 | 学籍管理 | 实践教学 | 网络教学 | 多媒体教室管理 | 实验教学与实验室管理 | 教学成果 | 国创计划 | 学科竞赛 | 微专业 | 众创空间 | 示范基地 | 学生社团 |
+| -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | ------------ | -------- | -------- | -------- | -------- | -------- | ---------------- | -------- | -------- | -------- | -------- | -------------- | -------------------- | -------- | -------- | -------- | ------ | -------- | -------- | -------- |
+| 339      | 340      | 342      | 346      | 351      | 353      | 354      | 355      | 442      | 443      | 444      | 445      | 2106         | 2332     | 2333     | 2334     | 2335     | 2336     | 2730             | 2855     | 2857     | 2859     | 3271     | 3508           | 3519                 | 3981     | 4057     | 4058     | 4059   | 4060     | 4061     | 4062     |`,
     categories: ['university'],
     features: {
         requireConfig: false,
@@ -53,12 +55,12 @@ async function handler(ctx) {
 
     const list = $('div.articleList li')
         .toArray()
-        .map((item) => {
+        .map((item): DataItem & { link: string } => {
             const element = $(item);
-            const link = new URL(element.find('a').attr('href'), rootUrl).href;
+            const link = new URL(element.find('a').attr('href')!, rootUrl).href;
             const title = element.find('a').text().trim();
-            const pubDateText = element.find('span').text().trim();
-            const pubDate = timezone(parseDate(pubDateText), +8);
+            const pubDateText = element.find('span').text();
+            const pubDate = timezone(parseDate(pubDateText), 8);
             return {
                 title,
                 link,
@@ -79,7 +81,10 @@ async function handler(ctx) {
                 const body = $('div.body');
                 body.find('[style]').removeAttr('style');
                 body.find('font').contents().unwrap();
-                body.html(body.html()?.replaceAll('&nbsp;', ''));
+                const cleaned = body.html()?.replaceAll('&nbsp;', '');
+                if (cleaned !== undefined) {
+                    body.html(cleaned);
+                }
                 body.find('[align]').removeAttr('align');
                 item.description = body.html();
                 if (item.description === null) {
@@ -93,7 +98,7 @@ async function handler(ctx) {
     return {
         title: `${bigTitle} - 哈尔滨理工大学教务处`,
         link: columnUrl,
-        language: 'zh-CN',
+        language: 'zh-CN' as const,
         item: items,
     };
 }

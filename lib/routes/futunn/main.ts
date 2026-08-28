@@ -42,7 +42,7 @@ async function handler(ctx) {
         applySourceImportance(
             {
                 title: item.title,
-                link: item.url.split('?')[0],
+                link: item.url.split('?', 1)[0],
                 author: item.source,
                 pubDate: parseDate(item.timestamp * 1000),
                 description: renderDescription({
@@ -58,7 +58,7 @@ async function handler(ctx) {
                               field: 'isTop',
                               value: item.isTop,
                               label: '置顶',
-                              normalized: 'important',
+                              normalized: 'important' as const,
                           },
                       ]
                     : []),
@@ -69,7 +69,7 @@ async function handler(ctx) {
                               field: 'imptTag',
                               value: item.imptTag,
                               label: '重要标签',
-                              normalized: 'important',
+                              normalized: 'important' as const,
                           },
                       ]
                     : []),

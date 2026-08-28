@@ -119,15 +119,15 @@ async function handler(ctx) {
     // Whitelist markets against MARKET_NAMES; unknown tokens are dropped so they
     // don't pollute the cache key or leak into the upstream payload. Sorted for
     // a stable cache key (HK,US and US,HK share an entry).
-    const markets = marketParam
+    const markets: string[] = marketParam
         ? [
-              ...new Set(
+              ...new Set<string>(
                   marketParam
                       .split(',')
                       .map((m) => m.trim().toUpperCase())
-                      .filter((m) => m in MARKET_NAMES)
+                      .filter((m) => Object.hasOwn(MARKET_NAMES, m))
               ),
-          ].toSorted()
+          ].toSorted((a, b) => a.localeCompare(b))
         : [];
 
     const now = new Date();
@@ -143,7 +143,7 @@ async function handler(ctx) {
                 date: formatDate(now),
                 date_end: formatDate(end),
                 count: '50',
-                ...(markets.length ? { markets } : {}),
+                ...(markets.length > 0 && { markets }),
             };
             const { data } = await got.post(`${API_BASE}/v2/stock_info/finance_calendar`, {
                 json: body,
@@ -161,12 +161,12 @@ async function handler(ctx) {
             title: `[${info.market || ''}] ${info.counter_name || ''} - ${info.content}`,
             description: renderInfo(info),
             link: info.counter_id ? `https://longbridge.com/zh-CN/stock/${info.counter_id}` : `https://longbridge.com/zh-CN/calendar/${typeKey}`,
-            pubDate: parseDate(Number.parseInt(info.datetime, 10) * 1000),
+            pubDate: parseDate(Math.trunc(Number(info.datetime)) * 1000),
             // Prefer upstream id; otherwise combine counter_id+datetime+content
             // so same-ticker/same-time events with different content don't collide.
             guid: info.id ? `longbridge-calendar-${info.id}` : `longbridge-calendar-${info.counter_id || ''}-${info.datetime}-${(info.content || '').slice(0, 32)}`,
             author: '长桥',
-            ...(info.icon ? { image: info.icon } : {}),
+            ...(info.icon && { image: info.icon }),
             ...(info.market ? { category: [info.market, typeConfig.name] } : { category: [typeConfig.name] }),
         }));
 

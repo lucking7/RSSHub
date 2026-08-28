@@ -1,4 +1,4 @@
-import type { Route } from '@/types';
+import type { Data, Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
@@ -28,7 +28,7 @@ export const route: Route = {
     cacheTtl: KAIPANLA_CACHE_TTL,
 };
 
-async function handler() {
+async function handler(): Promise<Data> {
     const apiUrl = 'https://apphq.longhuvip.com/w1/api/index.php';
 
     const response = await cache.tryGet(
@@ -144,7 +144,7 @@ async function handler() {
         title: '开盘啦 - 涨停表现',
         link: 'https://www.longhuvip.com/',
         description: '实时涨停板连板分布和封板率统计',
-        language: 'zh-cn',
+        language: 'zh-CN',
         item: [
             {
                 title,

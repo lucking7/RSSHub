@@ -1,4 +1,4 @@
-import type { Route } from '@/types';
+import type { Data, Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
@@ -28,7 +28,7 @@ export const route: Route = {
     cacheTtl: KAIPANLA_CACHE_TTL,
 };
 
-async function handler() {
+async function handler(): Promise<Data> {
     const apiUrl = 'https://apphq.longhuvip.com/w1/api/index.php';
 
     const response = await cache.tryGet(
@@ -53,7 +53,7 @@ async function handler() {
     );
 
     const info = response.info || {};
-    const strong = Number.parseInt(info.strong, 10) || 0;
+    const strong = Math.trunc(Number(info.strong)) || 0;
     const sign = info.sign || '';
 
     // 判断市场情绪
@@ -98,7 +98,7 @@ async function handler() {
         title: '开盘啦 - 盘面点评',
         link: 'https://www.longhuvip.com/',
         description: '实时市场情绪评分和盘面点评',
-        language: 'zh-cn',
+        language: 'zh-CN',
         item: [
             {
                 title,

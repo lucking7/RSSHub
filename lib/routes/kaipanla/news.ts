@@ -1,4 +1,4 @@
-import type { Route } from '@/types';
+import type { Data, Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
@@ -34,7 +34,7 @@ export const route: Route = {
     cacheTtl: KAIPANLA_CACHE_TTL,
 };
 
-async function handler(ctx) {
+async function handler(ctx): Promise<Data> {
     const typeParam = ctx.req.param('type') || 'stock';
 
     // Type参数映射
@@ -139,7 +139,7 @@ async function handler(ctx) {
         title: feedTitle,
         link: 'https://www.longhuvip.com/',
         description: feedDescription,
-        language: 'zh-cn',
+        language: 'zh-CN',
         item: items,
     };
 }

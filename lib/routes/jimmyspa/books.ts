@@ -55,14 +55,14 @@ async function handler(ctx) {
             const bookImageUrl = bookImageRelative ? baseUrl + bookImageRelative : '';
             const bookDetailUrl = bookContent('li.work_block').prop('data-route');
 
-            const { renderedDescription, publishDate } = (await cache.tryGet(bookDetailUrl, async () => {
+            const { renderedDescription, publishDate } = await cache.tryGet(bookDetailUrl, async () => {
                 const detailResponse = await got(bookDetailUrl);
                 const detailPage = load(detailResponse.data);
                 const bookDescription = detailPage('article.intro_cont').html() || '';
                 const bookInfoWrap = detailPage('div.info_wrap').html() || '';
 
                 const processedDescription = bookDescription.replaceAll(/<img\b[^>]*>/g, (imgTag) =>
-                    imgTag.replaceAll(/\b(src|data-src)="(?!http|https|\/\/)([^"]*)"/g, (_, attrName, relativePath) => {
+                    imgTag.replaceAll(/\b(src|data-src)="(?!http|\/\/)([^"]*)"/g, (_, attrName, relativePath) => {
                         const absoluteImageUrl = new URL(relativePath, baseUrl).href;
                         return `${attrName}="${absoluteImageUrl}"`;
                     })
@@ -87,7 +87,7 @@ async function handler(ctx) {
                     renderedDescription,
                     publishDate,
                 };
-            })) as { renderedDescription: string; publishDate: string };
+            });
 
             return {
                 title: bookTitle,

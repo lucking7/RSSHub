@@ -149,7 +149,7 @@ async function handler(ctx) {
     const num = Math.min(Math.max(limit, 1), 100);
 
     const cacheKey = `sina:724:feed:${tag}:${num}`;
-    const collected: Array<Record<string, any>> = await cache.tryGet(
+    const collected: Array<Record<string, any> & { id: string | number }> = await cache.tryGet(
         cacheKey,
         async () => {
             const response = await got(apiUrl, {
@@ -178,7 +178,7 @@ async function handler(ctx) {
     const items = collected.slice(0, limit).map((item) => {
         const content = item.content || '';
         const newsId = item.id;
-        const pubDate = timezone(parseDate(item.ctime), +8);
+        const pubDate = timezone(parseDate(item.ctime), 8);
 
         const title = buildTitle(item);
 

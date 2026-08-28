@@ -36,7 +36,7 @@ const getDisplayLevel = (signals: SourceImportanceSignal[]): Exclude<SourceImpor
         .toSorted((a, b) => levelWeight[b] - levelWeight[a])
         .find((level): level is Exclude<SourceImportanceLevel, 'normal'> => level !== 'normal');
 
-export const applySourceImportance = <T extends DataItem>(item: T, signals: SourceImportanceSignal[]): T => {
+export const applySourceImportance = <T extends DataItem>(item: T, signals: SourceImportanceSignal[]): T & Pick<DataItem, 'category' | '_extra'> => {
     const sourceImportance = signals.filter((signal) => hasValue(signal.value));
     if (sourceImportance.length === 0) {
         return item;
@@ -51,7 +51,7 @@ export const applySourceImportance = <T extends DataItem>(item: T, signals: Sour
     return {
         ...item,
         title,
-        ...(category ? { category } : {}),
+        ...(category && { category }),
         _extra: {
             ...item._extra,
             sourceImportance,

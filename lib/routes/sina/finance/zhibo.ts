@@ -1,7 +1,7 @@
 import { load } from 'cheerio';
 import iconv from 'iconv-lite';
 
-import type { Route } from '@/types';
+import type { Data, Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
@@ -132,11 +132,8 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
                 const prefix = s.symbol.slice(0, 3).toLowerCase();
                 const code = s.symbol.slice(3).toUpperCase();
                 apiSymbol = prefix + code;
-            } else if (s.symbol.toLowerCase().startsWith('si') || s.symbol.toLowerCase().startsWith('znb_')) {
-                // 指数：si 开头（国内指数）或 znb_ 开头（国际指数）
-                apiSymbol = s.symbol.toLowerCase();
             } else {
-                // 其他市场：尝试原样查询
+                // Index (si / znb_) and other markets: query lowercase as-is
                 apiSymbol = s.symbol.toLowerCase();
             }
 
@@ -186,14 +183,14 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
                         // 根据代码前缀判断市场类型并解析对应字段
                         if (apiSymbol.startsWith('gb_')) {
                             // 美股：第2个字段（索引1）是涨跌幅百分比
-                            const change = Number.parseFloat(data[2]);
+                            const change = Number(data[2]);
                             if (!Number.isNaN(change)) {
                                 changePercent = change;
                             }
                         } else if (apiSymbol.startsWith('hk')) {
                             // 港股：第8个字段（索引7）是涨跌幅百分比
                             if (data.length >= 9) {
-                                const change = Number.parseFloat(data[8]);
+                                const change = Number(data[8]);
                                 if (!Number.isNaN(change)) {
                                     changePercent = change;
                                 }
@@ -202,15 +199,15 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
                             (apiSymbol.startsWith('sh') || apiSymbol.startsWith('sz')) && // A股：需要从昨收和现价计算涨跌幅
                             data.length >= 4
                         ) {
-                            const prevClose = Number.parseFloat(data[2]);
-                            const currentPrice = Number.parseFloat(data[3]);
+                            const prevClose = Number(data[2]);
+                            const currentPrice = Number(data[3]);
                             if (prevClose > 0 && !Number.isNaN(currentPrice)) {
                                 changePercent = ((currentPrice - prevClose) / prevClose) * 100;
                             }
                         } else if (apiSymbol.startsWith('fx_')) {
                             // 外汇：第11个字段（索引10）是涨跌幅，但是小数形式（如-0.0017），需要乘以100
                             if (data.length >= 12) {
-                                const change = Number.parseFloat(data[11]);
+                                const change = Number(data[11]);
                                 if (!Number.isNaN(change)) {
                                     changePercent = change * 100;
                                 }
@@ -218,8 +215,8 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
                         } else if (apiSymbol.startsWith('nf_')) {
                             // 国内期货：字段[2]昨收，字段[7]现价
                             if (data.length >= 8) {
-                                const prevClose = Number.parseFloat(data[2]);
-                                const currentPrice = Number.parseFloat(data[7]);
+                                const prevClose = Number(data[2]);
+                                const currentPrice = Number(data[7]);
                                 if (prevClose > 0 && !Number.isNaN(currentPrice)) {
                                     changePercent = ((currentPrice - prevClose) / prevClose) * 100;
                                 }
@@ -228,8 +225,8 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
                             // 国际期货：字段[2]昨收，字段[0]现价（实时价）
                             // 注意：字段[7]是前结算价，不是现价！
                             if (data.length >= 3) {
-                                const prevClose = Number.parseFloat(data[2]);
-                                const currentPrice = Number.parseFloat(data[0]);
+                                const prevClose = Number(data[2]);
+                                const currentPrice = Number(data[0]);
                                 if (prevClose > 0 && !Number.isNaN(currentPrice)) {
                                     changePercent = ((currentPrice - prevClose) / prevClose) * 100;
                                 }
@@ -238,8 +235,8 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
                             (apiSymbol.startsWith('si') || apiSymbol.startsWith('znb_')) && // 指数：字段[1]当前值，字段[2]昨收
                             data.length >= 3
                         ) {
-                            const currentValue = Number.parseFloat(data[1]);
-                            const prevClose = Number.parseFloat(data[2]);
+                            const currentValue = Number(data[1]);
+                            const prevClose = Number(data[2]);
                             if (prevClose > 0 && !Number.isNaN(currentValue)) {
                                 changePercent = ((currentValue - prevClose) / prevClose) * 100;
                             }
@@ -265,7 +262,7 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
     }
 }
 
-async function handler(ctx) {
+async function handler(ctx): Promise<Data> {
     const zhiboIdParam = ctx.req.param('zhibo_id') ?? '152';
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 20;
     const pagesizeQuery = ctx.req.query('pagesize');
@@ -585,7 +582,7 @@ async function handler(ctx) {
         title: `新浪财经 - 7×24直播 - ${channelTitle}${focusSuffix}${tagSuffix}`,
         link: 'https://finance.sina.com.cn/7x24/',
         description: `新浪财经7×24小时财经直播 - ${channelTitle}频道${focusSuffix}${tagSuffix}`,
-        language: 'zh-cn',
+        language: 'zh-CN',
         item: items,
         author: '新浪财经',
         image: 'https://finance.sina.com.cn/favicon.ico',

@@ -1,8 +1,8 @@
 import { config } from '@/config';
 import InvalidParameterError from '@/errors/types/invalid-parameter';
-import type { Route } from '@/types';
+import type { Data, Route } from '@/types';
 import cache from '@/utils/cache';
-import got from '@/utils/got';
+import ofetch from '@/utils/ofetch';
 import { parseDate } from '@/utils/parse-date';
 
 import { applySourceImportance } from '../_finance/source-importance';
@@ -91,9 +91,9 @@ export const route: Route = {
 | watch | announcement | explain | red  | jpush | remind | fund | hk\\_us |`,
 };
 
-async function handler(ctx) {
+async function handler(ctx): Promise<Data> {
     const category = ctx.req.param('category') ?? '';
-    if (category && !categories[category]) {
+    if (category && !Object.hasOwn(categories, category)) {
         throw new InvalidParameterError(`Invalid category: "${category}". Supported categories are: ${Object.keys(categories).join(', ')}.`);
     }
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 20;
@@ -103,16 +103,15 @@ async function handler(ctx) {
     const rawData = await cache.tryGet(
         `cls:dianbao:${category || 'all'}`,
         async () => {
-            const apiParams = {
-                last_time: 0,
-                rn: maxRollListSize,
-                hasFirstVipArticle: 1,
-                ...(category ? { category } : {}),
-            };
-            const response = await got({
-                method: 'get',
-                url: apiUrl,
-                searchParams: getSearchParams(apiParams),
+            const response = await ofetch(apiUrl, {
+                query: getSearchParams({
+                    appName: undefined,
+                    app: 'CailianpressWeb',
+                    last_time: 0,
+                    rn: maxRollListSize,
+                    hasFirstVipArticle: 1,
+                    ...(category && { category }),
+                }),
                 headers: {
                     accept: 'application/json, text/plain, */*',
                     'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8',
@@ -124,7 +123,7 @@ async function handler(ctx) {
                     'Client-IP': '116.228.111.18',
                 },
             });
-            return response.data?.data?.roll_data ?? [];
+            return response.data?.roll_data ?? [];
         },
         CLS_DIANBAO_CACHE_TTL,
         false
@@ -184,7 +183,7 @@ async function handler(ctx) {
         title: `财联社 - 电报（API3）${category === '' ? '' : ` - ${categories[category]}`}`,
         link: 'https://www.cls.cn/telegraph',
         description: `财联社电报快讯 - 使用API3接口实时获取财经新闻${category === '' ? '' : `，关注${categories[category]}领域`}`,
-        language: 'zh-cn',
+        language: 'zh-CN',
         item: items,
     };
 }

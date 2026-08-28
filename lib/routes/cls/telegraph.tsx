@@ -1,17 +1,18 @@
+import type { Context } from 'hono';
 import { renderToString } from 'hono/jsx/dom/server';
 
 import { config } from '@/config';
 import InvalidParameterError from '@/errors/types/invalid-parameter';
-import type { Route } from '@/types';
+import type { DataItem, Route } from '@/types';
 import cache from '@/utils/cache';
-import got from '@/utils/got';
+import ofetch from '@/utils/ofetch';
 import { parseDate } from '@/utils/parse-date';
 
 import { applySourceImportance } from '../_finance/source-importance';
 import { renderSectorAndStockCards } from '../_finance/stock-card';
 import { cleanAndFilter, extractTitle, getClsImportanceSignals, getSearchParams, rootUrl, stripTitlePrefix, toStockItem } from './utils';
 
-const categories = {
+const categories: Record<string, string> = {
     watch: '看盘',
     announcement: '公司',
     explain: '解读',
@@ -20,6 +21,7 @@ const categories = {
     remind: '提醒',
     fund: '基金',
     hk: '港股',
+    hk_us: '港美股',
 };
 
 const apiUrl = 'https://api3.cls.cn/v1/roll/get_roll_list';
@@ -72,28 +74,29 @@ export const route: Route = {
     handler,
     url: 'cls.cn/telegraph',
     cacheTtl: CLS_TELEGRAPH_CACHE_TTL,
-    description: `| 看盘  | 公司         | 解读    | 加红 | 推送  | 提醒   | 基金 | 港股 |
-| ----- | ------------ | ------- | ---- | ----- | ------ | ---- | ---- |
-| watch | announcement | explain | red  | jpush | remind | fund | hk   |`,
+    description: `| 看盘  | 公司         | 解读    | 加红 | 推送  | 提醒   | 基金 | 港股 | 港美股 |
+| ----- | ------------ | ------- | ---- | ----- | ------ | ---- | ---- | ------ |
+| watch | announcement | explain | red  | jpush | remind | fund | hk   | hk\\_us |`,
 };
 
-async function handler(ctx) {
+async function handler(ctx: Context) {
     const category = ctx.req.param('category') ?? '';
-    if (category && !categories[category]) {
+    if (category && !Object.hasOwn(categories, category)) {
         throw new InvalidParameterError(`Invalid category: "${category}". Supported categories are: ${Object.keys(categories).join(', ')}.`);
     }
-    const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 50;
+    const limitQuery = ctx.req.query('limit');
+    const limit = limitQuery ? Number.parseInt(limitQuery) : 50;
 
     const currentUrl = `${rootUrl}/telegraph`;
 
     const rawData = await cache.tryGet(
         `cls:telegraph:${category}`,
         async () => {
-            const response = await got({
-                method: 'get',
-                url: apiUrl,
-                searchParams: getSearchParams({
-                    ...(category ? { category } : {}),
+            const response = await ofetch(apiUrl, {
+                query: getSearchParams({
+                    appName: undefined,
+                    app: 'CailianpressWeb',
+                    ...(category && { category }),
                     last_time: 0,
                     rn: rollListSize,
                     hasFirstVipArticle: 1,
@@ -109,7 +112,7 @@ async function handler(ctx) {
                     'Client-IP': '116.228.111.18',
                 },
             });
-            return response.data?.data?.roll_data ?? [];
+            return response.data?.roll_data ?? [];
         },
         CLS_TELEGRAPH_CACHE_TTL,
         false
@@ -139,30 +142,23 @@ async function handler(ctx) {
                 description += stockCards;
             }
 
-            const rssItem: any = applySourceImportance(
+            const rssItem: DataItem = applySourceImportance(
                 {
                     title,
                     link: item.shareurl,
                     description,
-                    pubDate: parseDate(item.ctime * 1000),
+                    pubDate: parseDate(item.ctime, 'X'),
                     category: [...subjectCategories, ...stockNameCategories],
                     author: item.author || '',
                 },
                 getClsImportanceSignals(item)
             );
 
-            // Audio enclosure is disabled for now; keep this block for later reuse.
-            // if (item.audio_url && item.audio_url.length > 0) {
-            //     rssItem.enclosure_url = item.audio_url[0];
-            //     rssItem.enclosure_type = 'audio/mpeg';
-            //     rssItem.enclosure_title = title;
-            // }
-
             return rssItem;
         });
 
     return {
-        title: `财联社 - 电报${category === '' ? '' : ` - ${categories[category]}`}`,
+        title: `财联社 - 电报${category ? ` - ${categories[category]}` : ''}`,
         link: currentUrl,
         item: items,
     };

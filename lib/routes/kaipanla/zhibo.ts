@@ -1,4 +1,4 @@
-import type { Route } from '@/types';
+import type { Data, Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
@@ -33,7 +33,7 @@ export const route: Route = {
     cacheTtl: KAIPANLA_CACHE_TTL,
 };
 
-async function handler(ctx) {
+async function handler(ctx): Promise<Data> {
     const category = ctx.req.param('category') || '全部';
     const apiUrl = 'https://apphwhq.longhuvip.com/w1/api/index.php';
 
@@ -80,7 +80,8 @@ async function handler(ctx) {
         stockCount: 0,
     };
 
-    for (const item of response.List || []) {
+    const liveItems = response.List || [];
+    for (const item of liveItems) {
         if (item.PlateName) {
             stats.plates.add(item.PlateName);
         }
@@ -108,7 +109,7 @@ async function handler(ctx) {
         description += `<p>${item.Comment}</p>`;
 
         if (item.PlateName && item.PlateName.trim() !== '') {
-            const plateZdf = item.PlateZDF ? Number.parseFloat(item.PlateZDF) : null;
+            const plateZdf = item.PlateZDF ? Number(item.PlateZDF) : null;
             description += renderStockCard('板块', '#1890ff', [{ name: item.PlateName, code: item.PlateJE ? `成交额: ${item.PlateJE}` : '', change: plateZdf }]);
         }
 
@@ -176,7 +177,7 @@ async function handler(ctx) {
         title: feedTitle,
         link: 'https://www.longhuvip.com/',
         description: feedDescription,
-        language: 'zh-cn',
+        language: 'zh-CN',
         item: items,
     };
 }

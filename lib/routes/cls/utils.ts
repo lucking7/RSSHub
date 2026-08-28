@@ -6,16 +6,23 @@ import type { StockItem } from '../_finance/stock-card';
 const rootUrl = 'https://www.cls.cn';
 
 const params = {
-    app: 'CailianpressWeb',
+    appName: 'CailianpressWeb',
     os: 'web',
-    sv: '8.4.6',
+    sv: '8.7.9',
 };
 
-const getSearchParams = (moreParams) => {
-    const searchParams = new URLSearchParams({ ...params, ...moreParams });
+const getSearchParams = (moreParams?: Record<string, string | number | boolean | undefined>) => {
+    const searchParams = new URLSearchParams();
+    const mergedParams = Object.entries({ ...params, ...moreParams });
+    for (const [key, value] of mergedParams) {
+        if (value !== undefined) {
+            searchParams.append(key, String(value));
+        }
+    }
     searchParams.sort();
-    searchParams.append('sign', CryptoJS.MD5(CryptoJS.SHA1(searchParams.toString()).toString()).toString());
-    return searchParams;
+    const sha1 = CryptoJS.SHA1(searchParams.toString()).toString();
+    searchParams.append('sign', CryptoJS.MD5(sha1).toString());
+    return Object.fromEntries(searchParams);
 };
 
 const getClsImportanceSignals = (item): SourceImportanceSignal[] => {
@@ -97,7 +104,7 @@ function isPromotionalContent(content: string): boolean {
         return true;
     }
 
-    if (content.includes('›') && /(直播|点击|阅读|观看)/.test(content)) {
+    if (content.includes('›') && /直播|点击|阅读|观看/.test(content)) {
         return true;
     }
 

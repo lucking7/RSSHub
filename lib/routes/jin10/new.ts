@@ -1,4 +1,4 @@
-import type { Route } from '@/types';
+import type { Data, Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
@@ -67,7 +67,8 @@ const parseFlashData = (rawData: string): Jin10RawItem[] => {
 
 const extractRemarkTags = (remark: Jin10RawItem['remark']) => {
     const tags: string[] = [];
-    for (const r of remark ?? []) {
+    const remarks = remark ?? [];
+    for (const r of remarks) {
         if (r.type === 'quotes') {
             if (r.title) {
                 tags.push(r.title);
@@ -82,7 +83,7 @@ const extractRemarkTags = (remark: Jin10RawItem['remark']) => {
     return tags;
 };
 
-async function handler(ctx) {
+async function handler(ctx): Promise<Data> {
     const channel = ctx.req.query('channel') || ctx.req.param('channel');
     const important = ctx.req.query('important') || ctx.req.param('important');
 
@@ -122,7 +123,7 @@ async function handler(ctx) {
     const items = filtered
         .map((item) => {
             const content = item.data?.content ?? '';
-            const titleMatch = content.match(/^【([^】]+)】/s);
+            const titleMatch = content.match(/^【([^】]+)】/);
             let baseTitle: string;
             let body = content;
 
@@ -171,7 +172,7 @@ async function handler(ctx) {
         .filter((item) => !isJin10AdFeedItem(item));
 
     const titleParts = ['金十数据'];
-    if (channelFilter && CHANNEL_MAP[channelFilter]) {
+    if (channelFilter && Object.hasOwn(CHANNEL_MAP, channelFilter)) {
         titleParts.push(CHANNEL_MAP[channelFilter]);
     }
     if (importantFilter === 1) {

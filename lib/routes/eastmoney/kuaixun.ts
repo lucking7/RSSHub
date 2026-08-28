@@ -1,4 +1,4 @@
-import type { Route } from '@/types';
+import type { Data, Route } from '@/types';
 import { ViewType } from '@/types';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
@@ -117,7 +117,7 @@ export const route: Route = {
 - \`/eastmoney/kuaixun?important_only=1\` - 仅重要快讯`,
 };
 
-async function handler(ctx) {
+async function handler(ctx): Promise<Data> {
     const category = ctx.req.param('category') ?? '';
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 50;
     const importantOnly = ctx.req.query('important_only') === '1';
@@ -231,7 +231,7 @@ async function handler(ctx) {
             title = content.slice(0, 50).replaceAll(/<[^>]+>/g, '');
         }
 
-        const pubDate = timezone(parseDate(item.showTime || item.publishTime), +8);
+        const pubDate = timezone(parseDate(item.showTime || item.publishTime), 8);
 
         // 构建链接
         const link = `https://finance.eastmoney.com/a/${id}.html`;
@@ -252,10 +252,10 @@ async function handler(ctx) {
             for (const stockCode of item.stockList) {
                 const info = stockMap[stockCode];
                 if (info) {
-                    const [market] = stockCode.split('.');
+                    const [market, code] = stockCode.split('.', 2);
                     const si: StockItem = {
                         name: info.name,
-                        code: stockCode.split('.')[1],
+                        code,
                         change: info.change,
                     };
                     if (market === '0' || market === '90') {
@@ -317,7 +317,7 @@ async function handler(ctx) {
         return result;
     });
 
-    const categoryName = category && categories[category] ? categories[category] : category;
+    const categoryName = category && Object.hasOwn(categories, category) ? categories[category] : category;
     const titleSuffix = categoryName ? ` - ${categoryName}` : '';
 
     return {
