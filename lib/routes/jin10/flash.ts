@@ -37,18 +37,12 @@ export const route: Route = {
     maintainers: ['laampui'],
     handler,
     cacheTtl: JIN10_FLASH_CACHE_TTL,
-    description: `获取金十数据（美港电讯）的实时财经快讯。
-
-频道（路径参数）：
-
-- 留空 = 全部快讯（综合，更新最快）
-- \`1\` = 美股盘前 / 盘后异动
-- \`2\` = 港股盘前 / 盘后异动
-
-查询参数：
+    description: `查询参数：
 
 - \`important_only=1\` 仅返回重要快讯
 - \`limit=50\` 限制返回数量（默认 50 条）
+
+热门快讯会在 \`category\` 中带上 \`火\` / \`热\` / \`沸\` / \`爆\`。可用 RSSHub 通用参数 \`filter_category\` 筛选。
 
 示例：
 
@@ -57,6 +51,11 @@ export const route: Route = {
 - \`/jin10/flash/2\` - 港股盘前 / 盘后异动
 - \`/jin10/flash?important_only=1\` - 全部快讯中仅重要
 - \`/jin10/flash/1?limit=20\` - 美港频道前 20 条`,
+};
+
+const FLASH_CHANNEL_TITLE: Record<string, string> = {
+    1: '美股盘前/盘后异动',
+    2: '港股盘前/盘后异动',
 };
 
 const extractRemarkTags = (remark: Jin10RawItem['remark']): string[] => {
@@ -160,7 +159,7 @@ async function handler(ctx) {
         .filter((item) => !isJin10AdFeedItem(item));
 
     return {
-        title: `金十数据 - 美港电讯${importantOnly ? ' - 重要快讯' : ''}${channel ? ` - ${channel}` : ''}`,
+        title: `金十数据 - 美港电讯${importantOnly ? ' - 重要快讯' : ''}${channel ? ` - ${FLASH_CHANNEL_TITLE[channel] ?? channel}` : ''}`,
         link: 'https://www.ushknews.com',
         item: items,
         description: `金十数据实时财经快讯${importantOnly ? '（仅重要）' : ''}`,

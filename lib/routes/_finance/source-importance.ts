@@ -36,6 +36,10 @@ const getDisplayLevel = (signals: SourceImportanceSignal[]): Exclude<SourceImpor
         .toSorted((a, b) => levelWeight[b] - levelWeight[a])
         .find((level): level is Exclude<SourceImportanceLevel, 'normal'> => level !== 'normal');
 
+/**
+ * Title takes the highest non-`normal` level; categories are the union of every non-`normal` level.
+ * Empty signals are dropped. An existing `「重要」` / `「关注」` prefix is not duplicated.
+ */
 export const applySourceImportance = <T extends DataItem>(item: T, signals: SourceImportanceSignal[]): T & Pick<DataItem, 'category' | '_extra'> => {
     const sourceImportance = signals.filter((signal) => hasValue(signal.value));
     if (sourceImportance.length === 0) {

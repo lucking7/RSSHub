@@ -71,6 +71,7 @@ const isPromotionalRemarkLink = (value?: string) => {
 
 const hasPromotionalRemarkLink = (item: Jin10RawItem) => item.remark?.some((remark) => isPromotionalRemarkLink(remark.link) || isPromotionalRemarkLink(remark.url)) ?? false;
 
+/** Drop type 1/2, extras.ad, VIP/`lock`, tv.jin10.com and qihuo…articleDetail remarks, and teaser copy (`点击查看`, `>>`, trailing `》`, short `……` without `【`). */
 export const isJin10PromotionalItem = (item: Jin10RawItem) => {
     if (item.type === 1 || item.type === 2) {
         return true;
@@ -119,4 +120,5 @@ export const isJin10PromotionalItem = (item: Jin10RawItem) => {
     return Boolean(item.data?.pic) && !hasTextContent(content);
 };
 
+/** Second-pass drop: title empty after HTML/whitespace strip, or description is image-only. */
 export const isJin10AdFeedItem = (item: Jin10FeedItem) => !hasTextContent(item.title) || isPureImageContent(item.description);

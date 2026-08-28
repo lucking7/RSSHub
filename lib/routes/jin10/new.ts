@@ -20,7 +20,7 @@ export const route: Route = {
         channel: '频道分类，可选值见下表，留空则返回所有频道（支持查询参数）',
         important: '只看重要快讯：1=只看重要，留空则返回所有（支持查询参数）',
     },
-    description: `金十数据实时快讯 - 支持多维度分类筛选
+    description: `路径参数与查询参数均可；同时提供时查询参数优先。
 
 | 频道名称      | channel 值 |
 | ------------- | ---------- |
@@ -62,7 +62,7 @@ export const route: Route = {
     url: 'jin10.com/',
 };
 
-// flash_newest.js 返回 `var newest = [...];` 赋值语句，需剥壳成 JSON
+// flash_newest.js returns a `var newest = [...];` assignment, not JSON; strip the wrapper before parse
 const parseFlashData = (rawData: string): Jin10RawItem[] => {
     const jsonStr = rawData.replace(/^var\s+newest\s*=\s*/, '').replace(/;?\s*$/, '');
     return JSON.parse(jsonStr);
