@@ -39,8 +39,10 @@ jobs:
                           with open('semgrep.sarif') as f:
                               json.load(f)
                           valid = True
+                      else:
+                          print('Skipping SARIF upload: semgrep.sarif is empty; it must exist and be non-empty valid SARIF JSON')
                   except Exception as e:
-                      print(f'Skipping SARIF upload: {e}')
+                      print(f'Skipping SARIF upload: semgrep.sarif failed validation ({e}); it must exist and be non-empty valid SARIF JSON')
 
                   with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
                       f.write(f'valid={str(valid).lower()}\n')

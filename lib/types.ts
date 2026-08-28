@@ -369,7 +369,11 @@ interface RouteItem {
     view?: ViewType;
 
     /**
-     * Route response cache lifetime in seconds, defaults to `CACHE_EXPIRE`
+     * Route response cache lifetime in seconds.
+     * Ignored unless it is a finite number greater than 0.
+     * The route registry sets a valid value on `ctx` as `routeCacheTtl`.
+     * That value drives the response cache TTL, the HTTP `Cache-Control` header, and the RSS `<ttl>` element (minutes, `trunc(seconds / 60)`, minimum 1).
+     * When unset or ignored, all three fall back to the `CACHE_EXPIRE` env (default 300 seconds).
      */
     cacheTtl?: number;
 }

@@ -50,7 +50,7 @@ export const route: Route = {
     view: ViewType.Notifications,
     example: '/eastmoney/kuaixun',
     parameters: {
-        category: '分类代码，可选，见下表，留空为全部快讯',
+        category: '分类代码，可选，见下表，留空默认为 102（7*24 全球直播）',
     },
     features: {
         requireConfig: false,
@@ -97,15 +97,13 @@ export const route: Route = {
 
 ### 数据范围
 
-- 每页 50 条，第 1 页覆盖最近 1-2 小时
-- 第 10 页可回溯约 1 天
-- 第 50 页可回溯约 5 天
-- API 支持获取约 7-10 天内的历史快讯
+- 每次只请求一页，条数由 \`limit\` 控制（默认 50）
+- 不翻页，无法按页回溯更早历史
 - 建议日常订阅使用默认 50 条即可
 
 ### 示例
 
-- \`/eastmoney/kuaixun\` - 所有快讯（最近 50 条）
+- \`/eastmoney/kuaixun\` - 7\\*24 全球直播（默认，最近 50 条）
 - \`/eastmoney/kuaixun/100\` - 焦点快讯
 - \`/eastmoney/kuaixun/103\` - 上市公司快讯
 - \`/eastmoney/kuaixun/zhibo\` - 股市直播
@@ -135,7 +133,7 @@ async function handler(ctx): Promise<Data> {
         searchParams: {
             client: 'web',
             biz: 'web_724',
-            fastColumn: isZhibo ? '' : category || '102', // 102为7*24快讯
+            fastColumn: isZhibo ? '' : category || '102',
             sortEnd: '',
             pageSize: limit,
             req_trace: Date.now(),
@@ -148,7 +146,6 @@ async function handler(ctx): Promise<Data> {
 
     let data = response.data;
 
-    // 解析JSONP格式
     if (typeof data === 'string') {
         const match = data.match(/jQuery\((.*)\)/);
         if (match) {
@@ -158,7 +155,6 @@ async function handler(ctx): Promise<Data> {
 
     const list = data?.data?.fastNewsList || [];
 
-    // 过滤重要快讯
     let filteredList = list;
     if (importantOnly) {
         filteredList = list.filter((item) => item.important === 1 || item.importantLevel > 0);
@@ -210,36 +206,29 @@ async function handler(ctx): Promise<Data> {
     }
 
     const items = filteredList.slice(0, limit).map((item) => {
-        // 提取标题和内容
         let title = item.title || '';
         let content = item.summary || item.content || '';
         const id = item.code || item.id || '';
 
-        // 处理【】标记 - API的summary通常包含【标题】正文的格式
+        // Upstream summary is 【title】body: fill a missing title from the brackets, and always strip that prefix from description so it does not duplicate the title.
         const bracketMatch = content.match(/^【([^】]+)】(.*)$/s);
         if (bracketMatch) {
-            // 如果API没有提供title，使用【】内的内容作为title
             if (!title) {
                 title = bracketMatch[1];
             }
-            // 总是移除【】部分，只保留正文（避免title和description重复）
             content = bracketMatch[2].trim();
         }
 
-        // 如果仍然没有标题，使用内容前50个字符
         if (!title) {
             title = content.slice(0, 50).replaceAll(/<[^>]+>/g, '');
         }
 
         const pubDate = timezone(parseDate(item.showTime || item.publishTime), 8);
 
-        // 构建链接
         const link = `https://finance.eastmoney.com/a/${id}.html`;
 
-        // 构建描述
         let description = content;
 
-        // 添加图片
         if (item.image && item.image.length > 0) {
             const images = item.image.map((img) => `<img src="${img}">`).join('');
             description += `<br><br>${images}`;
@@ -269,30 +258,25 @@ async function handler(ctx): Promise<Data> {
             description += renderSectorAndStockCards(sectors, stocks);
         }
 
-        // 添加来源信息
         if (item.source) {
             description += `<br><p style="color: #666; font-size: 0.9em;">📰 来源: ${item.source}</p>`;
         }
 
-        // 构建分类标签
         const category: string[] = [];
 
-        // 添加重要性标识
         if (item.important === 1 || item.importantLevel > 0) {
             category.push('重要');
         }
 
-        // 添加股票名称标签（而不是代码）
         if (item.stockList && Array.isArray(item.stockList)) {
             for (const stockCode of item.stockList) {
                 const info = stockMap[stockCode];
                 if (info && info.name) {
-                    category.push(info.name); // 使用股票名称
+                    category.push(info.name);
                 }
             }
         }
 
-        // 添加栏目名称
         if (item.columnName) {
             category.push(item.columnName);
         }
@@ -307,7 +291,6 @@ async function handler(ctx): Promise<Data> {
             author: item.source || '东方财富网',
         };
 
-        // 如果有图片，添加第一张作为封面
         if (item.image && item.image.length > 0) {
             result.image = item.image[0];
             result.enclosure_url = item.image[0];
