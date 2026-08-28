@@ -3437,6 +3437,9 @@ export type RoutePath =
   | `/usenix/loginonline`
   | `/usenix/usenix-security-sympoium`
   | `/usepanda/feeds/:id`
+  | `/ushknews/:channel?`
+  | `/ushknews/calendar`
+  | `/ushknews/flash/:channel?`
   | `/usst/jwc`
   | `/ustb/tj/news/:type?`
   | `/ustb/yjsy/news/:type`

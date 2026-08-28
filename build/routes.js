@@ -13919,198 +13919,6 @@ export default {
     ],
     "lang": "en"
   },
-  "jin10": {
-    "routes": {
-      "/category/:id": {
-        "path": "/category/:id",
-        "categories": [
-          "finance"
-        ],
-        "view": 5,
-        "example": "/jin10/category/36",
-        "cacheTtl": 1,
-        "parameters": {
-          "id": "分类id，见下表"
-        },
-        "description": "| Name             | ID  |\n| ---------------- | --- |\n| 贵金属           | 1   |\n| 黄金             | 2   |\n| 白银             | 3   |\n| 钯金             | 4   |\n| 铂金             | 5   |\n| 石油             | 6   |\n| WTI 原油         | 7   |\n| 布伦特原油       | 8   |\n| 欧佩克           | 9   |\n| 页岩气           | 10  |\n| 原油市场报告     | 11  |\n| 外汇             | 12  |\n| 欧元             | 13  |\n| 英镑             | 14  |\n| 日元             | 15  |\n| 美元             | 16  |\n| 瑞郎             | 17  |\n| 人民币           | 18  |\n| 期货             | 36  |\n| 油脂油料         | 145 |\n| 钢矿             | 146 |\n| 煤炭             | 147 |\n| 化工             | 148 |\n| 有色             | 149 |\n| 谷物             | 150 |\n| 糖棉果蛋         | 151 |\n| 生猪             | 152 |\n| 碳排放           | 154 |\n| 数字货币         | 19  |\n| 数字人民币       | 107 |\n| 科技             | 22  |\n| 手机             | 23  |\n| 电动汽车         | 39  |\n| 芯片             | 40  |\n| 中国突破         | 41  |\n| 5G               | 42  |\n| 量子计算         | 43  |\n| 航空航天         | 158 |\n| 元宇宙           | 165 |\n| 人工智能         | 168 |\n| 地缘局势         | 24  |\n| 缅甸局势         | 44  |\n| 印巴纷争         | 45  |\n| 中东风云         | 46  |\n| 阿富汗局势       | 155 |\n| 俄乌冲突         | 167 |\n| 人物             | 25  |\n| 鲍威尔           | 47  |\n| 马斯克           | 48  |\n| 拉加德           | 49  |\n| 特朗普           | 50  |\n| 拜登             | 51  |\n| 巴菲特           | 157 |\n| 央行             | 26  |\n| 美联储           | 53  |\n| 中国央行         | 54  |\n| 欧洲央行         | 55  |\n| 日本央行         | 56  |\n| 货币政策调整     | 137 |\n| 英国央行         | 141 |\n| 澳洲联储         | 159 |\n| 新西兰联储       | 160 |\n| 加拿大央行       | 161 |\n| 美股             | 27  |\n| 财报             | 59  |\n| Reddit 散户动态  | 60  |\n| 个股动态         | 108 |\n| 港股             | 28  |\n| 美股回港         | 61  |\n| 交易所动态       | 62  |\n| 指数动态         | 63  |\n| 个股动态         | 109 |\n| A 股             | 29  |\n| 美股回 A         | 64  |\n| 券商分析         | 65  |\n| 板块异动         | 66  |\n| 大盘动态         | 67  |\n| 南北资金         | 68  |\n| 亚盘动态         | 69  |\n| IPO 信息         | 70  |\n| 个股动态         | 110 |\n| 北交所           | 166 |\n| 基金             | 30  |\n| 投行机构         | 31  |\n| 标普、惠誉、穆迪 | 71  |\n| 美银             | 72  |\n| 高盛             | 112 |\n| 疫情             | 32  |\n| 疫苗动态         | 73  |\n| 确诊数据         | 74  |\n| 新冠药物         | 113 |\n| 债券             | 33  |\n| 政策             | 34  |\n| 中国             | 75  |\n| 美国             | 76  |\n| 欧盟             | 77  |\n| 日本             | 78  |\n| 贸易、关税       | 79  |\n| 碳中和           | 80  |\n| 中国香港         | 81  |\n| 英国             | 120 |\n| 房地产动态       | 156 |\n| 经济数据         | 35  |\n| 中国             | 82  |\n| 美国             | 83  |\n| 欧盟             | 84  |\n| 日本             | 85  |\n| 公司             | 37  |\n| 特斯拉           | 86  |\n| 苹果             | 90  |\n| 独角兽           | 91  |\n| 谷歌             | 92  |\n| 华为             | 93  |\n| 阿里巴巴         | 94  |\n| 小米             | 95  |\n| 字节跳动         | 116 |\n| 腾讯             | 117 |\n| 微软             | 118 |\n| 百度             | 119 |\n| 美团             | 162 |\n| 滴滴             | 163 |\n| 中国恒大         | 164 |\n| 灾害事故         | 38  |\n| 地震             | 96  |\n| 爆炸             | 97  |\n| 海啸             | 98  |\n| 寒潮             | 99  |\n| 洪涝             | 100 |\n| 火灾             | 101 |\n| 矿难             | 102 |\n| 枪击案           | 103 |",
-        "features": {
-          "requireConfig": false,
-          "requirePuppeteer": false,
-          "antiCrawler": false,
-          "supportBT": false,
-          "supportPodcast": false,
-          "supportScihub": false
-        },
-        "radar": [
-          {
-            "source": [
-              "jin10.com/"
-            ],
-            "target": "/category/:id"
-          }
-        ],
-        "name": "分类快讯",
-        "maintainers": [
-          "laampui"
-        ],
-        "url": "jin10.com/",
-        "location": "category.ts",
-        "module": () => import('@/routes/jin10/category.ts')
-      },
-      "/flash/:channel?": {
-        "path": "/flash/:channel?",
-        "categories": [
-          "finance"
-        ],
-        "view": 5,
-        "example": "/jin10/flash",
-        "parameters": {
-          "channel": "频道，可选；留空=全部快讯，`1`=美股，`2`=港股"
-        },
-        "features": {
-          "requireConfig": false,
-          "requirePuppeteer": false,
-          "antiCrawler": false,
-          "supportBT": false,
-          "supportPodcast": false,
-          "supportScihub": false
-        },
-        "radar": [
-          {
-            "source": [
-              "ushknews.com/",
-              "jin10.com/"
-            ]
-          }
-        ],
-        "name": "快讯 - 美港电讯",
-        "maintainers": [
-          "laampui"
-        ],
-        "cacheTtl": 1,
-        "description": "获取金十美港电讯（`ushknews.com`）快讯。站点页签只有「全部快讯 / 美股 / 港股」和「只看重要」，没有金十官网的 `火` / `热` / `沸` / `爆` 热度，也没有外汇 / 期货 / A 股频道。\n\n频道（路径参数）：\n\n- 留空 = 全部快讯\n- `1` = 美股\n- `2` = 港股\n\n查询参数：\n\n- `important_only=1` 仅返回重要快讯（对应站点「只看重要」）\n- `limit=50` 限制返回数量（默认 50 条）\n\n示例：\n\n- `/jin10/flash` - 全部快讯\n- `/jin10/flash/1` - 美股\n- `/jin10/flash/2` - 港股\n- `/jin10/flash?important_only=1` - 全部快讯中仅重要\n- `/jin10/flash/1?limit=20` - 美股前 20 条",
-        "location": "flash.ts",
-        "module": () => import('@/routes/jin10/flash.ts')
-      },
-      "/new/:channel?/:important?": {
-        "path": [
-          "/new/:channel?/:important?",
-          "/:important?"
-        ],
-        "categories": [
-          "finance"
-        ],
-        "view": 5,
-        "example": "/jin10",
-        "cacheTtl": 1,
-        "parameters": {
-          "channel": "频道分类，可选值见下表，留空则返回所有频道（支持查询参数）",
-          "important": "只看重要快讯：1=只看重要，留空则返回所有（支持查询参数）"
-        },
-        "description": "金十数据实时快讯（官网 `flash_newest.js`）。`/jin10` 与 `/jin10/1` 是本路由的别名（`1` = 只看重要）。`/jin10/4` 不会当成 A 股频道，请用 `/jin10/new/4`。`/jin10/flash`、`/jin10/category`、`/jin10/topic` 走不同接口，不在本路由合并。路径参数与查询参数均可；同时提供时查询参数优先。\n\n| 频道名称      | channel 值 |\n| ------------- | ---------- |\n| 外汇 / 贵金属 | 1          |\n| 期货          | 2          |\n| 全球市场      | 3          |\n| A 股          | 4          |\n| 英文          | 5          |\n\n**查询参数示例（推荐）：**\n\n- `/jin10?important=1` - 只看重要快讯\n- `/jin10/new?channel=4` - A 股快讯\n- `/jin10/new?channel=4&important=1` - A 股重要快讯\n- `/jin10/new?channel=5` - 英文快讯\n\n**路径参数示例：**\n\n- `/jin10` / `/jin10/new` - 所有快讯\n- `/jin10/1` - 只看重要\n- `/jin10/new/3` - 全球市场快讯\n- `/jin10/new/4/1` - A 股重要快讯\n- `/jin10/new/5` - 英文快讯\n\n热门快讯会在 `category` 中带上 `火` / `热` / `沸` / `爆`。可用 RSSHub 通用参数 `filter_category` 筛选。",
-        "features": {
-          "requireConfig": false,
-          "requirePuppeteer": false,
-          "antiCrawler": false,
-          "supportBT": false,
-          "supportPodcast": false,
-          "supportScihub": false
-        },
-        "radar": [
-          {
-            "source": [
-              "jin10.com/"
-            ],
-            "target": ""
-          }
-        ],
-        "name": "实时快讯",
-        "maintainers": [
-          "laampui"
-        ],
-        "url": "jin10.com/",
-        "location": "new.ts",
-        "module": () => import('@/routes/jin10/new.ts')
-      },
-      "/:important?": {
-        "path": [
-          "/new/:channel?/:important?",
-          "/:important?"
-        ],
-        "categories": [
-          "finance"
-        ],
-        "view": 5,
-        "example": "/jin10",
-        "cacheTtl": 1,
-        "parameters": {
-          "channel": "频道分类，可选值见下表，留空则返回所有频道（支持查询参数）",
-          "important": "只看重要快讯：1=只看重要，留空则返回所有（支持查询参数）"
-        },
-        "description": "金十数据实时快讯（官网 `flash_newest.js`）。`/jin10` 与 `/jin10/1` 是本路由的别名（`1` = 只看重要）。`/jin10/4` 不会当成 A 股频道，请用 `/jin10/new/4`。`/jin10/flash`、`/jin10/category`、`/jin10/topic` 走不同接口，不在本路由合并。路径参数与查询参数均可；同时提供时查询参数优先。\n\n| 频道名称      | channel 值 |\n| ------------- | ---------- |\n| 外汇 / 贵金属 | 1          |\n| 期货          | 2          |\n| 全球市场      | 3          |\n| A 股          | 4          |\n| 英文          | 5          |\n\n**查询参数示例（推荐）：**\n\n- `/jin10?important=1` - 只看重要快讯\n- `/jin10/new?channel=4` - A 股快讯\n- `/jin10/new?channel=4&important=1` - A 股重要快讯\n- `/jin10/new?channel=5` - 英文快讯\n\n**路径参数示例：**\n\n- `/jin10` / `/jin10/new` - 所有快讯\n- `/jin10/1` - 只看重要\n- `/jin10/new/3` - 全球市场快讯\n- `/jin10/new/4/1` - A 股重要快讯\n- `/jin10/new/5` - 英文快讯\n\n热门快讯会在 `category` 中带上 `火` / `热` / `沸` / `爆`。可用 RSSHub 通用参数 `filter_category` 筛选。",
-        "features": {
-          "requireConfig": false,
-          "requirePuppeteer": false,
-          "antiCrawler": false,
-          "supportBT": false,
-          "supportPodcast": false,
-          "supportScihub": false
-        },
-        "radar": [
-          {
-            "source": [
-              "jin10.com/"
-            ],
-            "target": ""
-          }
-        ],
-        "name": "实时快讯",
-        "maintainers": [
-          "laampui"
-        ],
-        "url": "jin10.com/",
-        "location": "new.ts",
-        "module": () => import('@/routes/jin10/new.ts')
-      },
-      "/topic/:id": {
-        "path": "/topic/:id",
-        "categories": [
-          "finance"
-        ],
-        "view": 0,
-        "example": "/jin10/topic/100",
-        "parameters": {
-          "id": "主题 id，来自 xnews.jin10.com/topic/:id"
-        },
-        "features": {
-          "requireConfig": false,
-          "requirePuppeteer": false,
-          "antiCrawler": false,
-          "supportBT": false,
-          "supportPodcast": false,
-          "supportScihub": false
-        },
-        "radar": [
-          {
-            "source": [
-              "xnews.jin10.com/topic/:id"
-            ]
-          }
-        ],
-        "name": "主题文章",
-        "maintainers": [
-          "miles170"
-        ],
-        "url": "jin10.com/",
-        "location": "topic.ts",
-        "module": () => import('@/routes/jin10/topic.ts')
-      }
-    },
-    "apiRoutes": {},
-    "name": "金十数据",
-    "url": "jin10.com",
-    "lang": "zh-CN"
-  },
   "jingzhengu": {
     "routes": {
       "/news": {
@@ -15898,6 +15706,129 @@ export default {
       "multimedia"
     ],
     "lang": "en"
+  },
+  "ushknews": {
+    "routes": {
+      "/calendar": {
+        "path": "/calendar",
+        "categories": [
+          "finance"
+        ],
+        "view": 5,
+        "example": "/ushknews/calendar",
+        "cacheTtl": 60,
+        "features": {
+          "requireConfig": false,
+          "requirePuppeteer": false,
+          "antiCrawler": false,
+          "supportBT": false,
+          "supportPodcast": false,
+          "supportScihub": false
+        },
+        "radar": [
+          {
+            "source": [
+              "ushknews.com/"
+            ],
+            "target": "/calendar"
+          }
+        ],
+        "name": "财经日历",
+        "maintainers": [
+          "luck"
+        ],
+        "url": "ushknews.com/",
+        "description": "美港电讯当日财经日历，合并经济数据（rili）和事件（events）。数据卡带实际 / 预期 / 前值；利多 / 利空 和 重要会写入 category。",
+        "location": "calendar.ts",
+        "module": () => import('@/routes/ushknews/calendar.ts')
+      },
+      "/flash/:channel?": {
+        "path": [
+          "/flash/:channel?",
+          "/:channel?"
+        ],
+        "categories": [
+          "finance"
+        ],
+        "view": 5,
+        "example": "/ushknews",
+        "cacheTtl": 1,
+        "parameters": {
+          "channel": "频道，留空或 `all` 为全部快讯，`us` / `1` 为美股，`hk` / `2` 为港股"
+        },
+        "features": {
+          "requireConfig": false,
+          "requirePuppeteer": false,
+          "antiCrawler": false,
+          "supportBT": false,
+          "supportPodcast": false,
+          "supportScihub": false
+        },
+        "radar": [
+          {
+            "source": [
+              "ushknews.com/"
+            ],
+            "target": "/flash"
+          }
+        ],
+        "name": "快讯",
+        "maintainers": [
+          "luck"
+        ],
+        "url": "ushknews.com/",
+        "description": "金十美港电讯（`ushknews.com`）实时快讯。站点页签为「全部快讯 / 美股 / 港股」，条目含文字快讯和数据卡（财报 EPS、经济数据）。重要条目会在 `category` 中带 `重要`，可用 `filter_category` 筛选。没有金十官网的 `火` / `热` / `沸` / `爆` 热度。\n\n| 频道     | channel |\n| -------- | ------- |\n| 全部快讯 | 空 /all |\n| 美股     | us / 1  |\n| 港股     | hk / 2  |\n\n示例：`/ushknews`、`/ushknews/us`、`/ushknews/flash/hk`、`/ushknews/1`。",
+        "location": "flash.ts",
+        "module": () => import('@/routes/ushknews/flash.ts')
+      },
+      "/:channel?": {
+        "path": [
+          "/flash/:channel?",
+          "/:channel?"
+        ],
+        "categories": [
+          "finance"
+        ],
+        "view": 5,
+        "example": "/ushknews",
+        "cacheTtl": 1,
+        "parameters": {
+          "channel": "频道，留空或 `all` 为全部快讯，`us` / `1` 为美股，`hk` / `2` 为港股"
+        },
+        "features": {
+          "requireConfig": false,
+          "requirePuppeteer": false,
+          "antiCrawler": false,
+          "supportBT": false,
+          "supportPodcast": false,
+          "supportScihub": false
+        },
+        "radar": [
+          {
+            "source": [
+              "ushknews.com/"
+            ],
+            "target": "/flash"
+          }
+        ],
+        "name": "快讯",
+        "maintainers": [
+          "luck"
+        ],
+        "url": "ushknews.com/",
+        "description": "金十美港电讯（`ushknews.com`）实时快讯。站点页签为「全部快讯 / 美股 / 港股」，条目含文字快讯和数据卡（财报 EPS、经济数据）。重要条目会在 `category` 中带 `重要`，可用 `filter_category` 筛选。没有金十官网的 `火` / `热` / `沸` / `爆` 热度。\n\n| 频道     | channel |\n| -------- | ------- |\n| 全部快讯 | 空 /all |\n| 美股     | us / 1  |\n| 港股     | hk / 2  |\n\n示例：`/ushknews`、`/ushknews/us`、`/ushknews/flash/hk`、`/ushknews/1`。",
+        "location": "flash.ts",
+        "module": () => import('@/routes/ushknews/flash.ts')
+      }
+    },
+    "apiRoutes": {},
+    "name": "美港电讯",
+    "url": "ushknews.com",
+    "categories": [
+      "finance"
+    ],
+    "description": "金十数据旗下美港电讯，覆盖美股与港股快讯、数据卡和财经日历。",
+    "lang": "zh-CN"
   },
   "vgnlab": {
     "routes": {
@@ -18891,6 +18822,199 @@ export default {
     "apiRoutes": {},
     "name": "京东",
     "url": "item.jd.com",
+    "lang": "zh-CN"
+  },
+  "jin10": {
+    "routes": {
+      "/category/:id": {
+        "path": "/category/:id",
+        "categories": [
+          "finance"
+        ],
+        "view": 5,
+        "example": "/jin10/category/36",
+        "cacheTtl": 1,
+        "parameters": {
+          "id": "分类id，见下表"
+        },
+        "description": "| Name             | ID  |\n| ---------------- | --- |\n| 贵金属           | 1   |\n| 黄金             | 2   |\n| 白银             | 3   |\n| 钯金             | 4   |\n| 铂金             | 5   |\n| 石油             | 6   |\n| WTI 原油         | 7   |\n| 布伦特原油       | 8   |\n| 欧佩克           | 9   |\n| 页岩气           | 10  |\n| 原油市场报告     | 11  |\n| 外汇             | 12  |\n| 欧元             | 13  |\n| 英镑             | 14  |\n| 日元             | 15  |\n| 美元             | 16  |\n| 瑞郎             | 17  |\n| 人民币           | 18  |\n| 期货             | 36  |\n| 油脂油料         | 145 |\n| 钢矿             | 146 |\n| 煤炭             | 147 |\n| 化工             | 148 |\n| 有色             | 149 |\n| 谷物             | 150 |\n| 糖棉果蛋         | 151 |\n| 生猪             | 152 |\n| 碳排放           | 154 |\n| 数字货币         | 19  |\n| 数字人民币       | 107 |\n| 科技             | 22  |\n| 手机             | 23  |\n| 电动汽车         | 39  |\n| 芯片             | 40  |\n| 中国突破         | 41  |\n| 5G               | 42  |\n| 量子计算         | 43  |\n| 航空航天         | 158 |\n| 元宇宙           | 165 |\n| 人工智能         | 168 |\n| 地缘局势         | 24  |\n| 缅甸局势         | 44  |\n| 印巴纷争         | 45  |\n| 中东风云         | 46  |\n| 阿富汗局势       | 155 |\n| 俄乌冲突         | 167 |\n| 人物             | 25  |\n| 鲍威尔           | 47  |\n| 马斯克           | 48  |\n| 拉加德           | 49  |\n| 特朗普           | 50  |\n| 拜登             | 51  |\n| 巴菲特           | 157 |\n| 央行             | 26  |\n| 美联储           | 53  |\n| 中国央行         | 54  |\n| 欧洲央行         | 55  |\n| 日本央行         | 56  |\n| 货币政策调整     | 137 |\n| 英国央行         | 141 |\n| 澳洲联储         | 159 |\n| 新西兰联储       | 160 |\n| 加拿大央行       | 161 |\n| 美股             | 27  |\n| 财报             | 59  |\n| Reddit 散户动态  | 60  |\n| 个股动态         | 108 |\n| 港股             | 28  |\n| 美股回港         | 61  |\n| 交易所动态       | 62  |\n| 指数动态         | 63  |\n| 个股动态         | 109 |\n| A 股             | 29  |\n| 美股回 A         | 64  |\n| 券商分析         | 65  |\n| 板块异动         | 66  |\n| 大盘动态         | 67  |\n| 南北资金         | 68  |\n| 亚盘动态         | 69  |\n| IPO 信息         | 70  |\n| 个股动态         | 110 |\n| 北交所           | 166 |\n| 基金             | 30  |\n| 投行机构         | 31  |\n| 标普、惠誉、穆迪 | 71  |\n| 美银             | 72  |\n| 高盛             | 112 |\n| 疫情             | 32  |\n| 疫苗动态         | 73  |\n| 确诊数据         | 74  |\n| 新冠药物         | 113 |\n| 债券             | 33  |\n| 政策             | 34  |\n| 中国             | 75  |\n| 美国             | 76  |\n| 欧盟             | 77  |\n| 日本             | 78  |\n| 贸易、关税       | 79  |\n| 碳中和           | 80  |\n| 中国香港         | 81  |\n| 英国             | 120 |\n| 房地产动态       | 156 |\n| 经济数据         | 35  |\n| 中国             | 82  |\n| 美国             | 83  |\n| 欧盟             | 84  |\n| 日本             | 85  |\n| 公司             | 37  |\n| 特斯拉           | 86  |\n| 苹果             | 90  |\n| 独角兽           | 91  |\n| 谷歌             | 92  |\n| 华为             | 93  |\n| 阿里巴巴         | 94  |\n| 小米             | 95  |\n| 字节跳动         | 116 |\n| 腾讯             | 117 |\n| 微软             | 118 |\n| 百度             | 119 |\n| 美团             | 162 |\n| 滴滴             | 163 |\n| 中国恒大         | 164 |\n| 灾害事故         | 38  |\n| 地震             | 96  |\n| 爆炸             | 97  |\n| 海啸             | 98  |\n| 寒潮             | 99  |\n| 洪涝             | 100 |\n| 火灾             | 101 |\n| 矿难             | 102 |\n| 枪击案           | 103 |",
+        "features": {
+          "requireConfig": false,
+          "requirePuppeteer": false,
+          "antiCrawler": false,
+          "supportBT": false,
+          "supportPodcast": false,
+          "supportScihub": false
+        },
+        "radar": [
+          {
+            "source": [
+              "jin10.com/"
+            ],
+            "target": "/category/:id"
+          }
+        ],
+        "name": "分类快讯",
+        "maintainers": [
+          "laampui"
+        ],
+        "url": "jin10.com/",
+        "location": "category.ts",
+        "module": () => import('@/routes/jin10/category.ts')
+      },
+      "/new/:channel?/:important?": {
+        "path": [
+          "/new/:channel?/:important?",
+          "/:important?"
+        ],
+        "categories": [
+          "finance"
+        ],
+        "view": 5,
+        "example": "/jin10",
+        "cacheTtl": 1,
+        "parameters": {
+          "channel": "频道分类，可选值见下表，留空则返回所有频道（支持查询参数）",
+          "important": "只看重要快讯：1=只看重要，留空则返回所有（支持查询参数）"
+        },
+        "description": "金十数据实时快讯（官网 `flash_newest.js`）。`/jin10` 与 `/jin10/1` 是本路由的别名（`1` = 只看重要）。`/jin10/4` 不会当成 A 股频道，请用 `/jin10/new/4`。`/jin10/flash` 是 `/ushknews` 的别名；`/jin10/category`、`/jin10/topic` 走不同接口，不在本路由合并。路径参数与查询参数均可；同时提供时查询参数优先。\n\n| 频道名称      | channel 值 |\n| ------------- | ---------- |\n| 外汇 / 贵金属 | 1          |\n| 期货          | 2          |\n| 全球市场      | 3          |\n| A 股          | 4          |\n| 英文          | 5          |\n\n**查询参数示例（推荐）：**\n\n- `/jin10?important=1` - 只看重要快讯\n- `/jin10/new?channel=4` - A 股快讯\n- `/jin10/new?channel=4&important=1` - A 股重要快讯\n- `/jin10/new?channel=5` - 英文快讯\n\n**路径参数示例：**\n\n- `/jin10` / `/jin10/new` - 所有快讯\n- `/jin10/1` - 只看重要\n- `/jin10/new/3` - 全球市场快讯\n- `/jin10/new/4/1` - A 股重要快讯\n- `/jin10/new/5` - 英文快讯\n\n热门快讯会在 `category` 中带上 `火` / `热` / `沸` / `爆`。可用 RSSHub 通用参数 `filter_category` 筛选。",
+        "features": {
+          "requireConfig": false,
+          "requirePuppeteer": false,
+          "antiCrawler": false,
+          "supportBT": false,
+          "supportPodcast": false,
+          "supportScihub": false
+        },
+        "radar": [
+          {
+            "source": [
+              "jin10.com/"
+            ],
+            "target": ""
+          }
+        ],
+        "name": "实时快讯",
+        "maintainers": [
+          "laampui"
+        ],
+        "url": "jin10.com/",
+        "location": "new.ts",
+        "module": () => import('@/routes/jin10/new.ts')
+      },
+      "/:important?": {
+        "path": [
+          "/new/:channel?/:important?",
+          "/:important?"
+        ],
+        "categories": [
+          "finance"
+        ],
+        "view": 5,
+        "example": "/jin10",
+        "cacheTtl": 1,
+        "parameters": {
+          "channel": "频道分类，可选值见下表，留空则返回所有频道（支持查询参数）",
+          "important": "只看重要快讯：1=只看重要，留空则返回所有（支持查询参数）"
+        },
+        "description": "金十数据实时快讯（官网 `flash_newest.js`）。`/jin10` 与 `/jin10/1` 是本路由的别名（`1` = 只看重要）。`/jin10/4` 不会当成 A 股频道，请用 `/jin10/new/4`。`/jin10/flash` 是 `/ushknews` 的别名；`/jin10/category`、`/jin10/topic` 走不同接口，不在本路由合并。路径参数与查询参数均可；同时提供时查询参数优先。\n\n| 频道名称      | channel 值 |\n| ------------- | ---------- |\n| 外汇 / 贵金属 | 1          |\n| 期货          | 2          |\n| 全球市场      | 3          |\n| A 股          | 4          |\n| 英文          | 5          |\n\n**查询参数示例（推荐）：**\n\n- `/jin10?important=1` - 只看重要快讯\n- `/jin10/new?channel=4` - A 股快讯\n- `/jin10/new?channel=4&important=1` - A 股重要快讯\n- `/jin10/new?channel=5` - 英文快讯\n\n**路径参数示例：**\n\n- `/jin10` / `/jin10/new` - 所有快讯\n- `/jin10/1` - 只看重要\n- `/jin10/new/3` - 全球市场快讯\n- `/jin10/new/4/1` - A 股重要快讯\n- `/jin10/new/5` - 英文快讯\n\n热门快讯会在 `category` 中带上 `火` / `热` / `沸` / `爆`。可用 RSSHub 通用参数 `filter_category` 筛选。",
+        "features": {
+          "requireConfig": false,
+          "requirePuppeteer": false,
+          "antiCrawler": false,
+          "supportBT": false,
+          "supportPodcast": false,
+          "supportScihub": false
+        },
+        "radar": [
+          {
+            "source": [
+              "jin10.com/"
+            ],
+            "target": ""
+          }
+        ],
+        "name": "实时快讯",
+        "maintainers": [
+          "laampui"
+        ],
+        "url": "jin10.com/",
+        "location": "new.ts",
+        "module": () => import('@/routes/jin10/new.ts')
+      },
+      "/topic/:id": {
+        "path": "/topic/:id",
+        "categories": [
+          "finance"
+        ],
+        "view": 0,
+        "example": "/jin10/topic/100",
+        "parameters": {
+          "id": "主题 id，来自 xnews.jin10.com/topic/:id"
+        },
+        "features": {
+          "requireConfig": false,
+          "requirePuppeteer": false,
+          "antiCrawler": false,
+          "supportBT": false,
+          "supportPodcast": false,
+          "supportScihub": false
+        },
+        "radar": [
+          {
+            "source": [
+              "xnews.jin10.com/topic/:id"
+            ]
+          }
+        ],
+        "name": "主题文章",
+        "maintainers": [
+          "miles170"
+        ],
+        "url": "jin10.com/",
+        "location": "topic.ts",
+        "module": () => import('@/routes/jin10/topic.ts')
+      },
+      "/flash/:channel?": {
+        "path": "/flash/:channel?",
+        "categories": [
+          "finance"
+        ],
+        "view": 5,
+        "example": "/jin10/flash",
+        "cacheTtl": 1,
+        "parameters": {
+          "channel": "频道，留空或 `all` 为全部快讯，`us` / `1` 为美股，`hk` / `2` 为港股"
+        },
+        "features": {
+          "requireConfig": false,
+          "requirePuppeteer": false,
+          "antiCrawler": false,
+          "supportBT": false,
+          "supportPodcast": false,
+          "supportScihub": false
+        },
+        "radar": [
+          {
+            "source": [
+              "ushknews.com/"
+            ],
+            "target": "/flash/:channel?"
+          }
+        ],
+        "name": "美港电讯",
+        "maintainers": [
+          "laampui",
+          "luck"
+        ],
+        "description": "`/jin10/flash` 是 `/ushknews` 的别名，数据来自 ushknews.com，请优先使用 `/ushknews`。\n\n金十美港电讯（`ushknews.com`）实时快讯。站点页签为「全部快讯 / 美股 / 港股」，条目含文字快讯和数据卡（财报 EPS、经济数据）。重要条目会在 `category` 中带 `重要`，可用 `filter_category` 筛选。没有金十官网的 `火` / `热` / `沸` / `爆` 热度。\n\n| 频道     | channel |\n| -------- | ------- |\n| 全部快讯 | 空 /all |\n| 美股     | us / 1  |\n| 港股     | hk / 2  |\n\n示例：`/ushknews`、`/ushknews/us`、`/ushknews/flash/hk`、`/ushknews/1`。",
+        "location": "flash.ts",
+        "module": () => import('@/routes/jin10/flash.ts')
+      }
+    },
+    "apiRoutes": {},
+    "name": "金十数据",
+    "url": "jin10.com",
     "lang": "zh-CN"
   },
   "jiuyangongshe": {

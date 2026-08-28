@@ -1078,21 +1078,6 @@
   "/inspirehep/authors/:id": [
     "TonyRL"
   ],
-  "/jin10/category/:id": [
-    "laampui"
-  ],
-  "/jin10/flash/:channel?": [
-    "laampui"
-  ],
-  "/jin10/new/:channel?/:important?": [
-    "laampui"
-  ],
-  "/jin10/:important?": [
-    "laampui"
-  ],
-  "/jin10/topic/:id": [
-    "miles170"
-  ],
   "/jingzhengu/news": [
     "TonyRL"
   ],
@@ -1234,6 +1219,15 @@
   ],
   "/trakt/collection/:username": [
     "hoilc"
+  ],
+  "/ushknews/calendar": [
+    "luck"
+  ],
+  "/ushknews/flash/:channel?": [
+    "luck"
+  ],
+  "/ushknews/:channel?": [
+    "luck"
   ],
   "/vgnlab/": [
     "wyangx"
@@ -1465,6 +1459,22 @@
   ],
   "/jd/price/:id": [
     "nczitzk"
+  ],
+  "/jin10/category/:id": [
+    "laampui"
+  ],
+  "/jin10/new/:channel?/:important?": [
+    "laampui"
+  ],
+  "/jin10/:important?": [
+    "laampui"
+  ],
+  "/jin10/topic/:id": [
+    "miles170"
+  ],
+  "/jin10/flash/:channel?": [
+    "laampui",
+    "luck"
   ],
   "/jiuyangongshe/community": [
     "TonyRL"

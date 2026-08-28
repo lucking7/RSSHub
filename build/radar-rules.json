@@ -3934,59 +3934,6 @@
       }
     ]
   },
-  "jin10.com": {
-    "_name": "金十数据",
-    ".": [
-      {
-        "title": "分类快讯",
-        "docs": "https://docs.rsshub.app/routes/finance",
-        "source": [
-          "/"
-        ],
-        "target": "/jin10/category/:id"
-      },
-      {
-        "title": "实时快讯",
-        "docs": "https://docs.rsshub.app/routes/finance",
-        "source": [
-          "/"
-        ],
-        "target": "/jin10/new/:channel?/:important?"
-      },
-      {
-        "title": "实时快讯",
-        "docs": "https://docs.rsshub.app/routes/finance",
-        "source": [
-          "/"
-        ],
-        "target": "/jin10/:important?"
-      }
-    ],
-    "xnews": [
-      {
-        "title": "主题文章",
-        "docs": "https://docs.rsshub.app/routes/finance",
-        "source": [
-          "/topic/:id"
-        ],
-        "target": "/jin10/topic/:id"
-      }
-    ]
-  },
-  "ushknews.com": {
-    "_name": "金十数据",
-    ".": [
-      {
-        "title": "快讯 - 美港电讯",
-        "docs": "https://docs.rsshub.app/routes/finance",
-        "source": [
-          "/",
-          "/"
-        ],
-        "target": "/jin10/flash/:channel?"
-      }
-    ]
-  },
   "jingzhengu.com": {
     "_name": "精真估",
     "www": [
@@ -4474,6 +4421,43 @@
           "/profile/:username"
         ],
         "target": "/trakt/collection/:username"
+      }
+    ]
+  },
+  "ushknews.com": {
+    "_name": "美港电讯",
+    ".": [
+      {
+        "title": "财经日历",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/"
+        ],
+        "target": "/ushknews/calendar"
+      },
+      {
+        "title": "快讯",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/"
+        ],
+        "target": "/ushknews/flash"
+      },
+      {
+        "title": "快讯",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/"
+        ],
+        "target": "/ushknews/flash"
+      },
+      {
+        "title": "美港电讯",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/"
+        ],
+        "target": "/jin10/flash/:channel?"
       }
     ]
   },
@@ -5099,6 +5083,45 @@
           "/category/:category"
         ],
         "target": "/i-cable/news/:category"
+      }
+    ]
+  },
+  "jin10.com": {
+    "_name": "金十数据",
+    ".": [
+      {
+        "title": "分类快讯",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/"
+        ],
+        "target": "/jin10/category/:id"
+      },
+      {
+        "title": "实时快讯",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/"
+        ],
+        "target": "/jin10/new/:channel?/:important?"
+      },
+      {
+        "title": "实时快讯",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/"
+        ],
+        "target": "/jin10/:important?"
+      }
+    ],
+    "xnews": [
+      {
+        "title": "主题文章",
+        "docs": "https://docs.rsshub.app/routes/finance",
+        "source": [
+          "/topic/:id"
+        ],
+        "target": "/jin10/topic/:id"
       }
     ]
   },
