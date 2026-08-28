@@ -5,7 +5,7 @@ import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
 import { applySourceImportance } from '../_finance/source-importance';
-import { API_BASE, API_HEADERS, cleanText, fetchOfficialRssItems, getNewsId } from './utils';
+import { API_BASE, API_HEADERS, cleanText, fetchOfficialRssItems, FLASH_GUID_PREFIX, getFlashMergeKey, getNewsId, officialNewsLink } from './utils';
 
 // `news/channels/stock_flash` is the reverse-chronological feed behind the official
 // 7x24 live page. The older `content/stock_flash/posts` endpoint is an editorially
@@ -27,7 +27,7 @@ const MARKET_MAP: Record<string, { name: string; param?: string; filterCodes?: s
 const BASE_URL = 'https://longbridge.com/zh-CN/news/live';
 const OFFICIAL_LIVE_FEED_URL = 'https://longbridge.com/zh-CN/news/live/feed';
 const LONG_BRIDGE_NEWS_CACHE_TTL = 1;
-const LONG_BRIDGE_FLASH_CACHE_KEY_VERSION = 'v10';
+const LONG_BRIDGE_FLASH_CACHE_KEY_VERSION = 'v11';
 
 export const route: Route = {
     path: '/flash/:market?',
@@ -80,21 +80,20 @@ function getItemTime(item: DataItem): number {
 }
 
 function buildItem(item): DataItem | undefined {
-    const apiId = String(item.id || '');
-    const link = cleanText(item.url) || (apiId ? `https://m.lbctrl.com/news/post/${apiId}` : '');
-    const id = getNewsId(link) || apiId;
+    const id = getNewsId(item.url, item.id);
     const title = cleanText(item.title) || cleanText(item.description);
     const publishedAt = Number(item.publish_at);
     if (!id || !title || !Number.isFinite(publishedAt)) {
         return undefined;
     }
+    const link = officialNewsLink(id) || cleanText(item.url) || `https://m.lbctrl.com/news/post/${id}`;
     return applySourceImportance(
         {
             title,
             description: item.description || title,
             link,
             pubDate: parseDate(publishedAt * 1000),
-            guid: `longbridge-flash-${id}`,
+            guid: `${FLASH_GUID_PREFIX}${id}`,
             author: item.post_source?.name || '长桥快讯',
             ...(item.image && { image: item.image }),
             ...(item.markets?.length && { category: item.markets }),
@@ -116,7 +115,7 @@ function mergeItems(items: DataItem[]): DataItem[] {
     return items
         .toSorted((a, b) => getItemTime(b) - getItemTime(a))
         .filter((item) => {
-            const key = item.guid || item.link;
+            const key = getFlashMergeKey(item);
             if (!key || seen.has(key)) {
                 return false;
             }
@@ -155,7 +154,7 @@ async function fetchFlashItems(marketConfig: (typeof MARKET_MAP)[string]): Promi
 async function fetchOfficialLiveItems(): Promise<DataItem[]> {
     try {
         return await fetchOfficialRssItems(OFFICIAL_LIVE_FEED_URL, {
-            guidPrefix: 'longbridge-flash-',
+            guidPrefix: FLASH_GUID_PREFIX,
             author: '长桥快讯',
             requireNewsId: true,
             requirePubDate: true,

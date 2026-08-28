@@ -31,7 +31,28 @@ export const parseRssDate = (value?: string): Date | undefined => {
     return Number.isNaN(date.getTime()) ? undefined : date;
 };
 
-export const getNewsId = (link?: string): string | undefined => cleanText(link).match(/\/news\/(?:post\/)?(\d+)(?:[/?#]|$)/)?.[1];
+const NEWS_ID_RE = /\/news\/(?:post\/)?(\d+)(?:[/?#]|$)/;
+export const FLASH_GUID_PREFIX = 'longbridge-flash-';
+const OFFICIAL_NEWS_LINK_PREFIX = 'https://longbridge.com/zh-CN/news/';
+
+export const getNewsId = (link?: string, fallbackId?: string | number): string | undefined => {
+    const fromUrl = cleanText(link).match(NEWS_ID_RE)?.[1];
+    if (fromUrl) {
+        return fromUrl;
+    }
+    const fallback = cleanText(fallbackId === undefined ? '' : String(fallbackId));
+    return fallback || undefined;
+};
+
+export const officialNewsLink = (id: string): string | undefined => (/^\d+$/.test(id) ? `${OFFICIAL_NEWS_LINK_PREFIX}${id}` : undefined);
+
+export const getFlashMergeKey = (item: Pick<DataItem, 'guid' | 'link'>): string | undefined => {
+    const link = typeof item.link === 'string' ? item.link : undefined;
+    const guid = typeof item.guid === 'string' ? item.guid : undefined;
+    const guidId = guid?.startsWith(FLASH_GUID_PREFIX) ? guid.slice(FLASH_GUID_PREFIX.length) : undefined;
+    const id = getNewsId(link, guidId) || getNewsId(guid);
+    return id ? `${FLASH_GUID_PREFIX}${id}` : guid || link;
+};
 
 export type OfficialRssItemOptions = {
     guidPrefix: string;
@@ -59,7 +80,7 @@ export const buildOfficialRssItem = (item, options: OfficialRssItemOptions): Dat
     return {
         title,
         description: description || title,
-        link,
+        link: (newsId && officialNewsLink(newsId)) || link,
         guid: `${options.guidPrefix}${newsId || link}`,
         author: options.author,
         ...(pubDate && { pubDate }),
