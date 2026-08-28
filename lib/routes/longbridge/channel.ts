@@ -65,15 +65,20 @@ export const route: Route = {
     cacheTtl: LONG_BRIDGE_NEWS_CACHE_TTL,
 };
 
-async function handler(ctx) {
-    const slug = ctx.req.param('slug') || DEFAULT_CHANNEL;
+export function resolveChannel(slug: string): ChannelConfig {
+    if (RETIRED_CHANNEL_SLUGS.has(slug)) {
+        throw new InvalidParameterError(`Retired Longbridge channel: ${slug}. mp-lb-daily and dolphin are no longer supported. Use /longbridge/channel/news or /longbridge/flash.`);
+    }
     const channel = CHANNELS[slug];
     if (!channel) {
-        if (RETIRED_CHANNEL_SLUGS.has(slug)) {
-            throw new InvalidParameterError(`Longbridge channel "${slug}" is retired. Use /longbridge/channel/news or /longbridge/flash.`);
-        }
         throw new InvalidParameterError(`Unsupported Longbridge channel: ${slug}. Valid: news, live.`);
     }
+    return channel;
+}
+
+async function handler(ctx) {
+    const slug = ctx.req.param('slug') || DEFAULT_CHANNEL;
+    const channel = resolveChannel(slug);
 
     const items = await cache.tryGet(
         `longbridge:channel:v2:${slug}`,
