@@ -11,7 +11,7 @@ export const route: Route = {
     categories: ['finance'],
     view: ViewType.Articles,
     example: '/jin10/topic/100',
-    parameters: { id: 'N' },
+    parameters: { id: '主题 id，来自 xnews.jin10.com/topic/:id' },
     features: {
         requireConfig: false,
         requirePuppeteer: false,

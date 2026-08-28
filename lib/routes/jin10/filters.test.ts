@@ -116,7 +116,7 @@ describe('isJin10PromotionalItem', () => {
 });
 
 describe('isJin10AdFeedItem', () => {
-    test('should filter feed items with empty title', () => {
+    test('should filter feed items with whitespace-only title after stripHtml', () => {
         expect(
             isJin10AdFeedItem({
                 title: ' ',
