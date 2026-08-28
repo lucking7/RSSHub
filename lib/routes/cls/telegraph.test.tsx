@@ -279,7 +279,7 @@ describe('/cls/telegraph', () => {
         expect(route.path).toEqual(['/telegraph/:category?', '/dianbao/:category?']);
     });
 
-    it('prefers bracketed title, renders B-level banner, announcement link, and stock cards', async () => {
+    it('keeps 「关注」 out of description while using bracketed title, announcement link, and stock cards', async () => {
         mockedOfetch.mockResolvedValue({
             data: {
                 roll_data: [

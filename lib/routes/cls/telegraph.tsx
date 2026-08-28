@@ -76,7 +76,7 @@ export const route: Route = {
     handler,
     url: 'cls.cn/telegraph',
     cacheTtl: CLS_TELEGRAPH_CACHE_TTL,
-    description: `\`/cls/dianbao/:category?\` 是本路由的别名，与 \`/cls/telegraph\` 共用同一 handler，默认返回 50 条（此前独立 \`dianbao\` 路由默认为 20 条）。可通过 RSSHub 通用参数 \`limit\` 调整条数，例如 \`/cls/dianbao?limit=20\`。
+    description: `\`/cls/dianbao/:category?\` 是本路由的别名，与 \`/cls/telegraph\` 共用同一 handler，默认返回 50 条。可通过 RSSHub 通用参数 \`limit\` 调整条数，例如 \`/cls/dianbao?limit=20\`。
 
 | 看盘  | 公司         | 解读    | 加红 | 推送  | 提醒   | 基金 | 港股 | 港美股 |
 | ----- | ------------ | ------- | ---- | ----- | ------ | ---- | ---- | ------ |
@@ -130,6 +130,7 @@ async function handler(ctx: Context): Promise<Data> {
                 StockID: stock.StockID ? stock.StockID.toUpperCase() : stock.StockID,
             }));
 
+            // StockID prefix 801 is a CLS sector, not a listed stock.
             const sectors = processedStockList.filter((s: any) => s.StockID?.startsWith('801')).map((s: any) => toStockItem(s));
             const stocks = processedStockList.filter((s: any) => !s.StockID?.startsWith('801')).map((s: any) => toStockItem(s));
 

@@ -129,6 +129,7 @@ const cleanAndFilter = (items: any[]) => {
         if (Number(item.is_ad) === 1 || Number(item.is_fad) === 1 || item.is_ad === true || item.is_fad === true) {
             return false;
         }
+        // Plain 直播 (live) news must not be dropped; only promotional copy that pairs 直播 with CTA markers.
         if (isPromotionalContent(item.content || '')) {
             return false;
         }
