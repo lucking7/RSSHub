@@ -1,6 +1,6 @@
 export type Jin10FeedItem = {
-    title?: string;
-    description?: string;
+    title?: string | null;
+    description?: string | null;
 };
 
 export type Jin10RawItem = {
@@ -11,6 +11,7 @@ export type Jin10RawItem = {
     summary?: string;
     important?: number;
     tags?: unknown[];
+    hot?: string;
     channel?: number[];
     remark?: Array<{
         id?: number;
@@ -42,20 +43,20 @@ export type Jin10RawItem = {
     };
 };
 
-const stripHtml = (value?: string) =>
+const stripHtml = (value?: string | null) =>
     value
         ?.replaceAll(/<[^>]*>/g, ' ')
         .replaceAll(/&nbsp;|&#160;/gi, ' ')
         .replaceAll(/\s+/g, ' ')
         .trim() ?? '';
 
-const hasTextContent = (value?: string) => stripHtml(value).length > 0;
+const hasTextContent = (value?: string | null) => stripHtml(value).length > 0;
 
-const isPureImageContent = (value?: string) => /<img\b/i.test(value ?? '') && !hasTextContent(value);
+const isPureImageContent = (value?: string | null) => /<img\b/i.test(value ?? '') && !hasTextContent(value);
 
 const getRawTitle = (item: Jin10RawItem) => {
     const content = item.data?.content;
-    const titleMatch = content?.match(/^【([^】]+)】/s);
+    const titleMatch = content?.match(/^【([^】]+)】/);
 
     return titleMatch?.[1] ?? item.data?.title ?? item.data?.vip_title ?? item.title ?? content ?? '';
 };

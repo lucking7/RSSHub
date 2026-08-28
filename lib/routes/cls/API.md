@@ -281,10 +281,11 @@ GET https://www.cls.cn/v2/web/ad
 | 路由文件        | 使用的 API                          |
 | --------------- | ----------------------------------- |
 | `telegraph.tsx` | `api3.cls.cn/v1/roll/get_roll_list` |
-| `dianbao.ts`    | `api3.cls.cn/v1/roll/get_roll_list` |
 | `hot.ts`        | `v2/article/hot/list`               |
 | `subject.ts`    | `api/subject/:id/article`           |
 | `depth.ts`      | 深度文章相关                        |
+
+`/cls/dianbao` 是 `telegraph.tsx` 上的别名路径（`path: ['/telegraph/:category?', '/dianbao/:category?']`），不再有独立的 `dianbao.ts`。
 
 ## 其他发现的 API（需进一步探索）
 

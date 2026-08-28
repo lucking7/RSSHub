@@ -5,21 +5,16 @@ import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
 import { applySourceImportance } from '../_finance/source-importance';
-import { API_BASE, API_HEADERS } from './utils';
+import { API_BASE, API_HEADERS, cleanText, fetchOfficialRssItems, getNewsId } from './utils';
 
-// The official 7x24 live page (longbridge.com/zh-CN/news/live) is backed by the
-// reverse-chronological `news/channels/stock_flash` endpoint, NOT the editorially
-// ranked `content/stock_flash/posts` one. The latter returns a heat/editor ranked
-// slice whose newest item can lag the real feed by well over an hour, which is why
-// the flash route updated late. `channels` returns `no-store` realtime data,
-// strictly ordered by `publish_at`, and shares the m.lbkrs.com host that already
-// works in production.
+// `news/channels/stock_flash` is the reverse-chronological feed behind the official
+// 7x24 live page. The older `content/stock_flash/posts` endpoint is an editorially
+// ranked slice whose newest item can lag the real feed by over an hour.
 const FLASH_CHANNEL_SLUG = 'stock_flash';
 const UPSTREAM_SIZE = 50;
 
-// `channels` only segments markets by `US` / `CN` (and "all" when the param is
-// omitted). The HK / composite markets the route historically exposed have no
-// native filter, so they are derived client-side from the unfiltered realtime feed
+// `channels` only segments markets natively by `US` / `CN`. HK and composite markets
+// have no upstream filter, so they are derived client-side from the unfiltered feed
 // via each item's exchange `markets` codes.
 const MARKET_MAP: Record<string, { name: string; param?: string; filterCodes?: string[] }> = {
     all: { name: '全部' },
@@ -30,22 +25,9 @@ const MARKET_MAP: Record<string, { name: string; param?: string; filterCodes?: s
 };
 
 const BASE_URL = 'https://longbridge.com/zh-CN/news/live';
+const OFFICIAL_LIVE_FEED_URL = 'https://longbridge.com/zh-CN/news/live/feed';
 const LONG_BRIDGE_NEWS_CACHE_TTL = 1;
-const LONG_BRIDGE_FLASH_CACHE_KEY_VERSION = 'v8';
-
-type ChannelFlashItem = {
-    id?: string | number;
-    title?: string;
-    description?: string;
-    url?: string;
-    publish_at?: string | number;
-    image?: string;
-    markets?: string[];
-    post_source?: {
-        name?: string;
-    };
-    important?: boolean;
-};
+const LONG_BRIDGE_FLASH_CACHE_KEY_VERSION = 'v10';
 
 export const route: Route = {
     path: '/flash/:market?',
@@ -59,7 +41,7 @@ export const route: Route = {
             .map(([k, v]) => `\`${k}\`（${v.name}）`)
             .join('、')}`,
     },
-    description: '长桥金融快讯（7x24 实时快讯），按发布时间倒序',
+    description: '长桥金融快讯（7x24 实时快讯）。主源为实时频道 API；默认 `all` 会补充官方 live RSS 中未出现在实时频道 API 的条目；市场筛选仅使用实时频道 API。按发布时间倒序。',
     categories: ['finance'],
     features: {
         requireConfig: false,
@@ -85,7 +67,7 @@ export const route: Route = {
 
 function normalizeMarket(raw?: string): string {
     const key = (raw || 'all').toLowerCase();
-    return MARKET_MAP[key] ? key : 'all';
+    return Object.hasOwn(MARKET_MAP, key) ? key : 'all';
 }
 
 function getItemTime(item: DataItem): number {
@@ -97,23 +79,25 @@ function getItemTime(item: DataItem): number {
     return Number.isNaN(time) ? 0 : time;
 }
 
-function buildItem(item: ChannelFlashItem): DataItem | undefined {
-    const id = String(item.id || '');
-    const title = (item.title || '').trim() || (item.description || '').trim();
-    const publishedAt = Number.parseInt(String(item.publish_at ?? ''), 10);
-    if (!id || !title || Number.isNaN(publishedAt)) {
+function buildItem(item): DataItem | undefined {
+    const apiId = String(item.id || '');
+    const link = cleanText(item.url) || (apiId ? `https://m.lbctrl.com/news/post/${apiId}` : '');
+    const id = getNewsId(link) || apiId;
+    const title = cleanText(item.title) || cleanText(item.description);
+    const publishedAt = Number(item.publish_at);
+    if (!id || !title || !Number.isFinite(publishedAt)) {
         return undefined;
     }
     return applySourceImportance(
         {
             title,
             description: item.description || title,
-            link: item.url || `https://m.lbctrl.com/news/post/${id}`,
+            link,
             pubDate: parseDate(publishedAt * 1000),
             guid: `longbridge-flash-${id}`,
             author: item.post_source?.name || '长桥快讯',
-            ...(item.image ? { image: item.image } : {}),
-            ...(item.markets?.length ? { category: item.markets } : {}),
+            ...(item.image && { image: item.image }),
+            ...(item.markets?.length && { category: item.markets }),
         },
         [
             {
@@ -159,7 +143,7 @@ async function fetchFlashItems(marketConfig: (typeof MARKET_MAP)[string]): Promi
         throw new Error(`Longbridge flash API error ${data?.code}: ${data?.message}`);
     }
 
-    let newsList: ChannelFlashItem[] = data.data?.news_list ?? [];
+    let newsList = data.data?.news_list ?? [];
     if (marketConfig.filterCodes) {
         const codes = new Set(marketConfig.filterCodes);
         newsList = newsList.filter((item) => (item.markets ?? []).some((code) => codes.has(code)));
@@ -168,11 +152,32 @@ async function fetchFlashItems(marketConfig: (typeof MARKET_MAP)[string]): Promi
     return newsList.map((item) => buildItem(item)).filter((item): item is DataItem => !!item);
 }
 
+async function fetchOfficialLiveItems(): Promise<DataItem[]> {
+    try {
+        return await fetchOfficialRssItems(OFFICIAL_LIVE_FEED_URL, {
+            guidPrefix: 'longbridge-flash-',
+            author: '长桥快讯',
+            requireNewsId: true,
+            requirePubDate: true,
+        });
+    } catch {
+        return [];
+    }
+}
+
 async function handler(ctx) {
     const marketKey = normalizeMarket(ctx.req.param('market'));
     const marketConfig = MARKET_MAP[marketKey];
 
-    const list = await cache.tryGet(`longbridge:flash:${LONG_BRIDGE_FLASH_CACHE_KEY_VERSION}:${marketKey}`, async () => mergeItems(await fetchFlashItems(marketConfig)), LONG_BRIDGE_NEWS_CACHE_TTL, false);
+    const list = await cache.tryGet(
+        `longbridge:flash:${LONG_BRIDGE_FLASH_CACHE_KEY_VERSION}:${marketKey}`,
+        async () => {
+            const [flashItems, officialLiveItems] = await Promise.all([fetchFlashItems(marketConfig), marketKey === 'all' ? fetchOfficialLiveItems() : Promise.resolve([])]);
+            return mergeItems([...flashItems, ...officialLiveItems]);
+        },
+        LONG_BRIDGE_NEWS_CACHE_TTL,
+        false
+    );
 
     return {
         title: `长桥 - 金融快讯${marketKey === 'all' ? '' : ` (${marketConfig.name})`}`,

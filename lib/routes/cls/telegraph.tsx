@@ -3,7 +3,7 @@ import { renderToString } from 'hono/jsx/dom/server';
 
 import { config } from '@/config';
 import InvalidParameterError from '@/errors/types/invalid-parameter';
-import type { DataItem, Route } from '@/types';
+import type { Data, DataItem, Route } from '@/types';
 import cache from '@/utils/cache';
 import ofetch from '@/utils/ofetch';
 import { parseDate } from '@/utils/parse-date';
@@ -33,11 +33,6 @@ function renderTelegraphDescription(item: any) {
 
     return renderToString(
         <>
-            {item.level === 'A' ? (
-                <div style="background: #fff1f0; border-left: 3px solid #ff4d4f; padding: 8px 12px; margin-bottom: 10px; border-radius: 3px;">
-                    <strong style="color: #ff4d4f;">【重要】</strong>
-                </div>
-            ) : null}
             {bodyContent ? <p style="font-size: 15px; line-height: 1.8; color: #333; margin: 0 0 10px 0; max-width: 800px;">{bodyContent}</p> : null}
             {item.images?.length ? (
                 <>
@@ -46,12 +41,19 @@ function renderTelegraphDescription(item: any) {
                     ))}
                 </>
             ) : null}
+            {item.assocArticleUrl ? (
+                <div style="background: #f6ffed; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 15px 0; border-radius: 4px;">
+                    <a href={item.assocArticleUrl} target="_blank" style="color: #1890ff; text-decoration: none;">
+                        点击查看原始公告文档 →
+                    </a>
+                </div>
+            ) : null}
         </>
     );
 }
 
 export const route: Route = {
-    path: '/telegraph/:category?',
+    path: ['/telegraph/:category?', '/dianbao/:category?'],
     categories: ['finance'],
     example: '/cls/telegraph',
     parameters: { category: '分类，见下表，默认为全部' },
@@ -74,12 +76,14 @@ export const route: Route = {
     handler,
     url: 'cls.cn/telegraph',
     cacheTtl: CLS_TELEGRAPH_CACHE_TTL,
-    description: `| 看盘  | 公司         | 解读    | 加红 | 推送  | 提醒   | 基金 | 港股 | 港美股 |
+    description: `\`/cls/dianbao/:category?\` 是本路由的别名，与 \`/cls/telegraph\` 共用同一 handler，默认返回 50 条（此前独立 \`dianbao\` 路由默认为 20 条）。可通过 RSSHub 通用参数 \`limit\` 调整条数，例如 \`/cls/dianbao?limit=20\`。
+
+| 看盘  | 公司         | 解读    | 加红 | 推送  | 提醒   | 基金 | 港股 | 港美股 |
 | ----- | ------------ | ------- | ---- | ----- | ------ | ---- | ---- | ------ |
 | watch | announcement | explain | red  | jpush | remind | fund | hk   | hk\\_us |`,
 };
 
-async function handler(ctx: Context) {
+async function handler(ctx: Context): Promise<Data> {
     const category = ctx.req.param('category') ?? '';
     if (category && !Object.hasOwn(categories, category)) {
         throw new InvalidParameterError(`Invalid category: "${category}". Supported categories are: ${Object.keys(categories).join(', ')}.`);
@@ -90,7 +94,7 @@ async function handler(ctx: Context) {
     const currentUrl = `${rootUrl}/telegraph`;
 
     const rawData = await cache.tryGet(
-        `cls:telegraph:${category}`,
+        `cls:telegraph:${category || 'all'}`,
         async () => {
             const response = await ofetch(apiUrl, {
                 query: getSearchParams({
@@ -136,11 +140,7 @@ async function handler(ctx: Context) {
             const title = item.title || titleFromContent || item.brief || item.content;
 
             let description = renderTelegraphDescription(item);
-
-            const stockCards = renderSectorAndStockCards(sectors, stocks);
-            if (stockCards) {
-                description += stockCards;
-            }
+            description += renderSectorAndStockCards(sectors, stocks);
 
             const rssItem: DataItem = applySourceImportance(
                 {
@@ -160,6 +160,7 @@ async function handler(ctx: Context) {
     return {
         title: `财联社 - 电报${category ? ` - ${categories[category]}` : ''}`,
         link: currentUrl,
+        language: 'zh-CN',
         item: items,
     };
 }

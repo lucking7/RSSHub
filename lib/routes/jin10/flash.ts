@@ -7,6 +7,7 @@ import timezone from '@/utils/timezone';
 
 import { applySourceImportance } from '../_finance/source-importance';
 import { isJin10AdFeedItem, isJin10PromotionalItem, type Jin10RawItem } from './filters';
+import { attachJin10HotLabels, withJin10HotCategory } from './hot';
 import { buildFlashDescription, buildFlashLink, CHANNEL_MAP, collectFlashImages, getImageMimeType } from './utils';
 
 const JIN10_FLASH_CACHE_TTL = 1;
@@ -60,7 +61,8 @@ export const route: Route = {
 
 const extractRemarkTags = (remark: Jin10RawItem['remark']): string[] => {
     const tags: string[] = [];
-    for (const r of remark ?? []) {
+    const remarks = remark ?? [];
+    for (const r of remarks) {
         if (r.category_name) {
             tags.push(r.category_name);
         }
@@ -91,7 +93,7 @@ async function handler(ctx) {
                     'Client-IP': '116.228.111.18',
                 },
             });
-            return response.data ?? [];
+            return attachJin10HotLabels(response.data ?? []);
         },
         JIN10_FLASH_CACHE_TTL,
         false
@@ -117,13 +119,12 @@ async function handler(ctx) {
 
             const isImportant = item.important === 1;
             const channels = (item.channel ?? []).map((ch) => CHANNEL_MAP[ch]).filter(Boolean);
-            const category = [...new Set([...channels, ...extractRemarkTags(item.remark)])];
+            const category = withJin10HotCategory([...new Set([...channels, ...extractRemarkTags(item.remark)])], item.hot);
             const images = collectFlashImages(item);
 
             const description = buildFlashDescription({
                 baseTitle,
                 body,
-                isImportant,
                 source: item.data?.source,
                 sourceLink: item.data?.source_link,
                 images,
@@ -135,7 +136,7 @@ async function handler(ctx) {
                     title: baseTitle,
                     description,
                     link: buildFlashLink(item),
-                    pubDate: timezone(parseDate(item.time!), +8),
+                    pubDate: timezone(parseDate(item.time!), 8),
                     category,
                     guid: `jin10:flash:${item.id}`,
                     author: item.data?.source || '金十数据',

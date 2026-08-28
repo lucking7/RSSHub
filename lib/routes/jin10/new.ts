@@ -7,6 +7,7 @@ import timezone from '@/utils/timezone';
 
 import { applySourceImportance } from '../_finance/source-importance';
 import { isJin10AdFeedItem, isJin10PromotionalItem, type Jin10RawItem } from './filters';
+import { attachJin10HotLabels, withJin10HotCategory } from './hot';
 import { buildFlashDescription, buildFlashLink, CHANNEL_MAP, collectFlashImages } from './utils';
 
 export const route: Route = {
@@ -38,7 +39,9 @@ export const route: Route = {
 
 - \`/jin10/new\` - 所有快讯
 - \`/jin10/new/3\` - 全球市场快讯
-- \`/jin10/new/4/1\` - A 股重要快讯`,
+- \`/jin10/new/4/1\` - A 股重要快讯
+
+热门快讯会在 \`category\` 中带上 \`火\` / \`热\` / \`沸\` / \`爆\`。可用 RSSHub 通用参数 \`filter_category\` 筛选。`,
     features: {
         requireConfig: false,
         requirePuppeteer: false,
@@ -101,7 +104,7 @@ async function handler(ctx): Promise<Data> {
                     t: Date.now(),
                 },
             });
-            return parseFlashData(response);
+            return attachJin10HotLabels(parseFlashData(response));
         },
         1,
         false
@@ -137,12 +140,11 @@ async function handler(ctx): Promise<Data> {
 
             const isImportant = item.important === 1;
             const channels = (item.channel ?? []).map((ch) => CHANNEL_MAP[ch]).filter(Boolean);
-            const category = [...new Set([...channels, ...extractRemarkTags(item.remark)])];
+            const category = withJin10HotCategory([...new Set([...channels, ...extractRemarkTags(item.remark)])], item.hot);
 
             const description = buildFlashDescription({
                 baseTitle,
                 body,
-                isImportant,
                 source: item.data?.source,
                 sourceLink: item.data?.source_link,
                 images: collectFlashImages(item),

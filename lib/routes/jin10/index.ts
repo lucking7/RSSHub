@@ -2,12 +2,11 @@ import type { Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
-import { parseDate } from '@/utils/parse-date';
-import timezone from '@/utils/timezone';
 
 import { applySourceImportance } from '../_finance/source-importance';
 import { isJin10AdFeedItem, isJin10PromotionalItem } from './filters';
-import { renderDescription } from './templates/description';
+import { attachJin10HotLabels } from './hot';
+import { mapClassicJin10FlashItem } from './utils';
 
 export const route: Route = {
     path: '/:important?',
@@ -51,7 +50,7 @@ async function handler(ctx) {
                     vip: '1',
                 },
             });
-            return response.data.filter((item) => !isJin10PromotionalItem(item));
+            return attachJin10HotLabels(response.data.filter((item) => !isJin10PromotionalItem(item)));
         },
         1,
         false
@@ -60,25 +59,12 @@ async function handler(ctx) {
     const filteredData = important ? data.filter((item) => item.important === 1) : data;
 
     const item = filteredData
-        .map((item) => {
-            const titleMatch = item.data.content.match(/^【([^】]+)】/s);
-            let title;
-            let content = item.data.content;
-            if (titleMatch) {
-                title = titleMatch[1];
-                content = content.replace(titleMatch[0], '');
-            } else {
-                title = item.data.vip_title || item.data.content;
-            }
-
-            return applySourceImportance(
-                {
-                    title,
-                    description: renderDescription(content, item.data.pic),
-                    pubDate: timezone(parseDate(item.time), 8),
-                    link: item.data.link,
-                    guid: `jin10:index:${item.id}`,
-                },
+        .map((item) =>
+            applySourceImportance(
+                mapClassicJin10FlashItem(item, {
+                    guidPrefix: 'jin10:index:',
+                    link: item.data?.link,
+                }),
                 [
                     {
                         source: 'jin10',
@@ -88,8 +74,8 @@ async function handler(ctx) {
                         normalized: item.important === 1 ? 'important' : 'normal',
                     },
                 ]
-            );
-        })
+            )
+        )
         .filter((item) => !isJin10AdFeedItem(item));
 
     return {

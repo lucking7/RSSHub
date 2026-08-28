@@ -2,10 +2,9 @@ import type { Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
-import { parseDate } from '@/utils/parse-date';
-import timezone from '@/utils/timezone';
 
-import { renderDescription } from './templates/description';
+import { attachJin10HotLabels } from './hot';
+import { FLASH_DETAIL_PREFIX, mapClassicJin10FlashItem } from './utils';
 
 export const route: Route = {
     path: '/category/:id',
@@ -183,31 +182,18 @@ async function handler(ctx) {
                     classify: `[${id}]`,
                 },
             });
-            return response.data.filter((item) => item.type !== 1);
+            return attachJin10HotLabels(response.data.filter((item) => item.type !== 1));
         },
         1,
         false
     );
 
-    const item = data.map((item) => {
-        const titleMatch = item.data.content.match(/^【(.*?)】/);
-        let title;
-        let content = item.data.content;
-        if (titleMatch) {
-            title = titleMatch[1];
-            content = content.replace(titleMatch[0], '');
-        } else {
-            title = item.data.vip_title || item.data.content;
-        }
-
-        return {
-            title,
-            description: renderDescription(content, item.data.pic),
-            pubDate: timezone(parseDate(item.time), 8),
-            link: `https://flash.jin10.com/detail/${item.id}`,
-            guid: `jin10:category:${item.id}`,
-        };
-    });
+    const item = data.map((item) =>
+        mapClassicJin10FlashItem(item, {
+            guidPrefix: 'jin10:category:',
+            link: item.id ? `${FLASH_DETAIL_PREFIX}/${item.id}` : undefined,
+        })
+    );
 
     return {
         title: '金十数据',

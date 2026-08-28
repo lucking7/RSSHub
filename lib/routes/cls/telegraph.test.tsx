@@ -274,4 +274,47 @@ describe('/cls/telegraph', () => {
         expect(result.item.map((i) => i.title)).toContain('正常文章：类型未定义');
         expect(result.item.map((i) => i.title)).toContain('正常文章：类型为null');
     });
+
+    it('exposes dianbao as an alias path', () => {
+        expect(route.path).toEqual(['/telegraph/:category?', '/dianbao/:category?']);
+    });
+
+    it('prefers bracketed title, renders B-level banner, announcement link, and stock cards', async () => {
+        mockedOfetch.mockResolvedValue({
+            data: {
+                roll_data: [
+                    {
+                        id: 401,
+                        type: -1,
+                        title: '',
+                        content: '【四川九洲】上半年净利润同比增长43.79%。',
+                        ctime: 1_778_123_456,
+                        shareurl: 'https://www.cls.cn/detail/401',
+                        level: 'B',
+                        assocArticleUrl: 'https://www.cls.cn/detail/401-ann',
+                        subjects: [],
+                        stock_list: [{ StockID: 'sz000801', name: '四川九洲', RiseRange: 2.5 }],
+                    },
+                ],
+            },
+        } as any);
+
+        const result = asData(
+            await route.handler({
+                req: {
+                    param: () => '',
+                    query: () => {},
+                },
+            } as any)
+        );
+
+        expect(result.item[0].title).toBe('「关注」四川九洲');
+        expect(result.item[0].description).toContain('上半年净利润同比增长43.79%');
+        expect(result.item[0].description).not.toContain('「关注」');
+        expect(result.item[0].description).not.toContain('【四川九洲】');
+        expect(result.item[0].description).toContain('https://www.cls.cn/detail/401-ann');
+        expect(result.item[0].description).toContain('四川九洲');
+        expect(result.item[0].description).toContain('SZ000801');
+        expect(result.item[0].category).toEqual(expect.arrayContaining(['四川九洲', '关注']));
+    });
 });

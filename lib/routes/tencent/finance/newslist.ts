@@ -1,4 +1,4 @@
-import type { Route } from '@/types';
+import type { Data, Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
@@ -9,6 +9,33 @@ import { applySourceImportance } from '../../_finance/source-importance';
 import { renderSectorAndStockCards, type StockItem } from '../../_finance/stock-card';
 
 const NEWSLIST_CACHE_TTL = 1;
+const NEWS_DETAIL_URL = 'https://wzq.tenpay.com/mp/v1/information/detail.shtml';
+
+export function pickLink(item: { id: string | number; url?: string }) {
+    const rawUrl = item.url?.trim();
+
+    if (rawUrl) {
+        if (rawUrl.startsWith('http://')) {
+            return rawUrl.replace(/^http:/, 'https:');
+        }
+
+        if (rawUrl.startsWith('https://')) {
+            return rawUrl;
+        }
+
+        if (rawUrl.startsWith('//')) {
+            return `https:${rawUrl}`;
+        }
+
+        if (rawUrl.startsWith('/')) {
+            return new URL(rawUrl, NEWS_DETAIL_URL).href;
+        }
+    }
+
+    const link = new URL(NEWS_DETAIL_URL);
+    link.searchParams.set('id', String(item.id));
+    return link.href;
+}
 
 export const route: Route = {
     path: '/finance/newslist',
@@ -59,7 +86,7 @@ export const route: Route = {
     cacheTtl: NEWSLIST_CACHE_TTL,
 };
 
-async function handler(ctx) {
+async function handler(ctx): Promise<Data> {
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 10;
 
     const baseUrl = 'https://snp.tenpay.com';
@@ -134,7 +161,8 @@ async function handler(ctx) {
         const newsList = data.data || [];
         collected = newsList.slice(0, Math.min(limit, 10)); // 最多返回10条
     } catch (error) {
-        throw new Error(`Failed to fetch news: ${error.message}`, {
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`Failed to fetch news: ${message}`, {
             cause: error,
         });
     }
@@ -186,7 +214,7 @@ async function handler(ctx) {
     const items = collected.slice(0, limit).map((item) => {
         const content = item.new_content || item.content || '';
         const newsId = item.id;
-        const pubDate = timezone(parseDate(item.publish_time * 1000), +8);
+        const pubDate = timezone(parseDate(item.publish_time * 1000), 8);
 
         // 解析标题（优先使用 new_title，否则提取【】内的内容）
         const title =
@@ -221,7 +249,7 @@ async function handler(ctx) {
                 const si: StockItem = {
                     name: stock.name || stockInfo.name,
                     code: stockCode.toUpperCase(),
-                    change: Number.parseFloat(stockInfo.change) || 0,
+                    change: Number(stockInfo.change) || 0,
                 };
 
                 if (isSector) {
@@ -256,7 +284,7 @@ async function handler(ctx) {
             {
                 title,
                 description,
-                link: item.url || `https://gu.qq.com/news/${newsId}`,
+                link: pickLink(item),
                 guid: `tencent-zxg-${newsId}`,
                 pubDate,
                 category: [...new Set(categories)],

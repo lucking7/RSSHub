@@ -1,4 +1,9 @@
+import type { DataItem } from '@/types';
+import { parseDate } from '@/utils/parse-date';
+import timezone from '@/utils/timezone';
+
 import type { Jin10RawItem } from './filters';
+import { withJin10HotCategory } from './hot';
 
 export const FLASH_DETAIL_PREFIX = 'https://flash.jin10.com/detail';
 
@@ -16,7 +21,8 @@ export const collectFlashImages = (item: Jin10RawItem): string[] => {
     if (item.data?.pic) {
         images.push(item.data.pic);
     }
-    for (const r of item.remark ?? []) {
+    const remarks = item.remark ?? [];
+    for (const r of remarks) {
         if (r.pic) {
             images.push(r.pic);
         }
@@ -38,15 +44,29 @@ export const getImageMimeType = (url: string): string => {
 export type FlashDescriptionInput = {
     baseTitle: string;
     body: string;
-    isImportant: boolean;
     source?: string;
     sourceLink?: string;
     images?: string[];
 };
 
-export const buildFlashDescription = ({ baseTitle, body, isImportant, source, sourceLink, images = [] }: FlashDescriptionInput): string => {
-    const displayTitle = isImportant ? `「重要」${baseTitle}` : baseTitle;
-    const parts = [`<p style="margin: 0 0 10px 0;"><strong><u>${displayTitle}</u></strong></p>`];
+export const splitJin10BracketTitle = (item: Jin10RawItem): { title: string; body: string } => {
+    const content = item.data?.content ?? '';
+    const titleMatch = content.match(/^【([^】]+)】/);
+    if (titleMatch) {
+        return {
+            title: titleMatch[1],
+            body: content.replace(titleMatch[0], ''),
+        };
+    }
+
+    return {
+        title: item.data?.vip_title || content,
+        body: content,
+    };
+};
+
+export const buildFlashDescription = ({ baseTitle, body, source, sourceLink, images = [] }: FlashDescriptionInput): string => {
+    const parts = [`<p style="margin: 0 0 10px 0;"><strong><u>${baseTitle}</u></strong></p>`];
     for (const pic of images) {
         parts.push(`<p style="margin: 0 0 10px 0;"><img src="${pic}" alt="配图" style="max-width: 100%; border-radius: 4px;"></p>`);
     }
@@ -57,4 +77,22 @@ export const buildFlashDescription = ({ baseTitle, body, isImportant, source, so
         parts.push(`<p style="margin: 8px 0 0 0; color: #666; font-size: 0.9em;">来源: ${inner}</p>`);
     }
     return parts.join('');
+};
+
+export const mapClassicJin10FlashItem = (item: Jin10RawItem, options: { guidPrefix: string; link?: string }): DataItem => {
+    const { title, body } = splitJin10BracketTitle(item);
+    return {
+        title,
+        description: buildFlashDescription({
+            baseTitle: title,
+            body,
+            source: item.data?.source,
+            sourceLink: item.data?.source_link,
+            images: collectFlashImages(item),
+        }),
+        pubDate: timezone(parseDate(item.time!), 8),
+        link: options.link,
+        guid: `${options.guidPrefix}${item.id}`,
+        category: withJin10HotCategory(undefined, item.hot),
+    };
 };
