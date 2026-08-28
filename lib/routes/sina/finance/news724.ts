@@ -21,6 +21,7 @@ export const route: Route = {
         tag: '分类标签，默认全部，可选：macro（宏观）、stock（股市）、international（国际）、opinion（观点）',
     },
     description: `使用新浪财经 724 移动端接口获取实时财经快讯。
+别名 \`/sina/724/:tag?\` 同样可用。
 
 支持查询参数：
 

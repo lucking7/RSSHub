@@ -370,10 +370,11 @@ interface RouteItem {
 
     /**
      * Route response cache lifetime in seconds.
-     * Ignored unless it is a finite number greater than 0.
-     * The route registry sets a valid value on `ctx` as `routeCacheTtl`.
-     * That value drives the response cache TTL, the HTTP `Cache-Control` header, and the RSS `<ttl>` element (minutes, `trunc(seconds / 60)`, minimum 1).
-     * When unset or ignored, all three fall back to the `CACHE_EXPIRE` env (default 300 seconds).
+     * The route registry copies a truthy `cacheTtl` onto `ctx` as `routeCacheTtl` (no numeric check).
+     * Each consumer then uses it only when it is a finite number greater than 0:
+     * - Response cache TTL (`lib/middleware/cache.ts`): valid `routeCacheTtl`, else `CACHE_EXPIRE` / `config.cache.routeExpire` (default 300s).
+     * - HTTP `Cache-Control` (`lib/middleware/header.ts`): `public, max-age=<value>` only when valid; otherwise the header stays at its default (no `CACHE_EXPIRE` fallback).
+     * - RSS `<ttl>` (`lib/middleware/template.tsx`): minutes = `trunc(effectiveSeconds / 60)`, forced to 1 when that is 0 or when the cache module is unavailable (cache-down always yields `<ttl>` 1).
      */
     cacheTtl?: number;
 }

@@ -148,7 +148,7 @@ async function handler(ctx): Promise<Data> {
         collected = newsList.slice(0, Math.min(limit, 10)); // Upstream caps a response at 10 items.
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        throw new Error(`Failed to fetch Tencent finance newslist: ${message}. Refresh the captured fixedParams.sign`, {
+        throw new Error(`Tencent finance newslist request failed: ${message}`, {
             cause: error,
         });
     }
