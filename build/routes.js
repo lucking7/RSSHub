@@ -13965,7 +13965,7 @@ export default {
         "view": 5,
         "example": "/jin10/flash",
         "parameters": {
-          "channel": "频道，可选；留空=全部快讯，`1`=美股盘前/盘后异动，`2`=港股盘前/盘后异动"
+          "channel": "频道，可选；留空=全部快讯，`1`=美股，`2`=港股"
         },
         "features": {
           "requireConfig": false,
@@ -13988,7 +13988,7 @@ export default {
           "laampui"
         ],
         "cacheTtl": 1,
-        "description": "获取金十数据（美港电讯）的实时财经快讯。\n\n频道（路径参数）：\n\n- 留空 = 全部快讯（综合，更新最快）\n- `1` = 美股盘前 / 盘后异动\n- `2` = 港股盘前 / 盘后异动\n\n查询参数：\n\n- `important_only=1` 仅返回重要快讯\n- `limit=50` 限制返回数量（默认 50 条）\n\n示例：\n\n- `/jin10/flash` - 所有快讯\n- `/jin10/flash/1` - 美股盘前 / 盘后异动\n- `/jin10/flash/2` - 港股盘前 / 盘后异动\n- `/jin10/flash?important_only=1` - 全部快讯中仅重要\n- `/jin10/flash/1?limit=20` - 美港频道前 20 条",
+        "description": "获取金十美港电讯（`ushknews.com`）快讯。站点页签只有「全部快讯 / 美股 / 港股」和「只看重要」，没有金十官网的 `火` / `热` / `沸` / `爆` 热度，也没有外汇 / 期货 / A 股频道。\n\n频道（路径参数）：\n\n- 留空 = 全部快讯\n- `1` = 美股\n- `2` = 港股\n\n查询参数：\n\n- `important_only=1` 仅返回重要快讯（对应站点「只看重要」）\n- `limit=50` 限制返回数量（默认 50 条）\n\n示例：\n\n- `/jin10/flash` - 全部快讯\n- `/jin10/flash/1` - 美股\n- `/jin10/flash/2` - 港股\n- `/jin10/flash?important_only=1` - 全部快讯中仅重要\n- `/jin10/flash/1?limit=20` - 美股前 20 条",
         "location": "flash.ts",
         "module": () => import('@/routes/jin10/flash.ts')
       },
@@ -14007,7 +14007,7 @@ export default {
           "channel": "频道分类，可选值见下表，留空则返回所有频道（支持查询参数）",
           "important": "只看重要快讯：1=只看重要，留空则返回所有（支持查询参数）"
         },
-        "description": "金十数据实时快讯（官网 `flash_newest.js`）。`/jin10` 与 `/jin10/1` 是本路由的别名（`1` = 只看重要）。`/jin10/flash`、`/jin10/category`、`/jin10/topic` 走不同接口，不在本路由合并。\n\n| 频道名称      | channel 值 |\n| ------------- | ---------- |\n| 外汇 / 贵金属 | 1          |\n| 期货          | 2          |\n| 全球市场      | 3          |\n| A 股          | 4          |\n\n**查询参数示例（推荐）：**\n\n- `/jin10?important=1` - 只看重要快讯\n- `/jin10/new?channel=4` - A 股快讯\n- `/jin10/new?channel=4&important=1` - A 股重要快讯\n\n**路径参数示例：**\n\n- `/jin10` / `/jin10/new` - 所有快讯\n- `/jin10/1` - 只看重要\n- `/jin10/new/3` - 全球市场快讯\n- `/jin10/new/4/1` - A 股重要快讯\n\n热门快讯会在 `category` 中带上 `火` / `热` / `沸` / `爆`。可用 RSSHub 通用参数 `filter_category` 筛选。",
+        "description": "金十数据实时快讯（官网 `flash_newest.js`）。`/jin10` 与 `/jin10/1` 是本路由的别名（`1` = 只看重要）。`/jin10/4` 不会当成 A 股频道，请用 `/jin10/new/4`。`/jin10/flash`、`/jin10/category`、`/jin10/topic` 走不同接口，不在本路由合并。路径参数与查询参数均可；同时提供时查询参数优先。\n\n| 频道名称      | channel 值 |\n| ------------- | ---------- |\n| 外汇 / 贵金属 | 1          |\n| 期货          | 2          |\n| 全球市场      | 3          |\n| A 股          | 4          |\n| 英文          | 5          |\n\n**查询参数示例（推荐）：**\n\n- `/jin10?important=1` - 只看重要快讯\n- `/jin10/new?channel=4` - A 股快讯\n- `/jin10/new?channel=4&important=1` - A 股重要快讯\n- `/jin10/new?channel=5` - 英文快讯\n\n**路径参数示例：**\n\n- `/jin10` / `/jin10/new` - 所有快讯\n- `/jin10/1` - 只看重要\n- `/jin10/new/3` - 全球市场快讯\n- `/jin10/new/4/1` - A 股重要快讯\n- `/jin10/new/5` - 英文快讯\n\n热门快讯会在 `category` 中带上 `火` / `热` / `沸` / `爆`。可用 RSSHub 通用参数 `filter_category` 筛选。",
         "features": {
           "requireConfig": false,
           "requirePuppeteer": false,
@@ -14047,7 +14047,7 @@ export default {
           "channel": "频道分类，可选值见下表，留空则返回所有频道（支持查询参数）",
           "important": "只看重要快讯：1=只看重要，留空则返回所有（支持查询参数）"
         },
-        "description": "金十数据实时快讯（官网 `flash_newest.js`）。`/jin10` 与 `/jin10/1` 是本路由的别名（`1` = 只看重要）。`/jin10/flash`、`/jin10/category`、`/jin10/topic` 走不同接口，不在本路由合并。\n\n| 频道名称      | channel 值 |\n| ------------- | ---------- |\n| 外汇 / 贵金属 | 1          |\n| 期货          | 2          |\n| 全球市场      | 3          |\n| A 股          | 4          |\n\n**查询参数示例（推荐）：**\n\n- `/jin10?important=1` - 只看重要快讯\n- `/jin10/new?channel=4` - A 股快讯\n- `/jin10/new?channel=4&important=1` - A 股重要快讯\n\n**路径参数示例：**\n\n- `/jin10` / `/jin10/new` - 所有快讯\n- `/jin10/1` - 只看重要\n- `/jin10/new/3` - 全球市场快讯\n- `/jin10/new/4/1` - A 股重要快讯\n\n热门快讯会在 `category` 中带上 `火` / `热` / `沸` / `爆`。可用 RSSHub 通用参数 `filter_category` 筛选。",
+        "description": "金十数据实时快讯（官网 `flash_newest.js`）。`/jin10` 与 `/jin10/1` 是本路由的别名（`1` = 只看重要）。`/jin10/4` 不会当成 A 股频道，请用 `/jin10/new/4`。`/jin10/flash`、`/jin10/category`、`/jin10/topic` 走不同接口，不在本路由合并。路径参数与查询参数均可；同时提供时查询参数优先。\n\n| 频道名称      | channel 值 |\n| ------------- | ---------- |\n| 外汇 / 贵金属 | 1          |\n| 期货          | 2          |\n| 全球市场      | 3          |\n| A 股          | 4          |\n| 英文          | 5          |\n\n**查询参数示例（推荐）：**\n\n- `/jin10?important=1` - 只看重要快讯\n- `/jin10/new?channel=4` - A 股快讯\n- `/jin10/new?channel=4&important=1` - A 股重要快讯\n- `/jin10/new?channel=5` - 英文快讯\n\n**路径参数示例：**\n\n- `/jin10` / `/jin10/new` - 所有快讯\n- `/jin10/1` - 只看重要\n- `/jin10/new/3` - 全球市场快讯\n- `/jin10/new/4/1` - A 股重要快讯\n- `/jin10/new/5` - 英文快讯\n\n热门快讯会在 `category` 中带上 `火` / `热` / `沸` / `爆`。可用 RSSHub 通用参数 `filter_category` 筛选。",
         "features": {
           "requireConfig": false,
           "requirePuppeteer": false,
@@ -14080,7 +14080,7 @@ export default {
         "view": 0,
         "example": "/jin10/topic/100",
         "parameters": {
-          "id": "N"
+          "id": "主题 id，来自 xnews.jin10.com/topic/:id"
         },
         "features": {
           "requireConfig": false,
@@ -21537,9 +21537,10 @@ export default {
           "finance"
         ],
         "example": "/wallstreetcn/live",
+        "cacheTtl": 1,
         "parameters": {
           "category": "快讯分类，默认`global`，见下表",
-          "score": "快讯重要度，默认`1`全部快讯，可设置为`2`只看重要的"
+          "score": "快讯重要度，默认`1`全部快讯，`2`只看重要（score≥2）"
         },
         "features": {
           "requireConfig": false,
@@ -21562,7 +21563,7 @@ export default {
         "maintainers": [
           "nczitzk"
         ],
-        "description": "| 要闻   | A 股    | 美股     | 港股     | 外汇  | 商品      | 理财      |\n| ------ | ------- | -------- | -------- | ----- | --------- | --------- |\n| global | a-stock | us-stock | hk-stock | forex | commodity | financing |",
+        "description": "| 要闻   | A 股    | 美股     | 港股     | 外汇  | 商品      | 理财      |\n| ------ | ------- | -------- | -------- | ----- | --------- | --------- |\n| global | a-stock | us-stock | hk-stock | forex | commodity | financing |\n\n额外频道：`gold` 黄金、`oil` 原油、`bond` 债券、`xgb` 选股宝、`blockchain` 区块链、`gold-forex` 黄金外汇。条目 `category` 还会带上来源频道和相关主题，可用 `filter_category` 筛选。",
         "location": "live.tsx",
         "module": () => import('@/routes/wallstreetcn/live.tsx')
       }
@@ -49090,7 +49091,7 @@ export default {
         ],
         "url": "cls.cn/telegraph",
         "cacheTtl": 1,
-        "description": "`/cls/dianbao/:category?` 是本路由的别名，与 `/cls/telegraph` 共用同一 handler，默认返回 50 条（此前独立 `dianbao` 路由默认为 20 条）。可通过 RSSHub 通用参数 `limit` 调整条数，例如 `/cls/dianbao?limit=20`。\n\n| 看盘  | 公司         | 解读    | 加红 | 推送  | 提醒   | 基金 | 港股 | 港美股 |\n| ----- | ------------ | ------- | ---- | ----- | ------ | ---- | ---- | ------ |\n| watch | announcement | explain | red  | jpush | remind | fund | hk   | hk\\_us |",
+        "description": "`/cls/dianbao/:category?` 是本路由的别名，与 `/cls/telegraph` 共用同一 handler，默认返回 50 条。可通过 RSSHub 通用参数 `limit` 调整条数，例如 `/cls/dianbao?limit=20`。\n\n| 看盘  | 公司         | 解读    | 加红 | 推送  | 提醒   | 基金 | 港股 | 港美股 |\n| ----- | ------------ | ------- | ---- | ----- | ------ | ---- | ---- | ------ |\n| watch | announcement | explain | red  | jpush | remind | fund | hk   | hk\\_us |",
         "location": "telegraph.tsx",
         "module": () => import('@/routes/cls/telegraph.tsx')
       },
@@ -49129,7 +49130,7 @@ export default {
         ],
         "url": "cls.cn/telegraph",
         "cacheTtl": 1,
-        "description": "`/cls/dianbao/:category?` 是本路由的别名，与 `/cls/telegraph` 共用同一 handler，默认返回 50 条（此前独立 `dianbao` 路由默认为 20 条）。可通过 RSSHub 通用参数 `limit` 调整条数，例如 `/cls/dianbao?limit=20`。\n\n| 看盘  | 公司         | 解读    | 加红 | 推送  | 提醒   | 基金 | 港股 | 港美股 |\n| ----- | ------------ | ------- | ---- | ----- | ------ | ---- | ---- | ------ |\n| watch | announcement | explain | red  | jpush | remind | fund | hk   | hk\\_us |",
+        "description": "`/cls/dianbao/:category?` 是本路由的别名，与 `/cls/telegraph` 共用同一 handler，默认返回 50 条。可通过 RSSHub 通用参数 `limit` 调整条数，例如 `/cls/dianbao?limit=20`。\n\n| 看盘  | 公司         | 解读    | 加红 | 推送  | 提醒   | 基金 | 港股 | 港美股 |\n| ----- | ------------ | ------- | ---- | ----- | ------ | ---- | ---- | ------ |\n| watch | announcement | explain | red  | jpush | remind | fund | hk   | hk\\_us |",
         "location": "telegraph.tsx",
         "module": () => import('@/routes/cls/telegraph.tsx')
       },
@@ -49198,7 +49199,7 @@ export default {
         ],
         "example": "/cls/subject/1103",
         "parameters": {
-          "category": "分类，默认为 1103，即A股盘面直播，可在对应话题页 URL 中找到"
+          "id": "话题 id，默认为 1103（A股盘面直播），可在对应话题页 URL 中找到"
         },
         "description": "::: tip\n若订阅 [有声早报](https://www.cls.cn/subject/1151)，网址为 `https://www.cls.cn/subject/1151`。截取 `https://www.cls.cn/subject/` 到末尾的部分 `1151` 作为参数填入，此时路由为 [`/cls/subject/1151`](https://rsshub.app/cls/subject/1151)。\n:::",
         "categories": [
@@ -59459,7 +59460,7 @@ export default {
         "view": 5,
         "example": "/eastmoney/kuaixun",
         "parameters": {
-          "category": "分类代码，可选，见下表，留空为全部快讯"
+          "category": "分类代码，可选，见下表，留空默认为 102（7*24 全球直播）"
         },
         "features": {
           "requireConfig": false,
@@ -59481,7 +59482,7 @@ export default {
         "maintainers": [
           "luck"
         ],
-        "description": "获取东方财富全球财经快讯的实时信息。\n\n### 分类代码\n\n| 基础分类   | 代码  | 公司相关 | 代码 | 市场相关 | 代码 |\n| ---------- | ----- | -------- | ---- | -------- | ---- |\n| 7\\*24 直播 | 102   | 焦点     | 100  | 商品     | 106  |\n| 要闻       | 101   | 上市公司 | 103  | 外汇     | 107  |\n| 股市直播   | zhibo | 中国公司 | 104  | 债券     | 108  |\n|            |       | 全球公司 | 105  | 基金     | 109  |\n\n| 地区筛选        | 代码 | 全球央行      | 代码 | 经济数据      | 代码 |\n| --------------- | ---- | ------------- | ---- | ------------- | ---- |\n| 地区 - 中国     | 110  | 央行 - 中国   | 118  | 数据 - 中国   | 125  |\n| 地区 - 美国     | 111  | 央行 - 美联储 | 119  | 数据 - 美国   | 126  |\n| 地区 - 欧元区   | 112  | 央行 - 欧洲   | 120  | 数据 - 欧元区 | 127  |\n| 地区 - 英国     | 113  | 央行 - 英国   | 121  | 数据 - 英国   | 128  |\n| 地区 - 日本     | 114  | 央行 - 日本   | 122  | 数据 - 日本   | 129  |\n| 地区 - 加拿大   | 115  | 央行 - 加拿大 | 123  | 数据 - 加拿大 | 130  |\n| 地区 - 澳洲     | 116  | 央行 - 澳洲   | 124  | 数据 - 澳洲   | 131  |\n| 地区 - 新兴市场 | 117  |               |      |               |      |\n\n### 查询参数\n\n- `limit=50` 限制返回数量（默认 50 条，建议不超过 200）\n- `important_only=1` 仅返回重要快讯\n\n### 数据范围\n\n- 每页 50 条，第 1 页覆盖最近 1-2 小时\n- 第 10 页可回溯约 1 天\n- 第 50 页可回溯约 5 天\n- API 支持获取约 7-10 天内的历史快讯\n- 建议日常订阅使用默认 50 条即可\n\n### 示例\n\n- `/eastmoney/kuaixun` - 所有快讯（最近 50 条）\n- `/eastmoney/kuaixun/100` - 焦点快讯\n- `/eastmoney/kuaixun/103` - 上市公司快讯\n- `/eastmoney/kuaixun/zhibo` - 股市直播\n- `/eastmoney/kuaixun/106` - 商品快讯\n- `/eastmoney/kuaixun/119` - 美联储相关快讯\n- `/eastmoney/kuaixun/126` - 美国经济数据\n- `/eastmoney/kuaixun?limit=20` - 限制 20 条\n- `/eastmoney/kuaixun?limit=100` - 获取最近 100 条（约 2-3 小时）\n- `/eastmoney/kuaixun?important_only=1` - 仅重要快讯",
+        "description": "获取东方财富全球财经快讯的实时信息。\n\n### 分类代码\n\n| 基础分类   | 代码  | 公司相关 | 代码 | 市场相关 | 代码 |\n| ---------- | ----- | -------- | ---- | -------- | ---- |\n| 7\\*24 直播 | 102   | 焦点     | 100  | 商品     | 106  |\n| 要闻       | 101   | 上市公司 | 103  | 外汇     | 107  |\n| 股市直播   | zhibo | 中国公司 | 104  | 债券     | 108  |\n|            |       | 全球公司 | 105  | 基金     | 109  |\n\n| 地区筛选        | 代码 | 全球央行      | 代码 | 经济数据      | 代码 |\n| --------------- | ---- | ------------- | ---- | ------------- | ---- |\n| 地区 - 中国     | 110  | 央行 - 中国   | 118  | 数据 - 中国   | 125  |\n| 地区 - 美国     | 111  | 央行 - 美联储 | 119  | 数据 - 美国   | 126  |\n| 地区 - 欧元区   | 112  | 央行 - 欧洲   | 120  | 数据 - 欧元区 | 127  |\n| 地区 - 英国     | 113  | 央行 - 英国   | 121  | 数据 - 英国   | 128  |\n| 地区 - 日本     | 114  | 央行 - 日本   | 122  | 数据 - 日本   | 129  |\n| 地区 - 加拿大   | 115  | 央行 - 加拿大 | 123  | 数据 - 加拿大 | 130  |\n| 地区 - 澳洲     | 116  | 央行 - 澳洲   | 124  | 数据 - 澳洲   | 131  |\n| 地区 - 新兴市场 | 117  |               |      |               |      |\n\n### 查询参数\n\n- `limit=50` 限制返回数量（默认 50 条，建议不超过 200）\n- `important_only=1` 仅返回重要快讯\n\n### 数据范围\n\n- 每次只请求一页，条数由 `limit` 控制（默认 50）\n- 不翻页，无法按页回溯更早历史\n- 建议日常订阅使用默认 50 条即可\n\n### 示例\n\n- `/eastmoney/kuaixun` - 7\\*24 全球直播（默认，最近 50 条）\n- `/eastmoney/kuaixun/100` - 焦点快讯\n- `/eastmoney/kuaixun/103` - 上市公司快讯\n- `/eastmoney/kuaixun/zhibo` - 股市直播\n- `/eastmoney/kuaixun/106` - 商品快讯\n- `/eastmoney/kuaixun/119` - 美联储相关快讯\n- `/eastmoney/kuaixun/126` - 美国经济数据\n- `/eastmoney/kuaixun?limit=20` - 限制 20 条\n- `/eastmoney/kuaixun?limit=100` - 获取最近 100 条（约 2-3 小时）\n- `/eastmoney/kuaixun?important_only=1` - 仅重要快讯",
         "location": "kuaixun.ts",
         "module": () => import('@/routes/eastmoney/kuaixun.ts')
       },
@@ -113408,7 +113409,7 @@ export default {
           "luck"
         ],
         "example": "/tencent/finance/newslist",
-        "description": "使用腾讯自选股移动端接口获取实时财经快讯\n\n⚠️ **重要说明**：\n\n- 由于 API 需要签名验证，当前使用固定签名（可能会过期）\n- 每次固定返回最新 10 条快讯\n- 如签名过期，需要更新代码中的 fixedParams\n\n支持查询参数：\n\n- `limit=10` - 限制返回数量（最多 10 条，默认 10 条）\n\n特点：\n\n- 📱 移动端专用接口\n- 📊 包含股票涨跌幅数据\n- 🏷️ 支持热门标签分类\n- ⏱️ 实时性强\n\n示例：\n\n- `/tencent/finance/newslist` - 获取最新 10 条财经快讯\n- `/tencent/finance/newslist?limit=5` - 获取最新 5 条快讯",
+        "description": "使用腾讯自选股移动端接口获取实时财经快讯。\n\n⚠️ **重要说明**：\n\n- 由于 API 需要签名验证，当前使用固定签名（可能会过期）\n- 每次固定返回最新 10 条快讯\n- 如签名过期，需要更新代码中的 `fixedParams.sign`\n\n支持查询参数：\n\n- `limit=10` - 限制返回数量（最多 10 条，默认 10 条）",
         "categories": [
           "finance"
         ],
@@ -150961,7 +150962,7 @@ export default {
         "view": 0,
         "example": "/sina/zhibo",
         "parameters": {
-          "zhibo_id": "直播频道 id，默认为 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业。特殊值：focus（仅显示重要新闻）。旧版 724 分类名仍可用：all、macro、stock、international、opinion"
+          "zhibo_id": "7×24 标签，默认 152/all（全部）。官网直播只在 152。可选：focus、宏观/市场/国际/A股 等标签名，或旧版 724 名：all、macro、stock、international、opinion"
         },
         "features": {
           "requireConfig": false,
@@ -150988,7 +150989,7 @@ export default {
         ],
         "url": "zhibo.sina.com.cn",
         "cacheTtl": 1,
-        "description": "对接新浪财经 7×24 直播接口（zhibo）。`/sina/724/:zhibo_id?` 是本路由的别名，共用同一数据源。\n\n查询参数：\n\n- `limit`: 返回条数，默认 20。接口单页最多 10 条，超过会自动分页抓取\n- `pagesize`: 单页条数（1-10），默认 10\n- `tag`: 标签过滤，支持标签名或 ID（如：市场、公司、A 股、美股），留空表示不过滤\n\n`/sina/zhibo/focus` 仅返回焦点新闻；重要新闻标题前会显示「重要」标记，feed 标题会带「重要新闻」。\n\n旧版 `/sina/724` 分类名会映射到频道：\n\n| 724 分类      | 频道     |\n| ------------- | -------- |\n| all           | 152 财经 |\n| macro         | 151 政经 |\n| stock         | 155 市场 |\n| international | 164 国际 |\n| opinion       | 153 综合 |\n\n示例：\n\n- `/sina/zhibo` - 财经频道\n- `/sina/zhibo/focus` - 仅焦点新闻\n- `/sina/724` - 同上（别名）\n- `/sina/724/stock` - 市场频道\n\n别名路径：`/sina/zhibo`、`/sina/finance/zhibo`、`/sina/724`、`/sina/finance/724`。",
+        "description": "对接新浪财经 7×24 直播接口。官网当前只有 `zhibo_id=152` 在更新；151/153/155/164/242 是 2014 年存档，已改映射到 152 上的对应标签。`/sina/724/:zhibo_id?` 是本路由的别名。\n\n查询参数：\n\n- `limit`: 返回条数，默认 20。接口单页最多 10 条，超过会自动分页抓取\n- `pagesize`: 单页条数（1-10），默认 10\n- `tag`: 标签过滤，支持标签名或 ID（如：市场、公司、A 股、国际），留空表示不过滤。上游 `tag=` 参数无效，过滤在本地完成\n\n`/sina/zhibo/focus` 仅返回焦点新闻（`is_focus=1` 或标签 `焦点` / id `9`）。焦点条目会打上「重要」标记。\n\n| 参数                      | 标签 |\n| ------------------------- | ---- |\n| all / 152 / 0             | 全部 |\n| focus / 9                 | 焦点 |\n| macro / 151 / 1           | 宏观 |\n| stock / 155 / 5           | 市场 |\n| international / 164 / 102 | 国际 |\n| opinion / 153 / 6         | 观点 |\n| 10                        | A 股 |\n| 3                         | 公司 |\n| 4                         | 数据 |\n| 7                         | 央行 |\n| 110 / 242                 | 产业 |\n\n示例：\n\n- `/sina/zhibo` - 全部财经快讯\n- `/sina/zhibo/focus` - 仅焦点新闻\n- `/sina/zhibo/市场` 或 `/sina/724/stock` - 市场\n- `/sina/724` - 同上（别名）\n\n别名路径：`/sina/zhibo`、`/sina/finance/zhibo`、`/sina/724`、`/sina/finance/724`。",
         "location": "finance/zhibo.ts",
         "module": () => import('@/routes/sina/finance/zhibo.ts')
       },
@@ -151005,7 +151006,7 @@ export default {
         "view": 0,
         "example": "/sina/zhibo",
         "parameters": {
-          "zhibo_id": "直播频道 id，默认为 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业。特殊值：focus（仅显示重要新闻）。旧版 724 分类名仍可用：all、macro、stock、international、opinion"
+          "zhibo_id": "7×24 标签，默认 152/all（全部）。官网直播只在 152。可选：focus、宏观/市场/国际/A股 等标签名，或旧版 724 名：all、macro、stock、international、opinion"
         },
         "features": {
           "requireConfig": false,
@@ -151032,7 +151033,7 @@ export default {
         ],
         "url": "zhibo.sina.com.cn",
         "cacheTtl": 1,
-        "description": "对接新浪财经 7×24 直播接口（zhibo）。`/sina/724/:zhibo_id?` 是本路由的别名，共用同一数据源。\n\n查询参数：\n\n- `limit`: 返回条数，默认 20。接口单页最多 10 条，超过会自动分页抓取\n- `pagesize`: 单页条数（1-10），默认 10\n- `tag`: 标签过滤，支持标签名或 ID（如：市场、公司、A 股、美股），留空表示不过滤\n\n`/sina/zhibo/focus` 仅返回焦点新闻；重要新闻标题前会显示「重要」标记，feed 标题会带「重要新闻」。\n\n旧版 `/sina/724` 分类名会映射到频道：\n\n| 724 分类      | 频道     |\n| ------------- | -------- |\n| all           | 152 财经 |\n| macro         | 151 政经 |\n| stock         | 155 市场 |\n| international | 164 国际 |\n| opinion       | 153 综合 |\n\n示例：\n\n- `/sina/zhibo` - 财经频道\n- `/sina/zhibo/focus` - 仅焦点新闻\n- `/sina/724` - 同上（别名）\n- `/sina/724/stock` - 市场频道\n\n别名路径：`/sina/zhibo`、`/sina/finance/zhibo`、`/sina/724`、`/sina/finance/724`。",
+        "description": "对接新浪财经 7×24 直播接口。官网当前只有 `zhibo_id=152` 在更新；151/153/155/164/242 是 2014 年存档，已改映射到 152 上的对应标签。`/sina/724/:zhibo_id?` 是本路由的别名。\n\n查询参数：\n\n- `limit`: 返回条数，默认 20。接口单页最多 10 条，超过会自动分页抓取\n- `pagesize`: 单页条数（1-10），默认 10\n- `tag`: 标签过滤，支持标签名或 ID（如：市场、公司、A 股、国际），留空表示不过滤。上游 `tag=` 参数无效，过滤在本地完成\n\n`/sina/zhibo/focus` 仅返回焦点新闻（`is_focus=1` 或标签 `焦点` / id `9`）。焦点条目会打上「重要」标记。\n\n| 参数                      | 标签 |\n| ------------------------- | ---- |\n| all / 152 / 0             | 全部 |\n| focus / 9                 | 焦点 |\n| macro / 151 / 1           | 宏观 |\n| stock / 155 / 5           | 市场 |\n| international / 164 / 102 | 国际 |\n| opinion / 153 / 6         | 观点 |\n| 10                        | A 股 |\n| 3                         | 公司 |\n| 4                         | 数据 |\n| 7                         | 央行 |\n| 110 / 242                 | 产业 |\n\n示例：\n\n- `/sina/zhibo` - 全部财经快讯\n- `/sina/zhibo/focus` - 仅焦点新闻\n- `/sina/zhibo/市场` 或 `/sina/724/stock` - 市场\n- `/sina/724` - 同上（别名）\n\n别名路径：`/sina/zhibo`、`/sina/finance/zhibo`、`/sina/724`、`/sina/finance/724`。",
         "location": "finance/zhibo.ts",
         "module": () => import('@/routes/sina/finance/zhibo.ts')
       },
@@ -151049,7 +151050,7 @@ export default {
         "view": 0,
         "example": "/sina/zhibo",
         "parameters": {
-          "zhibo_id": "直播频道 id，默认为 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业。特殊值：focus（仅显示重要新闻）。旧版 724 分类名仍可用：all、macro、stock、international、opinion"
+          "zhibo_id": "7×24 标签，默认 152/all（全部）。官网直播只在 152。可选：focus、宏观/市场/国际/A股 等标签名，或旧版 724 名：all、macro、stock、international、opinion"
         },
         "features": {
           "requireConfig": false,
@@ -151076,7 +151077,7 @@ export default {
         ],
         "url": "zhibo.sina.com.cn",
         "cacheTtl": 1,
-        "description": "对接新浪财经 7×24 直播接口（zhibo）。`/sina/724/:zhibo_id?` 是本路由的别名，共用同一数据源。\n\n查询参数：\n\n- `limit`: 返回条数，默认 20。接口单页最多 10 条，超过会自动分页抓取\n- `pagesize`: 单页条数（1-10），默认 10\n- `tag`: 标签过滤，支持标签名或 ID（如：市场、公司、A 股、美股），留空表示不过滤\n\n`/sina/zhibo/focus` 仅返回焦点新闻；重要新闻标题前会显示「重要」标记，feed 标题会带「重要新闻」。\n\n旧版 `/sina/724` 分类名会映射到频道：\n\n| 724 分类      | 频道     |\n| ------------- | -------- |\n| all           | 152 财经 |\n| macro         | 151 政经 |\n| stock         | 155 市场 |\n| international | 164 国际 |\n| opinion       | 153 综合 |\n\n示例：\n\n- `/sina/zhibo` - 财经频道\n- `/sina/zhibo/focus` - 仅焦点新闻\n- `/sina/724` - 同上（别名）\n- `/sina/724/stock` - 市场频道\n\n别名路径：`/sina/zhibo`、`/sina/finance/zhibo`、`/sina/724`、`/sina/finance/724`。",
+        "description": "对接新浪财经 7×24 直播接口。官网当前只有 `zhibo_id=152` 在更新；151/153/155/164/242 是 2014 年存档，已改映射到 152 上的对应标签。`/sina/724/:zhibo_id?` 是本路由的别名。\n\n查询参数：\n\n- `limit`: 返回条数，默认 20。接口单页最多 10 条，超过会自动分页抓取\n- `pagesize`: 单页条数（1-10），默认 10\n- `tag`: 标签过滤，支持标签名或 ID（如：市场、公司、A 股、国际），留空表示不过滤。上游 `tag=` 参数无效，过滤在本地完成\n\n`/sina/zhibo/focus` 仅返回焦点新闻（`is_focus=1` 或标签 `焦点` / id `9`）。焦点条目会打上「重要」标记。\n\n| 参数                      | 标签 |\n| ------------------------- | ---- |\n| all / 152 / 0             | 全部 |\n| focus / 9                 | 焦点 |\n| macro / 151 / 1           | 宏观 |\n| stock / 155 / 5           | 市场 |\n| international / 164 / 102 | 国际 |\n| opinion / 153 / 6         | 观点 |\n| 10                        | A 股 |\n| 3                         | 公司 |\n| 4                         | 数据 |\n| 7                         | 央行 |\n| 110 / 242                 | 产业 |\n\n示例：\n\n- `/sina/zhibo` - 全部财经快讯\n- `/sina/zhibo/focus` - 仅焦点新闻\n- `/sina/zhibo/市场` 或 `/sina/724/stock` - 市场\n- `/sina/724` - 同上（别名）\n\n别名路径：`/sina/zhibo`、`/sina/finance/zhibo`、`/sina/724`、`/sina/finance/724`。",
         "location": "finance/zhibo.ts",
         "module": () => import('@/routes/sina/finance/zhibo.ts')
       },
@@ -151093,7 +151094,7 @@ export default {
         "view": 0,
         "example": "/sina/zhibo",
         "parameters": {
-          "zhibo_id": "直播频道 id，默认为 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业。特殊值：focus（仅显示重要新闻）。旧版 724 分类名仍可用：all、macro、stock、international、opinion"
+          "zhibo_id": "7×24 标签，默认 152/all（全部）。官网直播只在 152。可选：focus、宏观/市场/国际/A股 等标签名，或旧版 724 名：all、macro、stock、international、opinion"
         },
         "features": {
           "requireConfig": false,
@@ -151120,7 +151121,7 @@ export default {
         ],
         "url": "zhibo.sina.com.cn",
         "cacheTtl": 1,
-        "description": "对接新浪财经 7×24 直播接口（zhibo）。`/sina/724/:zhibo_id?` 是本路由的别名，共用同一数据源。\n\n查询参数：\n\n- `limit`: 返回条数，默认 20。接口单页最多 10 条，超过会自动分页抓取\n- `pagesize`: 单页条数（1-10），默认 10\n- `tag`: 标签过滤，支持标签名或 ID（如：市场、公司、A 股、美股），留空表示不过滤\n\n`/sina/zhibo/focus` 仅返回焦点新闻；重要新闻标题前会显示「重要」标记，feed 标题会带「重要新闻」。\n\n旧版 `/sina/724` 分类名会映射到频道：\n\n| 724 分类      | 频道     |\n| ------------- | -------- |\n| all           | 152 财经 |\n| macro         | 151 政经 |\n| stock         | 155 市场 |\n| international | 164 国际 |\n| opinion       | 153 综合 |\n\n示例：\n\n- `/sina/zhibo` - 财经频道\n- `/sina/zhibo/focus` - 仅焦点新闻\n- `/sina/724` - 同上（别名）\n- `/sina/724/stock` - 市场频道\n\n别名路径：`/sina/zhibo`、`/sina/finance/zhibo`、`/sina/724`、`/sina/finance/724`。",
+        "description": "对接新浪财经 7×24 直播接口。官网当前只有 `zhibo_id=152` 在更新；151/153/155/164/242 是 2014 年存档，已改映射到 152 上的对应标签。`/sina/724/:zhibo_id?` 是本路由的别名。\n\n查询参数：\n\n- `limit`: 返回条数，默认 20。接口单页最多 10 条，超过会自动分页抓取\n- `pagesize`: 单页条数（1-10），默认 10\n- `tag`: 标签过滤，支持标签名或 ID（如：市场、公司、A 股、国际），留空表示不过滤。上游 `tag=` 参数无效，过滤在本地完成\n\n`/sina/zhibo/focus` 仅返回焦点新闻（`is_focus=1` 或标签 `焦点` / id `9`）。焦点条目会打上「重要」标记。\n\n| 参数                      | 标签 |\n| ------------------------- | ---- |\n| all / 152 / 0             | 全部 |\n| focus / 9                 | 焦点 |\n| macro / 151 / 1           | 宏观 |\n| stock / 155 / 5           | 市场 |\n| international / 164 / 102 | 国际 |\n| opinion / 153 / 6         | 观点 |\n| 10                        | A 股 |\n| 3                         | 公司 |\n| 4                         | 数据 |\n| 7                         | 央行 |\n| 110 / 242                 | 产业 |\n\n示例：\n\n- `/sina/zhibo` - 全部财经快讯\n- `/sina/zhibo/focus` - 仅焦点新闻\n- `/sina/zhibo/市场` 或 `/sina/724/stock` - 市场\n- `/sina/724` - 同上（别名）\n\n别名路径：`/sina/zhibo`、`/sina/finance/zhibo`、`/sina/724`、`/sina/finance/724`。",
         "location": "finance/zhibo.ts",
         "module": () => import('@/routes/sina/finance/zhibo.ts')
       },
