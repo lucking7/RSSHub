@@ -20,14 +20,58 @@ const toStockItemsWithQuotes = (items: any[], quotes: Record<string, { name: str
         }));
 
 const ROOT_URL = 'https://zhibo.sina.com.cn';
+const SINA_ZHIBO_CACHE_TTL = 1;
+
+const ZHIBO_CHANNELS: Record<string, string> = {
+    '151': '政经',
+    '152': '财经',
+    '153': '综合',
+    '155': '市场',
+    '164': '国际',
+    '242': '行业',
+};
+
+// Legacy `/sina/724/:tag` names map onto zhibo channel ids (approximate).
+const ZHIBO_ID_ALIASES: Record<string, string> = {
+    all: '152',
+    macro: '151',
+    stock: '155',
+    international: '164',
+    opinion: '153',
+};
+
+const INDIVIDUAL_MARKETS = new Set(['cn', 'hk', 'us', 'usa']);
+
+export function resolveZhiboId(raw = '152'): { zhiboId: string; isFocusMode: boolean } {
+    if (raw === 'focus') {
+        return { zhiboId: '152', isFocusMode: true };
+    }
+    return {
+        zhiboId: ZHIBO_ID_ALIASES[raw] ?? raw,
+        isFocusMode: false,
+    };
+}
+
+export function classifyZhiboStocks<T extends { market?: string }>(stocks: T[]): { individualStocks: T[]; sectors: T[] } {
+    const individualStocks: T[] = [];
+    const sectors: T[] = [];
+    for (const stock of stocks) {
+        if (INDIVIDUAL_MARKETS.has((stock.market ?? '').toLowerCase())) {
+            individualStocks.push(stock);
+        } else {
+            sectors.push(stock);
+        }
+    }
+    return { individualStocks, sectors };
+}
 
 export const route: Route = {
-    path: ['/finance/zhibo/:zhibo_id?', '/zhibo/:zhibo_id?'],
+    path: ['/finance/zhibo/:zhibo_id?', '/zhibo/:zhibo_id?', '/finance/724/:zhibo_id?', '/724/:zhibo_id?'],
     categories: ['finance'],
     view: ViewType.Articles,
     example: '/sina/zhibo',
     parameters: {
-        zhibo_id: '直播频道 id，默认为 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业。特殊值：focus（仅显示重要新闻）',
+        zhibo_id: '直播频道 id，默认为 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业。特殊值：focus（仅显示重要新闻）。旧版 724 分类名仍可用：all、macro、stock、international、opinion',
     },
     features: {
         requireConfig: false,
@@ -37,18 +81,45 @@ export const route: Route = {
         supportPodcast: false,
         supportScihub: false,
     },
+    radar: [
+        {
+            source: ['finance.sina.com.cn/7x24/', 'finance.sina.com.cn', 'zhibo.sina.com.cn/'],
+            target: '/zhibo',
+        },
+    ],
     name: '7×24直播',
-    maintainers: ['nczitzk'],
+    maintainers: ['nczitzk', 'luck'],
     handler,
     url: 'zhibo.sina.com.cn',
-    description:
-        '对接新浪财经直播接口（zhibo）。\n\n' +
-        '查询参数：\n' +
-        '- `limit`: 返回条数，默认 20\n' +
-        '- `pagesize`: 单页条数（1-10），默认 10\n' +
-        '- `tag`: 标签过滤，支持标签名或 ID（如：市场、公司、A股、美股），留空表示不过滤\n\n' +
-        '`limit` 超过单页条数时会自动分页抓取（上游单页上限 10 条）。\n\n' +
-        '`/sina/zhibo/focus` 仅返回焦点新闻；重要新闻标题前会显示「重要」标记，feed 标题会带「重要新闻」。',
+    cacheTtl: SINA_ZHIBO_CACHE_TTL,
+    description: `对接新浪财经 7×24 直播接口（zhibo）。\`/sina/724/:zhibo_id?\` 是本路由的别名，共用同一数据源。
+
+查询参数：
+
+- \`limit\`: 返回条数，默认 20。接口单页最多 10 条，超过会自动分页抓取
+- \`pagesize\`: 单页条数（1-10），默认 10
+- \`tag\`: 标签过滤，支持标签名或 ID（如：市场、公司、A 股、美股），留空表示不过滤
+
+\`/sina/zhibo/focus\` 仅返回焦点新闻；重要新闻标题前会显示「重要」标记，feed 标题会带「重要新闻」。
+
+旧版 \`/sina/724\` 分类名会映射到频道：
+
+| 724 分类      | 频道     |
+| ------------- | -------- |
+| all           | 152 财经 |
+| macro         | 151 政经 |
+| stock         | 155 市场 |
+| international | 164 国际 |
+| opinion       | 153 综合 |
+
+示例：
+
+- \`/sina/zhibo\` - 财经频道
+- \`/sina/zhibo/focus\` - 仅焦点新闻
+- \`/sina/724\` - 同上（别名）
+- \`/sina/724/stock\` - 市场频道
+
+别名路径：\`/sina/zhibo\`、\`/sina/finance/zhibo\`、\`/sina/724\`、\`/sina/finance/724\`。`,
 };
 
 interface ZhiboFeedItem {
@@ -242,57 +313,51 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
 }
 
 async function handler(ctx): Promise<Data> {
-    const zhiboIdParam = ctx.req.param('zhibo_id') ?? '152';
+    const { zhiboId, isFocusMode } = resolveZhiboId(ctx.req.param('zhibo_id'));
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 20;
     const pagesizeQuery = ctx.req.query('pagesize');
     const tagFilter = ctx.req.query('tag');
     const dire = ctx.req.query('dire') ?? 'f';
     const dpc = ctx.req.query('dpc') ?? '1';
 
-    // `zhibo_id=focus` is not an upstream channel; map it to 152 (finance) and filter is_focus=1 later.
-    const isFocusMode = zhiboIdParam === 'focus';
-    const zhiboId = isFocusMode ? '152' : zhiboIdParam;
-
     const apiUrl = `${ROOT_URL}/api/zhibo/feed`;
 
     const pageSize = Math.min(10, Math.max(1, pagesizeQuery ? Number.parseInt(pagesizeQuery) : 10)); // Upstream page size max is 10
     const maxPages = Math.max(1, Math.ceil(limit / pageSize));
 
-    const collected: ZhiboFeedItem[] = [];
-    const pageNumbers = Array.from({ length: maxPages }, (_, i) => i + 1);
-    const pages = await Promise.all(
-        pageNumbers.map(async (page) => {
-            const res = await got(apiUrl, {
-                searchParams: {
-                    zhibo_id: zhiboId,
-                    pagesize: pageSize,
-                    tag: '0', // Upstream tag=0 returns the unfiltered feed; apply tag/focus filters client-side.
-                    dire,
-                    dpc,
-                    page,
-                },
-                headers: {
-                    Referer: 'https://finance.sina.com.cn/',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                },
-                timeout: 30000,
-            });
-            return {
-                page,
-                list: (res.data?.result?.data?.feed?.list as ZhiboFeedItem[]) ?? [],
-            };
-        })
+    const collected: ZhiboFeedItem[] = await cache.tryGet(
+        `sina:zhibo:feed:${zhiboId}:${pageSize}:${dire}:${dpc}:${maxPages}`,
+        async () => {
+            const pageNumbers = Array.from({ length: maxPages }, (_, i) => i + 1);
+            const pages = await Promise.all(
+                pageNumbers.map(async (page) => {
+                    const res = await got(apiUrl, {
+                        searchParams: {
+                            zhibo_id: zhiboId,
+                            pagesize: pageSize,
+                            tag: '0', // Upstream tag=0 returns the unfiltered feed; apply tag/focus filters client-side.
+                            dire,
+                            dpc,
+                            page,
+                        },
+                        headers: {
+                            Referer: 'https://finance.sina.com.cn/',
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        },
+                        timeout: 30000,
+                    });
+                    return {
+                        page,
+                        list: (res.data?.result?.data?.feed?.list as ZhiboFeedItem[]) ?? [],
+                    };
+                })
+            );
+            pages.sort((a, b) => a.page - b.page);
+            return pages.flatMap((p) => p.list);
+        },
+        SINA_ZHIBO_CACHE_TTL,
+        false
     );
-    pages.sort((a, b) => a.page - b.page);
-    for (const p of pages) {
-        if (collected.length >= limit * 2) {
-            // Over-fetch ~2x so tag/focus client filters can still fill `limit`.
-            break;
-        }
-        if (p.list.length) {
-            collected.push(...p.list);
-        }
-    }
 
     let filteredData = collected;
     if (tagFilter) {
@@ -424,15 +489,7 @@ async function handler(ctx): Promise<Data> {
                 }
             }
 
-            const sectors: any[] = [];
-            const individualStocks: any[] = [];
-            for (const s of stockInfo) {
-                if (s.symbol.toUpperCase().startsWith('8')) {
-                    sectors.push(s);
-                } else {
-                    individualStocks.push(s);
-                }
-            }
+            const { sectors, individualStocks } = classifyZhiboStocks(stockInfo);
 
             const stockCategories = stockInfo.map((s) => `${s.key}(${s.symbol.toUpperCase()})`);
 
@@ -523,16 +580,7 @@ async function handler(ctx): Promise<Data> {
         })
     );
 
-    const CHANNELS: Record<string, string> = {
-        '151': '政经',
-        '152': '财经',
-        '153': '综合',
-        '155': '市场',
-        '164': '国际',
-        '242': '行业',
-    };
-
-    const channelTitle = CHANNELS[zhiboId] || '财经';
+    const channelTitle = ZHIBO_CHANNELS[zhiboId] || '财经';
     const tagSuffix = tagFilter ? ` - ${tagFilter}` : '';
     const focusSuffix = isFocusMode ? ' - 重要新闻' : '';
 

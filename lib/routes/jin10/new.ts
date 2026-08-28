@@ -11,16 +11,16 @@ import { attachJin10HotLabels, withJin10HotCategory } from './hot';
 import { buildFlashDescription, buildFlashLink, CHANNEL_MAP, collectFlashImages } from './utils';
 
 export const route: Route = {
-    path: '/new/:channel?/:important?',
+    path: ['/new/:channel?/:important?', '/:important?'],
     categories: ['finance'],
     view: ViewType.Notifications,
-    example: '/jin10/new',
+    example: '/jin10',
     cacheTtl: 1,
     parameters: {
         channel: '频道分类，可选值见下表，留空则返回所有频道（支持查询参数）',
         important: '只看重要快讯：1=只看重要，留空则返回所有（支持查询参数）',
     },
-    description: `路径参数与查询参数均可；同时提供时查询参数优先。
+    description: `金十数据实时快讯（官网 \`flash_newest.js\`）。\`/jin10\` 与 \`/jin10/1\` 是本路由的别名（\`1\` = 只看重要）。\`/jin10/flash\`、\`/jin10/category\`、\`/jin10/topic\` 走不同接口，不在本路由合并。路径参数与查询参数均可；同时提供时查询参数优先。
 
 | 频道名称      | channel 值 |
 | ------------- | ---------- |
@@ -31,13 +31,14 @@ export const route: Route = {
 
 **查询参数示例（推荐）：**
 
-- \`/jin10/new?important=1\` - 只看重要快讯
+- \`/jin10?important=1\` - 只看重要快讯
 - \`/jin10/new?channel=4\` - A 股快讯
 - \`/jin10/new?channel=4&important=1\` - A 股重要快讯
 
 **路径参数示例：**
 
-- \`/jin10/new\` - 所有快讯
+- \`/jin10\` / \`/jin10/new\` - 所有快讯
+- \`/jin10/1\` - 只看重要
 - \`/jin10/new/3\` - 全球市场快讯
 - \`/jin10/new/4/1\` - A 股重要快讯
 
@@ -53,7 +54,7 @@ export const route: Route = {
     radar: [
         {
             source: ['jin10.com/'],
-            target: '/new',
+            target: '',
         },
     ],
     name: '实时快讯',
