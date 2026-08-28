@@ -42,3 +42,8 @@ yarn.lock
 yarn-error.log
 
 dist-container
+
+# Local tool state
+.pi/
+.antigravitycli/
+pi-session-*.html
