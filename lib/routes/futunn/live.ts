@@ -70,8 +70,7 @@ async function handler(ctx) {
     });
 
     const items = response.data.data.data.news.map((item) => {
-        // Audio output is disabled for now; keep the upstream mapping here for later reuse.
-        // const audio = item.audioInfos.find((audio) => audio.language === lang);
+        // Audio output is disabled for now.
         const title = item.title || item.content;
         const category = item.quote.map((quote) => quote.name);
         return applySourceImportance(
@@ -82,20 +81,6 @@ async function handler(ctx) {
                 pubDate: parseDate(item.time * 1000),
                 category,
                 itunes_item_image: item.pic,
-                // itunes_duration: audio.audioDuration,
-                // enclosure_url: audio.audioUrl,
-                // enclosure_type: 'audio/mpeg',
-                // media: {
-                //     content: {
-                //         url: audio.audioUrl,
-                //         type: 'audio/mpeg',
-                //         duration: audio.audioDuration,
-                //         language: lang === 'Mandarin' ? 'zh-CN' : lang === 'Cantonese' ? 'zh-HK' : 'en',
-                //     },
-                //     thumbnail: {
-                //         url: item.pic,
-                //     },
-                // },
             },
             item.level === undefined
                 ? []

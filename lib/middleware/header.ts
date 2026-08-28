@@ -40,6 +40,7 @@ const middleware: MiddlewareHandler = async (ctx, next) => {
 
     await next();
     const rPath = routePath(ctx);
+    // Per-route routeCacheTtl is only set on ctx by the handler wrapper during next(), so Cache-Control must be (re)applied here.
     const routeCacheTtl = getRouteCacheTtl(ctx);
     if (routeCacheTtl) {
         ctx.header('Cache-Control', `public, max-age=${routeCacheTtl}`);
