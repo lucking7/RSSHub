@@ -160,6 +160,7 @@ async function fetchOfficialLiveItems(): Promise<DataItem[]> {
             requirePubDate: true,
         });
     } catch {
+        // Deliberate: a live-RSS failure must not empty the channel-API feed.
         return [];
     }
 }

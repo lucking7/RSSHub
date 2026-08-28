@@ -54,7 +54,7 @@ async function handler(): Promise<Data> {
 
     const info = response.info || [];
 
-    // 解析数据
+    // Upstream ZhangTingExpression `info[]`: [0-3] 1/2/3/high-board counts, [4-7] seal rates, [8-10] avg seals (1-3 boards), [11] comment.
     const yiBan = info[0] || 0;
     const erBan = info[1] || 0;
     const sanBan = info[2] || 0;
@@ -71,7 +71,6 @@ async function handler(): Promise<Data> {
     const totalZt = yiBan + erBan + sanBan + gaoBan;
     const avgSealRate = ((yiBanRate + erBanRate + sanBanRate + gaoBanRate) / 4).toFixed(2);
 
-    // 判断市场情绪
     let sentiment = '中性';
     if (Number(avgSealRate) >= 80 && gaoBan > 5) {
         sentiment = '极强';
@@ -85,17 +84,14 @@ async function handler(): Promise<Data> {
 
     const title = `涨停表现：${sentiment} (平均封板率${avgSealRate}%)`;
 
-    // 构建 sina 风格的 description
     let description = '';
 
-    // 涨停表现分析（下划线标题）
     description += '<div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 0 0 15px 0; border-radius: 4px;">';
     description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">涨停表现分析</h3>';
     description += `• <strong>${sentiment}</strong> | 平均封板率 ${avgSealRate}%<br>`;
     description += `<p style="margin: 10px 0 0 0; line-height: 1.6;">${comment}</p>`;
     description += '</div>';
 
-    // 连板分布（下划线标题 + 表格）
     description += '<div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 0 0 15px 0; border-radius: 4px;">';
     description += `<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">连板分布 (共${totalZt}家)</h3>`;
     description += '<table style="width: 100%; border-collapse: collapse;">';
@@ -123,7 +119,6 @@ async function handler(): Promise<Data> {
     description += '<td style="padding: 8px; text-align: center; border: 1px solid #ddd;">-</td></tr>';
     description += '</tbody></table></div>';
 
-    // 数据说明（下划线标题）
     description += '<div style="background: #f5f5f5; border-left: 3px solid #722ed1; padding: 10px 15px; margin: 0 0 15px 0; border-radius: 4px;">';
     description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">数据说明</h3>';
     description += '• <strong>封板率</strong>：当前封住涨停的股票占该连板总数的比例<br>';
@@ -131,7 +126,6 @@ async function handler(): Promise<Data> {
     description += '• <strong>高板</strong>：4连板及以上的股票';
     description += '</div>';
 
-    // 市场情绪参考（下划线标题）
     description += '<div style="background: #f5f5f5; border-left: 3px solid #faad14; padding: 10px 15px; margin: 0; border-radius: 4px;">';
     description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">市场情绪参考</h3>';
     description += '• <strong>极强</strong>：平均封板率>80% 且 高板>5家<br>';

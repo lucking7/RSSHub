@@ -61,19 +61,14 @@ async function handler(ctx): Promise<Data> {
 
     let newsList = response.List || [];
 
-    // 根据分类筛选
     if (category === '个股') {
-        // 只显示包含个股的快讯
         newsList = newsList.filter((item) => item.Stock && item.Stock.length > 0);
     } else if (category === '板块') {
-        // 只显示有板块信息的快讯
         newsList = newsList.filter((item) => item.PlateName && item.PlateName.trim() !== '');
     } else if (category !== '全部') {
-        // 按板块名称或发布者筛选
         newsList = newsList.filter((item) => item.PlateName === category || item.UserName === category);
     }
 
-    // 统计分类信息
     const stats = {
         plates: new Set(),
         authors: new Set(),
@@ -94,18 +89,14 @@ async function handler(ctx): Promise<Data> {
     }
 
     const items = newsList.map((item) => {
-        // 标题：优先使用Comment前50字，如果太短则用完整内容
         const title = item.Comment.length > 50 ? item.Comment.slice(0, 50) + '...' : item.Comment;
 
-        // 构建描述内容
         let description = '';
 
-        // 1. 添加配图（如果有）
         if (item.Image && item.Image.trim() !== '') {
             description += `<p><img src="${item.Image}" referrerpolicy="no-referrer" /></p>`;
         }
 
-        // 2. 主要内容
         description += `<p>${item.Comment}</p>`;
 
         if (item.PlateName && item.PlateName.trim() !== '') {
@@ -121,21 +112,18 @@ async function handler(ctx): Promise<Data> {
             }
         }
 
-        // 5. 解读内容（下划线标题）
         if (item.Interpretation && item.Interpretation.trim() !== '') {
             description += '<div style="background: #f5f5f5; border-left: 3px solid #722ed1; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
             description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">解读</h3>';
             description += `<p style="margin: 0;">${item.Interpretation}</p></div>`;
         }
 
-        // 6. 爆发原因（下划线标题）
         if (item.BoomReason && item.BoomReason.trim() !== '') {
             description += '<div style="background: #f5f5f5; border-left: 3px solid #faad14; padding: 10px 15px; margin: 15px 0 10px 0; border-radius: 4px;">';
             description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">爆发原因</h3>';
             description += `<p style="margin: 0;">${item.BoomReason}</p></div>`;
         }
 
-        // 构建分类信息：板块 + 相关个股
         const categories: string[] = [];
 
         if (item.PlateName) {
@@ -161,7 +149,6 @@ async function handler(ctx): Promise<Data> {
         };
     });
 
-    // 构建标题
     let feedTitle = '开盘啦 - 大盘直播';
     if (category === '个股') {
         feedTitle += ' - 个股异动';
