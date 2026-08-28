@@ -56,7 +56,6 @@ async function handler(): Promise<Data> {
     const strong = Math.trunc(Number(info.strong)) || 0;
     const sign = info.sign || '';
 
-    // 判断市场情绪
     let sentiment = '中性';
     if (strong >= 80) {
         sentiment = '极强';
@@ -70,22 +69,18 @@ async function handler(): Promise<Data> {
 
     const title = `市场情绪：${sentiment} (${strong}分)`;
 
-    // 构建 sina 风格的 description
     let description = '';
 
-    // 市场综合强度（下划线标题）
     description += '<div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 0 0 15px 0; border-radius: 4px;">';
     description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">市场综合强度</h3>';
     description += `<p style="font-size: 24px; font-weight: bold; text-align: center; margin: 0; color: #333;">${strong}分 - ${sentiment}</p>`;
     description += '</div>';
 
-    // 盘面点评（下划线标题）
     description += '<div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 0 0 15px 0; border-radius: 4px;">';
     description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">盘面点评</h3>';
     description += `<p style="margin: 0; line-height: 1.6;">${sign}</p>`;
     description += '</div>';
 
-    // 强度评分说明（下划线标题）
     description += '<div style="background: #f5f5f5; border-left: 3px solid #faad14; padding: 10px 15px; margin: 0; border-radius: 4px;">';
     description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">强度评分说明</h3>';
     description += '• <strong>80-100分</strong>：市场情绪极强，可积极参与<br>';

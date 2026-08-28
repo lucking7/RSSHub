@@ -70,6 +70,7 @@ export const buildOfficialRssItem = (item, options: OfficialRssItemOptions): Dat
     if (!link || !title) {
         return undefined;
     }
+    // Flash merge needs news id for dedupe GUIDs and pubDate for ordering, so items lacking either are dropped.
     if (options.requireNewsId && !newsId) {
         return undefined;
     }

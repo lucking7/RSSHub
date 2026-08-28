@@ -37,10 +37,9 @@ export const route: Route = {
 async function handler(ctx): Promise<Data> {
     const typeParam = ctx.req.param('type') || 'stock';
 
-    // Type参数映射
     const typeMap = {
-        stock: '0', // 股票类
-        commodity: '1', // 商品期货类
+        stock: '0',
+        commodity: '1',
     };
 
     const type = typeMap[typeParam] || '0';
@@ -59,7 +58,7 @@ async function handler(ctx): Promise<Data> {
                     Type: type,
                     Index: '0',
                     NewsID: '0',
-                    st: '30', // 获取30条
+                    st: '30',
                 },
                 headers: {
                     'User-Agent': 'lhb/5.21.3 (com.kaipanla.www; build:0; iOS 26.0.1) Alamofire/4.9.1',
@@ -78,13 +77,11 @@ async function handler(ctx): Promise<Data> {
     const newsList = response.List || [];
 
     const items = newsList.map((item) => {
-        // 标题：有就用，没有就留空
         const title = item.Title || '';
 
-        // 构建HTML描述
         let contentText = item.Content || item.Title || '';
 
-        // 移除description开头重复的【标题】
+        // Strip a duplicated 【title】 prefix from the description body.
         if (title && contentText) {
             const titleMatch = contentText.match(/^【(.+?)】/);
             if (titleMatch) {
@@ -95,26 +92,24 @@ async function handler(ctx): Promise<Data> {
             }
         }
 
-        // 开始构建HTML description
         let description = '';
 
-        // 1. 新闻正文（HTML卡片样式）
         description += '<div style="padding: 15px; background: #f8f9fa; border-left: 4px solid #1890ff; border-radius: 5px; margin-bottom: 10px;">';
         description += `<p style="margin: 0; line-height: 1.6; color: #333;">${contentText}</p>`;
         description += '</div>';
 
         if (item.Stocks && item.Stocks.length > 0) {
+            // Upstream API uses 8* codes for sectors.
             const plates = item.Stocks.filter(([code]: any[]) => code.startsWith('8')).map((s: any[]) => toStockTuple(s));
             const stocks = item.Stocks.filter(([code]: any[]) => !code.startsWith('8')).map((s: any[]) => toStockTuple(s));
             description += renderSectorAndStockCards(plates, stocks);
         }
 
-        // 构建分类信息：股票名(代码)，不包含涨跌幅（避免动态数据）
+        // Categories are stable `name(code)` labels; omit change % so they do not churn with live quotes.
         const categories =
             item.Stocks && item.Stocks.length > 0
                 ? item.Stocks.map((s) => {
                       const [code, name] = s;
-                      // 格式：股票名(代码)，不包含涨跌幅
                       return `${name}(${code})`;
                   })
                 : [];
@@ -130,7 +125,6 @@ async function handler(ctx): Promise<Data> {
         };
     });
 
-    // 构建标题
     const typeName = typeParam === 'commodity' ? '商品期货' : '股票';
     const feedTitle = `开盘啦 - ${typeName}新闻快讯`;
     const feedDescription = `来自财联社等权威财经媒体的${typeName}实时资讯`;
