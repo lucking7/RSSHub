@@ -20,27 +20,16 @@ export const route: Route = {
     parameters: {
         tag: '分类标签，默认全部，可选：macro（宏观）、stock（股市）、international（国际）、opinion（观点）',
     },
-    description: `使用新浪财经 724 移动端接口获取实时财经快讯
+    description: `使用新浪财经 724 移动端接口获取实时财经快讯。
 
 支持查询参数：
 
-- \`limit=20\` - 限制返回数量（默认 20 条）
-
-特点：
-
-- 📱 移动端专用接口
-- 📊 包含股票涨跌幅数据
-- ⏱️ 实时性强（平均 30 秒 / 条）
-- 🔄 单次最多 100 条
+- \`limit=20\` - 限制返回数量（默认 20 条，单次最多 100 条）
 
 示例：
 
-- \`/sina/724\` - 所有财经快讯（简短别名）
-- \`/sina/finance/724\` - 所有财经快讯（完整路径）
 - \`/sina/724/stock\` - 股市快讯
-- \`/sina/724?limit=50\` - 获取 50 条快讯
-
-别名路径：\`/sina/finance/724/:tag?\` 与 \`/sina/724/:tag?\` 均可使用。`,
+- \`/sina/724?limit=50\` - 获取 50 条快讯`,
     categories: ['finance'],
     features: {
         requireConfig: false,
@@ -60,8 +49,8 @@ export const route: Route = {
     cacheTtl: SINA_NEWS_CACHE_TTL,
 };
 
-// 股票分类辅助：根据 stocktype 字段把 item.stock[] 分成个股和非个股
-// 非个股包括：基金、商品、国际期货、国际指数、股指期货、外汇
+// Split item.stock[] by stocktype into individual stocks vs non-individual.
+// Non-individual: funds, commodities, international futures, international indexes, index futures, FX.
 const INDIVIDUAL_STOCK_TYPES = new Set(['cn', 'hk', 'us']);
 
 export interface Sina724Stock {
@@ -89,8 +78,7 @@ export function classifyStocks(stocks: Sina724Stock[]): {
     return { individualStocks, sectors };
 }
 
-// 把上游 original_pic 数组渲染成 html。
-// 注意：根据 AGENTS.md #40 不要写 referrerpolicy，RSSHub middleware 自行处理。
+// Do not set referrerpolicy; RSSHub middleware owns it (AGENTS.md).
 export function buildImageHtml(pics: string[] | undefined | null): string {
     if (!Array.isArray(pics) || pics.length === 0) {
         return '';
@@ -100,13 +88,12 @@ export function buildImageHtml(pics: string[] | undefined | null): string {
 
 const SINA_724_BASE_URL = 'https://news.cj.sina.cn';
 
-// 选 item link：pageUrl（正文页）→ url（分享页）→ 构造兜底，统一升 https。
 export function pickLink(item: { pageUrl?: string; url?: string; id: number | string }): string {
     const raw = item.pageUrl || item.url || `${SINA_724_BASE_URL}/7x24/${item.id}`;
     return raw.replace(/^http:/, 'https:');
 }
 
-// Prefer the first bracketed phrase, then the first 100 characters, then id.
+// Prefer the first bracketed phrase, then the first 100 characters, then id. `color` is ignored here; the importance prefix comes from applySourceImportance.
 export function buildTitle(item: { color?: number; content?: string; id: number | string }): string {
     const cleanContent = (item.content ?? '').replaceAll(/<[^>]+>/g, '');
     const titleMatch = cleanContent.match(/【([^】]+)】/);
@@ -124,7 +111,6 @@ function toStockItems(items: Sina724Stock[]): StockItem[] {
         }));
 }
 
-// 分类标签映射
 const TAG_MAP = {
     all: 0,
     macro: 1,
@@ -139,13 +125,13 @@ async function handler(ctx) {
     const tag = TAG_MAP[tagParam] ?? 0;
     const apiUrl = `${SINA_724_BASE_URL}/app/v1/news724/list`;
 
-    // 生成设备ID（缓存24小时）
+    // Stable device id; cached with the default content-expire TTL (CACHE_CONTENT_EXPIRE, 1h), not a custom 24h.
     const deviceId = await cache.tryGet('sina:724:deviceid', async () => {
         const crypto = await import('node:crypto');
         return crypto.randomBytes(16).toString('hex');
     });
 
-    // 上游 num 参数最大 100（超过会降级为 10）。RSS 只取第一页，不翻页。
+    // Upstream `num` max is 100 (values above that silently drop to 10). RSS takes the first page only; no pagination.
     const num = Math.min(Math.max(limit, 1), 100);
 
     const cacheKey = `sina:724:feed:${tag}:${num}`;
@@ -182,10 +168,8 @@ async function handler(ctx) {
 
         const title = buildTitle(item);
 
-        // 构建描述（去掉开头的【】部分）
         let description = content.replace(/【[^】]+】/, '').trim();
 
-        // 把上游 original_pic 渲染到 description 最前面（AGENTS.md #40：不写 referrerpolicy）
         const imageHtml = buildImageHtml(item.original_pic);
         if (imageHtml) {
             description = `${imageHtml}<br>${description}`;

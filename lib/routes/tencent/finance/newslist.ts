@@ -44,29 +44,17 @@ export const route: Route = {
     maintainers: ['luck'],
     handler,
     example: '/tencent/finance/newslist',
-    description: `使用腾讯自选股移动端接口获取实时财经快讯
+    description: `使用腾讯自选股移动端接口获取实时财经快讯。
 
 ⚠️ **重要说明**：
 
 - 由于 API 需要签名验证，当前使用固定签名（可能会过期）
 - 每次固定返回最新 10 条快讯
-- 如签名过期，需要更新代码中的 fixedParams
+- 如签名过期，需要更新代码中的 \`fixedParams.sign\`
 
 支持查询参数：
 
-- \`limit=10\` - 限制返回数量（最多 10 条，默认 10 条）
-
-特点：
-
-- 📱 移动端专用接口
-- 📊 包含股票涨跌幅数据
-- 🏷️ 支持热门标签分类
-- ⏱️ 实时性强
-
-示例：
-
-- \`/tencent/finance/newslist\` - 获取最新 10 条财经快讯
-- \`/tencent/finance/newslist?limit=5\` - 获取最新 5 条快讯`,
+- \`limit=10\` - 限制返回数量（最多 10 条，默认 10 条）`,
     categories: ['finance'],
     features: {
         requireConfig: false,
@@ -92,8 +80,7 @@ async function handler(ctx): Promise<Data> {
     const baseUrl = 'https://snp.tenpay.com';
     const apiUrl = `${baseUrl}/cgi-bin/snpgw_724_newslist.fcgi`;
 
-    // 固定参数（从抓包数据中获取 - 2025-10-28）
-    // 注意：签名可能会过期，届时需要更新
+    // Captured request params (2025-10-28). The `sign` can expire and must be recaptured when it does.
     const fixedParams = {
         reserve: '2149056560',
         filter: '0',
@@ -143,7 +130,7 @@ async function handler(ctx): Promise<Data> {
                 const data = response.data;
 
                 if (data.retcode !== '0') {
-                    throw new Error(`API Error: ${data.retmsg || 'Unknown error'}`);
+                    throw new Error(`Tencent finance newslist API error: ${data.retmsg || 'Unknown error'}. Refresh the captured fixedParams.sign`);
                 }
 
                 return data;
@@ -152,17 +139,16 @@ async function handler(ctx): Promise<Data> {
             false
         );
 
-        // 保存热门标签
         if (data.hot_label && data.hot_label.length > 0) {
             hotLabels = data.hot_label;
         }
 
-        // 获取新闻列表（注意：API返回的字段是 data 不是 list）
+        // API list field is `data`, not `list`.
         const newsList = data.data || [];
-        collected = newsList.slice(0, Math.min(limit, 10)); // 最多返回10条
+        collected = newsList.slice(0, Math.min(limit, 10)); // Upstream caps a response at 10 items.
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        throw new Error(`Failed to fetch news: ${message}`, {
+        throw new Error(`Failed to fetch Tencent finance newslist: ${message}. Refresh the captured fixedParams.sign`, {
             cause: error,
         });
     }
@@ -199,9 +185,9 @@ async function handler(ctx): Promise<Data> {
                     const fields = match[2].split('~');
                     if (fields.length > 5) {
                         stockMap[code] = {
-                            name: fields[1], // 股票名称
-                            price: fields[3], // 最新价
-                            change: fields[32] || fields[5], // 涨跌幅
+                            name: fields[1], // stock name
+                            price: fields[3], // last price
+                            change: fields[32] || fields[5], // change percent (32 preferred, 5 fallback)
                         };
                     }
                 }
@@ -216,7 +202,6 @@ async function handler(ctx): Promise<Data> {
         const newsId = item.id;
         const pubDate = timezone(parseDate(item.publish_time * 1000), 8);
 
-        // 解析标题（优先使用 new_title，否则提取【】内的内容）
         const title =
             item.new_title ||
             (() => {
@@ -262,10 +247,8 @@ async function handler(ctx): Promise<Data> {
             description += renderSectorAndStockCards(sectors, individualStocks);
         }
 
-        // 构建分类标签
         const categories: string[] = [];
 
-        // 添加标签信息
         const labelList = item.label_list || [];
         for (const label of labelList) {
             if (label.label_name) {
@@ -273,7 +256,6 @@ async function handler(ctx): Promise<Data> {
             }
         }
 
-        // 添加股票名称标签
         for (const stock of stockList) {
             if (stock.name) {
                 categories.push(stock.name);
@@ -288,7 +270,7 @@ async function handler(ctx): Promise<Data> {
                 guid: `tencent-zxg-${newsId}`,
                 pubDate,
                 category: [...new Set(categories)],
-                author: item.source || '腾讯自选股', // 使用API返回的来源作为作者，如"财联社"、"央视新闻"等
+                author: item.source || '腾讯自选股', // Author is API `source` (e.g. 财联社, 央视新闻), not the app name.
             },
             [
                 {
@@ -309,7 +291,6 @@ async function handler(ctx): Promise<Data> {
         );
     });
 
-    // 构建标题
     let titleSuffix = '';
     if (hotLabels.length > 0) {
         const labelNames = hotLabels.map((l) => l.name).join('、');
