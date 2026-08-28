@@ -1,6 +1,6 @@
-import { load } from 'cheerio';
 import iconv from 'iconv-lite';
 
+import InvalidParameterError from '@/errors/types/invalid-parameter';
 import type { Data, Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
@@ -21,34 +21,148 @@ const toStockItemsWithQuotes = (items: any[], quotes: Record<string, { name: str
 
 const ROOT_URL = 'https://zhibo.sina.com.cn';
 const SINA_ZHIBO_CACHE_TTL = 1;
+const LIVE_ZHIBO_ID = '152';
 
-const ZHIBO_CHANNELS: Record<string, string> = {
-    '151': '政经',
-    '152': '财经',
-    '153': '综合',
-    '155': '市场',
-    '164': '国际',
-    '242': '行业',
+// 7x24 currently serves live flashes only on zhibo_id=152; other historic ids are 2014 archives.
+const ZHIBO_TAGS: Record<string, string> = {
+    '0': '全部',
+    '1': '宏观',
+    '3': '公司',
+    '4': '数据',
+    '5': '市场',
+    '6': '观点',
+    '7': '央行',
+    '8': '其他',
+    '9': '焦点',
+    '10': 'A股',
+    '102': '国际',
+    '110': '产业',
 };
 
-// Legacy `/sina/724/:tag` names map onto zhibo channel ids (approximate).
-const ZHIBO_ID_ALIASES: Record<string, string> = {
-    all: '152',
-    macro: '151',
-    stock: '155',
-    international: '164',
-    opinion: '153',
+const ZHIBO_TAG_NAME_TO_ID: Record<string, string> = Object.fromEntries(Object.entries(ZHIBO_TAGS).map(([id, name]) => [name, id]));
+
+const LEGACY_724_NAMES: Record<string, string> = {
+    all: '0',
+    macro: '1',
+    stock: '5',
+    international: '102',
+    opinion: '6',
+    focus: '9',
+};
+
+const LEGACY_ZHIBO_ID_TO_TAG: Record<string, string> = {
+    '151': '1',
+    '153': '6',
+    '155': '5',
+    '164': '102',
+    '242': '110',
 };
 
 const INDIVIDUAL_MARKETS = new Set(['cn', 'hk', 'us', 'usa']);
 
-export function resolveZhiboId(raw = '152'): { zhiboId: string; isFocusMode: boolean } {
-    if (raw === 'focus') {
-        return { zhiboId: '152', isFocusMode: true };
+export type ResolvedZhiboId = {
+    zhiboId: string;
+    isFocusMode: boolean;
+    tagId: string;
+    tagName: string;
+};
+
+export function resolveZhiboId(raw = '152'): ResolvedZhiboId {
+    const key = decodeURIComponent(raw).trim();
+    if (!key || key === LIVE_ZHIBO_ID || key === 'all' || key === '0') {
+        return { zhiboId: LIVE_ZHIBO_ID, isFocusMode: false, tagId: '0', tagName: '全部' };
     }
+
+    const tagId = LEGACY_724_NAMES[key.toLowerCase()] ?? LEGACY_ZHIBO_ID_TO_TAG[key] ?? (Object.hasOwn(ZHIBO_TAGS, key) ? key : ZHIBO_TAG_NAME_TO_ID[key]);
+    if (!tagId) {
+        throw new InvalidParameterError(`Invalid zhibo_id "${raw}". Use 152/all, focus, a 7x24 tag (宏观/市场/国际/A股/...), or a legacy 724 name (macro/stock/international/opinion).`);
+    }
+
     return {
-        zhiboId: ZHIBO_ID_ALIASES[raw] ?? raw,
-        isFocusMode: false,
+        zhiboId: LIVE_ZHIBO_ID,
+        isFocusMode: tagId === '9',
+        tagId,
+        tagName: ZHIBO_TAGS[tagId],
+    };
+}
+
+export function isZhiboFocusItem(item: { is_focus?: number; tag?: Array<{ id?: string; name?: string }> }): boolean {
+    if (item.is_focus === 1) {
+        return true;
+    }
+    return item.tag?.some((tag) => tag.name === '焦点' || String(tag.id) === '9') ?? false;
+}
+
+export function itemMatchesZhiboTag(item: { is_focus?: number; tag?: Array<{ id?: string; name?: string }> }, tagId: string, tagName?: string): boolean {
+    if (!tagId || tagId === '0' || tagName === '全部') {
+        return true;
+    }
+    if (tagId === '9' || tagName === '焦点') {
+        return isZhiboFocusItem(item);
+    }
+    const wantedName = tagName || ZHIBO_TAGS[tagId];
+    return (
+        item.tag?.some((tag) => {
+            if (String(tag.id) === tagId || (wantedName && tag.name === wantedName)) {
+                return true;
+            }
+            return Boolean(tagName && (tag.id === tagName || tag.name?.includes(tagName)));
+        }) ?? false
+    );
+}
+
+const asMediaUrls = (value: unknown): string[] => {
+    if (typeof value === 'string') {
+        return /^https?:\/\//i.test(value) ? [value] : [];
+    }
+    if (Array.isArray(value)) {
+        return value.flatMap((entry) => asMediaUrls(entry));
+    }
+    return [];
+};
+
+export function collectZhiboMultimedia(
+    multimedia: unknown,
+    richText?: string
+): {
+    images: string[];
+    videos: string[];
+    audios: string[];
+} {
+    const images: string[] = [];
+    const videos: string[] = [];
+    const audios: string[] = [];
+
+    if (multimedia && typeof multimedia === 'object') {
+        const media = multimedia as Record<string, unknown>;
+        images.push(...asMediaUrls(media.img_url), ...asMediaUrls(media.original_pic));
+        videos.push(...asMediaUrls(media.video_url));
+        audios.push(...asMediaUrls(media.audio_url));
+        if (Array.isArray(media.pic_id_plus)) {
+            for (const pic of media.pic_id_plus) {
+                if (!pic || typeof pic !== 'object') {
+                    continue;
+                }
+                const urls = pic as { large?: string; bmiddle?: string; thumbnail?: string };
+                images.push(...asMediaUrls(urls.large || urls.bmiddle || urls.thumbnail));
+            }
+        }
+    }
+
+    if (richText) {
+        const richTextImgMatches = richText.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi) ?? [];
+        for (const imgTag of richTextImgMatches) {
+            const srcMatch = imgTag.match(/src=["']([^"']+)["']/);
+            if (srcMatch) {
+                images.push(...asMediaUrls(srcMatch[1]));
+            }
+        }
+    }
+
+    return {
+        images: [...new Set(images)],
+        videos: [...new Set(videos)],
+        audios: [...new Set(audios)],
     };
 }
 
@@ -71,7 +185,7 @@ export const route: Route = {
     view: ViewType.Articles,
     example: '/sina/zhibo',
     parameters: {
-        zhibo_id: '直播频道 id，默认为 152（财经）。常见：151 政经、153 综合、155 市场、164 国际、242 行业。特殊值：focus（仅显示重要新闻）。旧版 724 分类名仍可用：all、macro、stock、international、opinion',
+        zhibo_id: '7×24 标签，默认 152/all（全部）。官网直播只在 152。可选：focus、宏观/市场/国际/A股 等标签名，或旧版 724 名：all、macro、stock、international、opinion',
     },
     features: {
         requireConfig: false,
@@ -92,32 +206,36 @@ export const route: Route = {
     handler,
     url: 'zhibo.sina.com.cn',
     cacheTtl: SINA_ZHIBO_CACHE_TTL,
-    description: `对接新浪财经 7×24 直播接口（zhibo）。\`/sina/724/:zhibo_id?\` 是本路由的别名，共用同一数据源。
+    description: `对接新浪财经 7×24 直播接口。官网当前只有 \`zhibo_id=152\` 在更新；151/153/155/164/242 是 2014 年存档，已改映射到 152 上的对应标签。\`/sina/724/:zhibo_id?\` 是本路由的别名。
 
 查询参数：
 
 - \`limit\`: 返回条数，默认 20。接口单页最多 10 条，超过会自动分页抓取
 - \`pagesize\`: 单页条数（1-10），默认 10
-- \`tag\`: 标签过滤，支持标签名或 ID（如：市场、公司、A 股、美股），留空表示不过滤
+- \`tag\`: 标签过滤，支持标签名或 ID（如：市场、公司、A 股、国际），留空表示不过滤。上游 \`tag=\` 参数无效，过滤在本地完成
 
-\`/sina/zhibo/focus\` 仅返回焦点新闻；重要新闻标题前会显示「重要」标记，feed 标题会带「重要新闻」。
+\`/sina/zhibo/focus\` 仅返回焦点新闻（\`is_focus=1\` 或标签 \`焦点\` / id \`9\`）。焦点条目会打上「重要」标记。
 
-旧版 \`/sina/724\` 分类名会映射到频道：
-
-| 724 分类      | 频道     |
-| ------------- | -------- |
-| all           | 152 财经 |
-| macro         | 151 政经 |
-| stock         | 155 市场 |
-| international | 164 国际 |
-| opinion       | 153 综合 |
+| 参数                      | 标签 |
+| ------------------------- | ---- |
+| all / 152 / 0             | 全部 |
+| focus / 9                 | 焦点 |
+| macro / 151 / 1           | 宏观 |
+| stock / 155 / 5           | 市场 |
+| international / 164 / 102 | 国际 |
+| opinion / 153 / 6         | 观点 |
+| 10                        | A 股 |
+| 3                         | 公司 |
+| 4                         | 数据 |
+| 7                         | 央行 |
+| 110 / 242                 | 产业 |
 
 示例：
 
-- \`/sina/zhibo\` - 财经频道
+- \`/sina/zhibo\` - 全部财经快讯
 - \`/sina/zhibo/focus\` - 仅焦点新闻
+- \`/sina/zhibo/市场\` 或 \`/sina/724/stock\` - 市场
 - \`/sina/724\` - 同上（别名）
-- \`/sina/724/stock\` - 市场频道
 
 别名路径：\`/sina/zhibo\`、\`/sina/finance/zhibo\`、\`/sina/724\`、\`/sina/finance/724\`。`,
 };
@@ -130,11 +248,7 @@ interface ZhiboFeedItem {
     update_time?: string;
     creator?: string;
     docurl?: string;
-    multimedia?: {
-        img_url?: string[];
-        video_url?: string[];
-        audio_url?: string[];
-    };
+    multimedia?: unknown;
     tag?: Array<{
         id: string;
         name: string;
@@ -313,12 +427,25 @@ async function fetchStockQuotes(stockInfoList: Array<{ market: string; symbol: s
 }
 
 async function handler(ctx): Promise<Data> {
-    const { zhiboId, isFocusMode } = resolveZhiboId(ctx.req.param('zhibo_id'));
+    const resolved = resolveZhiboId(ctx.req.param('zhibo_id'));
+    const { zhiboId, isFocusMode } = resolved;
     const limit = ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 20;
     const pagesizeQuery = ctx.req.query('pagesize');
-    const tagFilter = ctx.req.query('tag');
+    const tagQuery = ctx.req.query('tag');
     const dire = ctx.req.query('dire') ?? 'f';
     const dpc = ctx.req.query('dpc') ?? '1';
+    let tagId = resolved.tagId;
+    let tagName = resolved.tagName;
+    if (tagQuery) {
+        try {
+            const queryResolved = resolveZhiboId(tagQuery);
+            tagId = queryResolved.tagId;
+            tagName = queryResolved.tagName;
+        } catch {
+            tagId = tagQuery;
+            tagName = tagQuery;
+        }
+    }
 
     const apiUrl = `${ROOT_URL}/api/zhibo/feed`;
 
@@ -359,21 +486,7 @@ async function handler(ctx): Promise<Data> {
         false
     );
 
-    let filteredData = collected;
-    if (tagFilter) {
-        filteredData = collected.filter((item) => {
-            if (!item.tag || item.tag.length === 0) {
-                return false;
-            }
-            return item.tag.some((tag) => tag.name === tagFilter || tag.id === tagFilter || tag.name.includes(tagFilter));
-        });
-    }
-
-    if (isFocusMode) {
-        filteredData = filteredData.filter((item) => item.is_focus === 1);
-    }
-
-    filteredData = filteredData.slice(0, limit);
+    const filteredData = collected.filter((item) => itemMatchesZhiboTag(item, tagId, tagName) && (!isFocusMode || isZhiboFocusItem(item))).slice(0, limit);
 
     const allStocks: Array<{ market: string; symbol: string; key: string }> = [];
     for (const item of filteredData) {
@@ -391,203 +504,122 @@ async function handler(ctx): Promise<Data> {
 
     const stockQuotes = await fetchStockQuotes(allStocks);
 
-    const items = await Promise.all(
-        filteredData.map(async (it) => {
-            const plain = it.rich_text?.replaceAll(/<[^>]+>/g, '').trim() ?? '';
-            // Prefer the 【…】 phrase as title so the body is not mixed into the title.
-            const bracketMatch = plain.match(/^【([^】]+)】/);
-            let titleText;
-            if (bracketMatch) {
-                // Unlike 724 (which strips the marks), keep the 【】 wrappers.
-                titleText = `【${bracketMatch[1]}】`;
-            } else if (plain.length > 0) {
-                titleText = plain.length > 80 ? `${plain.slice(0, 80)}…` : plain;
-            } else {
-                titleText = `直播快讯 #${it.id}`;
-            }
-            const isFocus = it.is_focus === 1;
-            // Strip the 【…】 prefix from the body so it is not repeated after the title.
-            const plainBody = bracketMatch ? plain.replace(/^【[^】]+】\s*/, '') : plain;
-            const richBodyHtml = typeof it.rich_text === 'string' && bracketMatch ? it.rich_text.replace(/^【[^】]+】\s*/, '') : it.rich_text || '';
+    const items = filteredData.map((it) => {
+        const plain = it.rich_text?.replaceAll(/<[^>]+>/g, '').trim() ?? '';
+        const bracketMatch = plain.match(/^【([^】]+)】/);
+        const titleText = bracketMatch ? `【${bracketMatch[1]}】` : plain || `直播快讯 #${it.id}`;
+        const isFocus = isZhiboFocusItem(it);
+        const plainBody = bracketMatch ? plain.replace(/^【[^】]+】\s*/, '') : plain;
+        const richBodyHtml = typeof it.rich_text === 'string' && bracketMatch ? it.rich_text.replace(/^【[^】]+】\s*/, '') : it.rich_text || '';
 
-            let detailLink = 'https://finance.sina.com.cn/7x24/';
-            let stockInfo: Array<{
-                market: string;
-                symbol: string;
-                key: string;
-            }> = [];
+        let detailLink = '';
+        let stockInfo: Array<{
+            market: string;
+            symbol: string;
+            key: string;
+        }> = [];
 
-            if (it.ext) {
-                try {
-                    const extData = JSON.parse(it.ext);
-                    if (extData.docurl) {
-                        detailLink = extData.docurl.replace(/^http:\/\//, 'https://');
-                    }
-                    if (extData.stocks && Array.isArray(extData.stocks)) {
-                        stockInfo = extData.stocks;
-                    }
-                } catch {
-                    // Keep the default link when ext JSON is unparseable.
+        if (it.ext) {
+            try {
+                const extData = JSON.parse(it.ext);
+                if (extData.docurl) {
+                    detailLink = extData.docurl.replace(/^http:\/\//, 'https://');
                 }
-            }
-
-            if (detailLink === 'https://finance.sina.com.cn/7x24/' && it.docurl) {
-                detailLink = it.docurl.replace(/^http:\/\//, 'https://');
-            }
-
-            const images: string[] = [];
-            const videos: string[] = [];
-            const audios: string[] = [];
-
-            if (it.multimedia && typeof it.multimedia === 'object') {
-                if (it.multimedia.img_url && Array.isArray(it.multimedia.img_url)) {
-                    images.push(...it.multimedia.img_url);
+                if (extData.stocks && Array.isArray(extData.stocks)) {
+                    stockInfo = extData.stocks;
                 }
-                if (it.multimedia.video_url && Array.isArray(it.multimedia.video_url)) {
-                    videos.push(...it.multimedia.video_url);
-                }
-                if (it.multimedia.audio_url && Array.isArray(it.multimedia.audio_url)) {
-                    audios.push(...it.multimedia.audio_url);
-                }
+            } catch {
+                // Keep the default link when ext JSON is unparseable.
             }
+        }
 
-            if (it.rich_text && typeof it.rich_text === 'string') {
-                const richTextImgMatches = it.rich_text.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi);
-                if (richTextImgMatches) {
-                    for (const imgTag of richTextImgMatches) {
-                        const srcMatch = imgTag.match(/src=["']([^"']+)["']/);
-                        if (srcMatch && !images.includes(srcMatch[1])) {
-                            images.push(srcMatch[1]);
-                        }
-                    }
-                }
-            }
+        if (!detailLink && it.docurl) {
+            detailLink = it.docurl.replace(/^http:\/\//, 'https://');
+        }
+        if (!detailLink || /\/7x24\/?$/.test(detailLink)) {
+            detailLink = `https://finance.sina.com.cn/7x24/?id=${it.id}`;
+        }
 
-            // If the feed item has no images, fall back to the detail page (og/twitter/#article/#artibody), same idea as 10jqka.
-            if (images.length === 0 && detailLink) {
-                try {
-                    const detailResp = await got(detailLink);
-                    const $ = load(detailResp.data);
-                    const ogImage = $('meta[property="og:image"]').attr('content');
-                    const twitterImage = $('meta[name="twitter:image"], meta[name="twitter:image:src"]').attr('content');
-                    const pageImages = new Set<string>();
-                    if (ogImage) {
-                        pageImages.add(ogImage);
-                    }
-                    if (twitterImage) {
-                        pageImages.add(twitterImage);
-                    }
-                    $('#article img[src], #artibody img[src]').each((_, el) => {
-                        const src = $(el).attr('src');
-                        if (src) {
-                            pageImages.add(src);
-                        }
-                    });
-                    images.push(...pageImages);
-                } catch {
-                    // Ignore unreachable detail pages.
-                }
-            }
+        const { images, videos, audios } = collectZhiboMultimedia(it.multimedia, it.rich_text);
+        const { sectors, individualStocks } = classifyZhiboStocks(stockInfo);
+        const stockCategories = stockInfo.map((s) => `${s.key}(${s.symbol.toUpperCase()})`);
 
-            const { sectors, individualStocks } = classifyZhiboStocks(stockInfo);
+        const mediaHtml: string[] = [];
+        if (images.length > 0) {
+            mediaHtml.push(...images.map((img) => `<img src="${img}" />`));
+        }
+        if (videos.length > 0) {
+            mediaHtml.push(...videos.map((video) => `<video controls src="${video}" style="max-width: 100%;">您的浏览器不支持视频播放</video>`));
+        }
+        if (audios.length > 0) {
+            mediaHtml.push(...audios.map((audio) => `<audio controls src="${audio}">您的浏览器不支持音频播放</audio>`));
+        }
 
-            const stockCategories = stockInfo.map((s) => `${s.key}(${s.symbol.toUpperCase()})`);
+        const description = `${plainBody}<br>${mediaHtml.join('<br>')}${renderSectorAndStockCards(toStockItemsWithQuotes(sectors, stockQuotes), toStockItemsWithQuotes(individualStocks, stockQuotes))}`;
+        const contentHtml = `${richBodyHtml}<br>${mediaHtml.join('<br>')}<br>`;
+        const uniqueCategories = [...new Set([...(it.tag?.map((t) => t.name) || []), ...stockCategories])].filter(Boolean);
 
-            let description = `${plainBody}<br>`;
-            description += renderSectorAndStockCards(toStockItemsWithQuotes(sectors, stockQuotes), toStockItemsWithQuotes(individualStocks, stockQuotes));
+        let authorName = '新浪财经';
+        if (it.anchor && it.anchor.trim()) {
+            authorName = it.anchor.trim();
+        } else if (it.compere_info && it.compere_info.trim()) {
+            authorName = it.compere_info.trim();
+        } else if (it.creator) {
+            authorName = it.creator.replace('@staff.sina.com.cn', '').replace('@staff.sina.com', '');
+        }
 
-            const mediaHtml: string[] = [];
+        const [firstVideo] = videos;
+        const [firstAudio] = audios;
+        const [firstImage] = images;
 
-            if (images.length > 0) {
-                mediaHtml.push(...images.map((img) => `<img src="${img}" />`));
-            }
-
-            if (videos.length > 0) {
-                mediaHtml.push(...videos.map((video) => `<video controls src="${video}" style="max-width: 100%;">您的浏览器不支持视频播放</video>`));
-            }
-
-            if (audios.length > 0) {
-                mediaHtml.push(...audios.map((audio) => `<audio controls src="${audio}">您的浏览器不支持音频播放</audio>`));
-            }
-
-            const contentHtml = `${richBodyHtml}<br>${mediaHtml.join('<br>')}<br>`;
-
-            const tagCategories = it.tag?.map((t) => t.name) || [];
-            const categories = [...tagCategories, ...stockCategories];
-            const uniqueCategories = [...new Set(categories)].filter(Boolean);
-
-            // Author: anchor > compere_info > creator (strip the staff email suffix).
-            let authorName = '新浪财经';
-            if (it.anchor && it.anchor.trim()) {
-                authorName = it.anchor.trim();
-            } else if (it.compere_info && it.compere_info.trim()) {
-                authorName = it.compere_info.trim();
-            } else if (it.creator) {
-                authorName = it.creator.replace('@staff.sina.com.cn', '').replace('@staff.sina.com', '');
-            }
-
-            let enclosure: { url: string; type: string } | undefined;
-            if (videos.length > 0) {
-                enclosure = {
-                    url: videos[0],
-                    type: 'video/mp4',
-                };
-            } else if (audios.length > 0) {
-                enclosure = {
-                    url: audios[0],
-                    type: 'audio/mpeg',
-                };
-            } else if (images.length > 0) {
-                enclosure = {
-                    url: images[0],
-                    type: 'image/jpeg',
-                };
-            }
-
-            return applySourceImportance(
-                {
-                    title: titleText,
-                    link: detailLink,
-                    description,
-                    author: authorName,
-                    pubDate: parseDate(it.create_time),
-                    guid: `sina-finance-zhibo-${it.id}`,
-                    category: uniqueCategories,
-                    image: images[0],
-                    banner: images[0],
-                    enclosure,
-                    content: {
-                        html: contentHtml,
-                        text: plainBody,
-                    },
+        return applySourceImportance(
+            {
+                title: titleText,
+                link: detailLink,
+                description,
+                author: authorName,
+                pubDate: parseDate(it.create_time),
+                guid: `sina-finance-zhibo-${it.id}`,
+                category: uniqueCategories,
+                image: firstImage,
+                banner: firstImage,
+                ...(firstVideo
+                    ? { enclosure_url: firstVideo, enclosure_type: 'video/mp4' }
+                    : firstAudio
+                      ? { enclosure_url: firstAudio, enclosure_type: 'audio/mpeg' }
+                      : firstImage
+                        ? { enclosure_url: firstImage, enclosure_type: 'image/jpeg' }
+                        : {}),
+                content: {
+                    html: contentHtml,
+                    text: plainBody,
                 },
-                [
-                    {
-                        source: 'sina',
-                        field: 'is_focus',
-                        value: it.is_focus,
-                        label: '焦点',
-                        normalized: isFocus ? 'important' : 'normal',
-                    },
-                    {
-                        source: 'sina',
-                        field: 'top_value',
-                        value: it.top_value,
-                        label: '置顶值',
-                    },
-                ]
-            );
-        })
-    );
+            },
+            [
+                {
+                    source: 'sina',
+                    field: 'is_focus',
+                    value: isFocus ? 1 : it.is_focus,
+                    label: '焦点',
+                    normalized: isFocus ? 'important' : 'normal',
+                },
+                {
+                    source: 'sina',
+                    field: 'top_value',
+                    value: it.top_value,
+                    label: '置顶值',
+                },
+            ]
+        );
+    });
 
-    const channelTitle = ZHIBO_CHANNELS[zhiboId] || '财经';
-    const tagSuffix = tagFilter ? ` - ${tagFilter}` : '';
+    const channelTitle = tagName === '全部' ? '财经' : tagName;
     const focusSuffix = isFocusMode ? ' - 重要新闻' : '';
 
     return {
-        title: `新浪财经 - 7×24直播 - ${channelTitle}${focusSuffix}${tagSuffix}`,
+        title: `新浪财经 - 7×24直播 - ${channelTitle}${focusSuffix}`,
         link: 'https://finance.sina.com.cn/7x24/',
-        description: `新浪财经7×24小时财经直播 - ${channelTitle}频道${focusSuffix}${tagSuffix}`,
+        description: `新浪财经7×24小时财经直播 - ${channelTitle}${focusSuffix}`,
         language: 'zh-CN',
         item: items,
         author: '新浪财经',

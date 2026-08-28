@@ -2,6 +2,7 @@ import type { DataItem } from '@/types';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
+import { applySourceImportance } from '../_finance/source-importance';
 import type { Jin10RawItem } from './filters';
 import { withJin10HotCategory } from './hot';
 
@@ -12,6 +13,7 @@ export const CHANNEL_MAP: Record<number, string> = {
     2: '期货',
     3: '全球市场',
     4: 'A股',
+    5: '英文',
 };
 
 export const buildFlashLink = (item: Jin10RawItem) => item.data?.source_link || item.data?.link || (item.id ? `${FLASH_DETAIL_PREFIX}/${item.id}` : undefined);
@@ -49,20 +51,55 @@ export type FlashDescriptionInput = {
     images?: string[];
 };
 
-export const splitJin10BracketTitle = (item: Jin10RawItem): { title: string; body: string } => {
+export const splitJin10FlashText = (item: Jin10RawItem, keepBrackets = false): { title: string; body: string } => {
     const content = item.data?.content ?? '';
     const titleMatch = content.match(/^【([^】]+)】/);
     if (titleMatch) {
         return {
-            title: titleMatch[1],
-            body: content.replace(titleMatch[0], ''),
+            title: keepBrackets ? `【${titleMatch[1]}】` : titleMatch[1],
+            body: content.replace(titleMatch[0], '').trim(),
         };
     }
 
+    const fallback = item.data?.title || item.data?.vip_title || content;
     return {
-        title: item.data?.vip_title || content,
+        title: fallback.replaceAll(/<[^>]+>/g, '').trim(),
         body: content,
     };
+};
+
+export const splitJin10BracketTitle = (item: Jin10RawItem): { title: string; body: string } => splitJin10FlashText(item);
+
+export const extractFlashCategories = (item: Jin10RawItem, options?: { includeChannels?: boolean }): string[] => {
+    const tags: string[] = [];
+    const channels = item.channel ?? [];
+    const remarks = item.remark ?? [];
+    if (options?.includeChannels !== false) {
+        for (const ch of channels) {
+            const name = CHANNEL_MAP[ch];
+            if (name) {
+                tags.push(name);
+            }
+        }
+    }
+    for (const remark of remarks) {
+        if (remark.type === 'quotes') {
+            if (remark.title) {
+                tags.push(remark.title);
+            }
+        } else {
+            if (remark.category_name) {
+                tags.push(remark.category_name);
+            }
+            if (remark.title && remark.title !== '相关链接') {
+                tags.push(remark.title);
+            }
+        }
+        if (remark.symbol) {
+            tags.push(remark.symbol);
+        }
+    }
+    return [...new Set(tags)];
 };
 
 export const buildFlashDescription = ({ baseTitle, body, source, sourceLink, images = [] }: FlashDescriptionInput): string => {
@@ -79,20 +116,51 @@ export const buildFlashDescription = ({ baseTitle, body, source, sourceLink, ima
     return parts.join('');
 };
 
-export const mapClassicJin10FlashItem = (item: Jin10RawItem, options: { guidPrefix: string; link?: string }): DataItem => {
-    const { title, body } = splitJin10BracketTitle(item);
-    return {
-        title,
-        description: buildFlashDescription({
-            baseTitle: title,
-            body,
-            source: item.data?.source,
-            sourceLink: item.data?.source_link,
-            images: collectFlashImages(item),
-        }),
-        pubDate: timezone(parseDate(item.time!), 8),
-        link: options.link,
-        guid: `${options.guidPrefix}${item.id}`,
-        category: withJin10HotCategory(undefined, item.hot),
-    };
+export const mapClassicJin10FlashItem = (
+    item: Jin10RawItem,
+    options: {
+        guidPrefix: string;
+        link?: string;
+        keepBrackets?: boolean;
+        includeChannels?: boolean;
+        extraCategories?: string[];
+    }
+): DataItem => {
+    const { title, body } = splitJin10FlashText(item, options.keepBrackets);
+    const isImportant = item.important === 1;
+    const images = collectFlashImages(item);
+    const [firstImage] = images;
+    const category = withJin10HotCategory([...new Set([...extractFlashCategories(item, { includeChannels: options.includeChannels }), ...(options.extraCategories ?? [])])], item.hot);
+
+    return applySourceImportance(
+        {
+            title,
+            description: buildFlashDescription({
+                baseTitle: title,
+                body,
+                source: item.data?.source,
+                sourceLink: item.data?.source_link,
+                images,
+            }),
+            pubDate: timezone(parseDate(item.time!), 8),
+            link: options.link ?? buildFlashLink(item),
+            guid: `${options.guidPrefix}${item.id}`,
+            category,
+            author: item.data?.source || '金十数据',
+            ...(firstImage && {
+                image: firstImage,
+                enclosure_url: firstImage,
+                enclosure_type: getImageMimeType(firstImage),
+            }),
+        },
+        [
+            {
+                source: 'jin10',
+                field: 'important',
+                value: item.important,
+                label: '重要',
+                normalized: isImportant ? 'important' : 'normal',
+            },
+        ]
+    );
 };

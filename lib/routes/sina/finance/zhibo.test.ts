@@ -1,26 +1,81 @@
 import { describe, expect, test } from 'vitest';
 
-import { classifyZhiboStocks, resolveZhiboId } from './zhibo';
+import InvalidParameterError from '@/errors/types/invalid-parameter';
+
+import { classifyZhiboStocks, collectZhiboMultimedia, isZhiboFocusItem, itemMatchesZhiboTag, resolveZhiboId } from './zhibo';
 
 describe('resolveZhiboId', () => {
-    test('defaults to finance channel 152', () => {
-        expect(resolveZhiboId()).toEqual({ zhiboId: '152', isFocusMode: false });
+    test('defaults to live zhibo 152 with no tag filter', () => {
+        expect(resolveZhiboId()).toEqual({ zhiboId: '152', isFocusMode: false, tagId: '0', tagName: '全部' });
     });
 
-    test('passes through numeric channel ids', () => {
-        expect(resolveZhiboId('242')).toEqual({ zhiboId: '242', isFocusMode: false });
+    test('remaps archived zhibo ids onto live 152 tags', () => {
+        expect(resolveZhiboId('242')).toEqual({ zhiboId: '152', isFocusMode: false, tagId: '110', tagName: '产业' });
+        expect(resolveZhiboId('155')).toEqual({ zhiboId: '152', isFocusMode: false, tagId: '5', tagName: '市场' });
     });
 
-    test('maps focus to channel 152 with isFocusMode', () => {
-        expect(resolveZhiboId('focus')).toEqual({ zhiboId: '152', isFocusMode: true });
+    test('maps focus to tag 9', () => {
+        expect(resolveZhiboId('focus')).toEqual({ zhiboId: '152', isFocusMode: true, tagId: '9', tagName: '焦点' });
+        expect(resolveZhiboId('焦点')).toEqual({ zhiboId: '152', isFocusMode: true, tagId: '9', tagName: '焦点' });
     });
 
-    test('maps legacy /sina/724 tag names onto zhibo channels', () => {
-        expect(resolveZhiboId('all')).toEqual({ zhiboId: '152', isFocusMode: false });
-        expect(resolveZhiboId('macro')).toEqual({ zhiboId: '151', isFocusMode: false });
-        expect(resolveZhiboId('stock')).toEqual({ zhiboId: '155', isFocusMode: false });
-        expect(resolveZhiboId('international')).toEqual({ zhiboId: '164', isFocusMode: false });
-        expect(resolveZhiboId('opinion')).toEqual({ zhiboId: '153', isFocusMode: false });
+    test('maps legacy /sina/724 names onto 7x24 tags', () => {
+        expect(resolveZhiboId('all')).toEqual({ zhiboId: '152', isFocusMode: false, tagId: '0', tagName: '全部' });
+        expect(resolveZhiboId('macro')).toEqual({ zhiboId: '152', isFocusMode: false, tagId: '1', tagName: '宏观' });
+        expect(resolveZhiboId('stock')).toEqual({ zhiboId: '152', isFocusMode: false, tagId: '5', tagName: '市场' });
+        expect(resolveZhiboId('international')).toEqual({ zhiboId: '152', isFocusMode: false, tagId: '102', tagName: '国际' });
+        expect(resolveZhiboId('opinion')).toEqual({ zhiboId: '152', isFocusMode: false, tagId: '6', tagName: '观点' });
+        expect(resolveZhiboId('市场')).toEqual({ zhiboId: '152', isFocusMode: false, tagId: '5', tagName: '市场' });
+    });
+
+    test('rejects unknown ids', () => {
+        expect(() => resolveZhiboId('999')).toThrow(InvalidParameterError);
+    });
+});
+
+describe('isZhiboFocusItem', () => {
+    test('treats is_focus and 焦点 tags as focus', () => {
+        expect(isZhiboFocusItem({ is_focus: 1 })).toBe(true);
+        expect(isZhiboFocusItem({ is_focus: 0, tag: [{ id: '9', name: '焦点' }] })).toBe(true);
+        expect(isZhiboFocusItem({ is_focus: 0, tag: [{ id: '5', name: '市场' }] })).toBe(false);
+    });
+});
+
+describe('itemMatchesZhiboTag', () => {
+    test('matches tag id or name, and uses 焦点 for tag 9', () => {
+        const market = { is_focus: 0, tag: [{ id: '5', name: '市场' }] };
+        const focus = {
+            is_focus: 0,
+            tag: [
+                { id: '9', name: '焦点' },
+                { id: '5', name: '市场' },
+            ],
+        };
+
+        expect(itemMatchesZhiboTag(market, '0')).toBe(true);
+        expect(itemMatchesZhiboTag(market, '5', '市场')).toBe(true);
+        expect(itemMatchesZhiboTag(market, '102', '国际')).toBe(false);
+        expect(itemMatchesZhiboTag(focus, '9', '焦点')).toBe(true);
+        expect(itemMatchesZhiboTag(market, '9', '焦点')).toBe(false);
+    });
+});
+
+describe('collectZhiboMultimedia', () => {
+    test('reads img_url strings/arrays and weibo pic_id_plus.large', () => {
+        expect(collectZhiboMultimedia({ img_url: 'https://n.sinaimg.cn/a.jpg' }).images).toEqual(['https://n.sinaimg.cn/a.jpg']);
+        expect(collectZhiboMultimedia({ img_url: ['https://n.sinaimg.cn/a.jpg', 'https://n.sinaimg.cn/b.jpg'] }).images).toHaveLength(2);
+        expect(
+            collectZhiboMultimedia({
+                pic_id_plus: [{ large: 'https://wx4.sinaimg.cn/large/foo.jpg', thumbnail: 'https://wx4.sinaimg.cn/thumbnail/foo.jpg' }],
+            }).images
+        ).toEqual(['https://wx4.sinaimg.cn/large/foo.jpg']);
+    });
+
+    test('ignores empty multimedia and listing-style strings', () => {
+        expect(collectZhiboMultimedia('').images).toEqual([]);
+        expect(collectZhiboMultimedia({ img_url: '' }).images).toEqual([]);
+        expect(collectZhiboMultimedia(undefined, '<p>text</p>').images).toEqual([]);
+        expect(collectZhiboMultimedia(undefined, '<img src="https://n.sinaimg.cn/x.jpg" />').images).toEqual(['https://n.sinaimg.cn/x.jpg']);
     });
 });
 

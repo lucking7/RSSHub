@@ -1,14 +1,11 @@
-import type { Route } from '@/types';
+import InvalidParameterError from '@/errors/types/invalid-parameter';
+import type { Data, Route } from '@/types';
 import { ViewType } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
-import { parseDate } from '@/utils/parse-date';
-import timezone from '@/utils/timezone';
 
-import { applySourceImportance } from '../_finance/source-importance';
 import { isJin10AdFeedItem, isJin10PromotionalItem, type Jin10RawItem } from './filters';
-import { attachJin10HotLabels, withJin10HotCategory } from './hot';
-import { buildFlashDescription, buildFlashLink, CHANNEL_MAP, collectFlashImages, getImageMimeType } from './utils';
+import { mapClassicJin10FlashItem } from './utils';
 
 const JIN10_FLASH_CACHE_TTL = 1;
 
@@ -18,7 +15,7 @@ export const route: Route = {
     view: ViewType.Notifications,
     example: '/jin10/flash',
     parameters: {
-        channel: '频道，可选；留空=全部快讯，`1`=美股盘前/盘后异动，`2`=港股盘前/盘后异动',
+        channel: '频道，可选；留空=全部快讯，`1`=美股，`2`=港股',
     },
     features: {
         requireConfig: false,
@@ -37,43 +34,38 @@ export const route: Route = {
     maintainers: ['laampui'],
     handler,
     cacheTtl: JIN10_FLASH_CACHE_TTL,
-    description: `查询参数：
+    description: `获取金十美港电讯（\`ushknews.com\`）快讯。站点页签只有「全部快讯 / 美股 / 港股」和「只看重要」，没有金十官网的 \`火\` / \`热\` / \`沸\` / \`爆\` 热度，也没有外汇 / 期货 / A 股频道。
 
-- \`important_only=1\` 仅返回重要快讯
+频道（路径参数）：
+
+- 留空 = 全部快讯
+- \`1\` = 美股
+- \`2\` = 港股
+
+查询参数：
+
+- \`important_only=1\` 仅返回重要快讯（对应站点「只看重要」）
 - \`limit=50\` 限制返回数量（默认 50 条）
-
-热门快讯会在 \`category\` 中带上 \`火\` / \`热\` / \`沸\` / \`爆\`。可用 RSSHub 通用参数 \`filter_category\` 筛选。
 
 示例：
 
-- \`/jin10/flash\` - 所有快讯
-- \`/jin10/flash/1\` - 美股盘前 / 盘后异动
-- \`/jin10/flash/2\` - 港股盘前 / 盘后异动
+- \`/jin10/flash\` - 全部快讯
+- \`/jin10/flash/1\` - 美股
+- \`/jin10/flash/2\` - 港股
 - \`/jin10/flash?important_only=1\` - 全部快讯中仅重要
-- \`/jin10/flash/1?limit=20\` - 美港频道前 20 条`,
+- \`/jin10/flash/1?limit=20\` - 美股前 20 条`,
 };
 
-const FLASH_CHANNEL_TITLE: Record<string, string> = {
-    1: '美股盘前/盘后异动',
-    2: '港股盘前/盘后异动',
+const USHK_CHANNEL_NAMES: Record<string, string> = {
+    '1': '美股',
+    '2': '港股',
 };
 
-const extractRemarkTags = (remark: Jin10RawItem['remark']): string[] => {
-    const tags: string[] = [];
-    const remarks = remark ?? [];
-    for (const r of remarks) {
-        if (r.category_name) {
-            tags.push(r.category_name);
-        }
-        if (r.symbol) {
-            tags.push(r.symbol);
-        }
-    }
-    return tags;
-};
-
-async function handler(ctx) {
+async function handler(ctx): Promise<Data> {
     const channel = ctx.req.param('channel') ?? '';
+    if (channel && !Object.hasOwn(USHK_CHANNEL_NAMES, channel)) {
+        throw new InvalidParameterError(`Invalid ushknews channel "${channel}". Use empty (all), 1 (US), or 2 (HK).`);
+    }
     const limitQuery = ctx.req.query('limit');
     const limit = limitQuery ? Number.parseInt(limitQuery) : 50;
     const importantOnly = ctx.req.query('important_only') === '1';
@@ -92,7 +84,7 @@ async function handler(ctx) {
                     'Client-IP': '116.228.111.18',
                 },
             });
-            return attachJin10HotLabels(response.data ?? []);
+            return response.data ?? [];
         },
         JIN10_FLASH_CACHE_TTL,
         false
@@ -101,67 +93,21 @@ async function handler(ctx) {
     const filtered = rawItems.filter((item) => !isJin10PromotionalItem(item) && (!importantOnly || item.important === 1)).slice(0, limit);
 
     const items = filtered
-        .map((item) => {
-            const content = item.data?.content ?? '';
-            const bracketMatch = content.match(/^【([^】]+)】(.*)$/s);
-
-            let baseTitle: string;
-            let body: string;
-            if (bracketMatch) {
-                baseTitle = `【${bracketMatch[1].trim()}】`;
-                body = bracketMatch[2].trim();
-            } else {
-                const plainText = item.data?.title?.trim() || content.replaceAll(/<[^>]+>/g, '');
-                baseTitle = plainText.length > 80 ? plainText.slice(0, 80) + '…' : plainText;
-                body = content;
-            }
-
-            const isImportant = item.important === 1;
-            const channels = (item.channel ?? []).map((ch) => CHANNEL_MAP[ch]).filter(Boolean);
-            const category = withJin10HotCategory([...new Set([...channels, ...extractRemarkTags(item.remark)])], item.hot);
-            const images = collectFlashImages(item);
-
-            const description = buildFlashDescription({
-                baseTitle,
-                body,
-                source: item.data?.source,
-                sourceLink: item.data?.source_link,
-                images,
-            });
-            const [firstImage] = images;
-
-            return applySourceImportance(
-                {
-                    title: baseTitle,
-                    description,
-                    link: buildFlashLink(item),
-                    pubDate: timezone(parseDate(item.time!), 8),
-                    category,
-                    guid: `jin10:flash:${item.id}`,
-                    author: item.data?.source || '金十数据',
-                    ...(firstImage && {
-                        image: firstImage,
-                        enclosure_url: firstImage,
-                        enclosure_type: getImageMimeType(firstImage),
-                    }),
-                },
-                [
-                    {
-                        source: 'jin10',
-                        field: 'important',
-                        value: item.important,
-                        label: '重要',
-                        normalized: isImportant ? 'important' : 'normal',
-                    },
-                ]
-            );
-        })
+        .map((item) =>
+            mapClassicJin10FlashItem(item, {
+                guidPrefix: 'jin10:flash:',
+                keepBrackets: true,
+                includeChannels: false,
+                extraCategories: [...(channel ? [USHK_CHANNEL_NAMES[channel]] : []), ...(item.channel ?? []).map((ch) => USHK_CHANNEL_NAMES[String(ch)]).filter(Boolean)],
+            })
+        )
         .filter((item) => !isJin10AdFeedItem(item));
 
     return {
-        title: `金十数据 - 美港电讯${importantOnly ? ' - 重要快讯' : ''}${channel ? ` - ${FLASH_CHANNEL_TITLE[channel] ?? channel}` : ''}`,
+        title: `金十数据 - 美港电讯${importantOnly ? ' - 重要快讯' : ''}${channel ? ` - ${USHK_CHANNEL_NAMES[channel]}` : ''}`,
         link: 'https://www.ushknews.com',
         item: items,
         description: `金十数据实时财经快讯${importantOnly ? '（仅重要）' : ''}`,
+        language: 'zh-CN',
     };
 }

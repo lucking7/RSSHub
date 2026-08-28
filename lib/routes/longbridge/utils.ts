@@ -33,7 +33,7 @@ export const parseRssDate = (value?: string): Date | undefined => {
 
 const NEWS_ID_RE = /\/news\/(?:post\/)?(\d+)(?:[/?#]|$)/;
 export const FLASH_GUID_PREFIX = 'longbridge-flash-';
-const OFFICIAL_NEWS_LINK_PREFIX = 'https://longbridge.com/zh-CN/news/';
+const OFFICIAL_NEWS_LINK_PREFIX = 'https://longbridge.com/news/';
 
 export const getNewsId = (link?: string, fallbackId?: string | number): string | undefined => {
     const fromUrl = cleanText(link).match(NEWS_ID_RE)?.[1];
