@@ -2,15 +2,15 @@
 
 ## 公共参数
 
-所有接口通用参数：
+`getSearchParams()` 默认附加：
 
-| 参数  | 值                | 说明   |
-| ----- | ----------------- | ------ |
-| `app` | `CailianpressWeb` | 应用名 |
-| `os`  | `web`             | 平台   |
-| `sv`  | `8.4.6`           | 版本号 |
+| 参数      | 值                | 说明   |
+| --------- | ----------------- | ------ |
+| `appName` | `CailianpressWeb` | 应用名 |
+| `os`      | `web`             | 平台   |
+| `sv`      | `8.7.9`           | 版本号 |
 
-`Referer: https://www.cls.cn/telegraph` 对所有接口都需要。
+`app` 与 telegraph 的 `Referer`/`Origin` **不是**全站共用。仅 `telegraph.tsx` 把 `appName` 换成 `app=CailianpressWeb`，并设置 `Origin: https://www.cls.cn`、`Referer: https://www.cls.cn/telegraph` 和浏览器 UA。`subject.ts` 使用默认 `appName`，不发 `app`，也不带这些 headers。
 
 ## 签名算法
 
@@ -27,7 +27,7 @@ const raw = sp.toString().replace(/%2C/g, ',');
 const sign = CryptoJS.MD5(CryptoJS.SHA1(raw).toString()).toString();
 ```
 
-> `lib/routes/cls/utils.ts` 第 14 行当前使用 `searchParams.toString()` 未做逗号还原，对不含逗号的参数无影响，但对 `stock_list` 等含逗号参数的接口会导致签名错误。
+> 签名在 `getSearchParams` 的 searchParams serialization（`URLSearchParams.sort()` 之后的 `searchParams.toString()`）上计算，当前**不做** `%2C` → `,` 还原。不含逗号的参数无影响，但对 `stock_list` 等含逗号参数的接口会导致签名错误。
 
 ## 接口列表
 
@@ -61,7 +61,7 @@ GET https://api3.cls.cn/v1/roll/get_roll_list
                 "brief": "...",
                 "ctime": 1777347190,
                 "level": "C", // A/B/C, A=重要
-                "type": -1, // -1=普通, 20015=VIP内容, 20026=大佬持仓跟踪
+                "type": -1, // -1=普通；非 -1（如 20015 VIP、20026 大佬持仓跟踪）会被 cleanAndFilter 丢弃
                 "subjects": [{ "subject_id": 1811, "subject_name": "民航机场" }],
                 "stock_list": [{ "StockID": "sh688788", "name": "科思科技", "RiseRange": -1.36 }],
                 "images": ["https://..."],
@@ -75,17 +75,17 @@ GET https://api3.cls.cn/v1/roll/get_roll_list
         ],
         "update_num": 6
     },
-    "vipData": [], // VIP 数据，应过滤
-    "vipGlobal": [] // VIP 全局推荐，应过滤
+    "vipData": [], // 顶层 VIP 数据；路由只读 data.roll_data，不消费此字段
+    "vipGlobal": [] // 顶层 VIP 全局推荐；路由不消费此字段
 }
 ```
 
 **注意：**
 
-- `www.cls.cn/nodeapi/updateTelegraphList` 已返回 404，不再作为 `/cls/telegraph` 的数据源
-- `type === 20015` 且顶层 `vipData`/`vipGlobal` 中的条目均为 VIP 付费内容，不应包含在 RSS feed 中
-- `item.shareurl` 域名固定为 `api3.cls.cn`，用作 item.link
-- `content` 开头通常包含 `【xxx】` 标题标记，建议用 `item.title || item.content` 作为 title
+- `www.cls.cn/nodeapi/updateTelegraphList` 已返回 404，不再作为 `/cls/telegraph` 的数据源；当前完整条目来自本接口 `get_roll_list`
+- `cleanAndFilter` 丢弃：`type !== -1` 的条目（`undefined`/`null` 视为 `-1`）、`share_img` 含 `vip` 的条目、广告（`is_ad` / `is_fad`）、以及促销文案。顶层 `vipData` / `vipGlobal` 不进入 feed
+- item.link 使用原始 `shareurl`，不做域名改写
+- title 回退链为 `title || extractTitle(content) || brief || content`（`extractTitle` 取 content 开头的 `【…】`）
 
 ### 2. 电报列表（全量刷新）
 
@@ -118,7 +118,7 @@ GET https://www.cls.cn/nodeapi/refreshTelegraphList
 
 数据封装在 `l` 对象中，key 为文章 ID。部分条目仅含 `id`+`ctime`（轻量轮询信号），不含完整内容。
 
-> 全量接口主要用于判断是否有新文章，完整内容仍需通过 `updateTelegraphList` 获取。
+> 全量接口主要用于判断是否有新文章。完整正文不在本接口；当前 `/cls/telegraph` 从 `get_roll_list` 取完整条目（`updateTelegraphList` 已 404，不再使用）。
 
 ### 3. 指数行情
 
