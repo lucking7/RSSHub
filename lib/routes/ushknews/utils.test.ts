@@ -161,8 +161,7 @@ describe('calendar mappers', () => {
         });
 
         expect(item?.title).toBe('「重要」美国至8月28日当周石油钻井总数(口)');
-        expect(item?.description).toContain('实际 447 口');
-        expect(item?.description).toContain('预期 暂无');
+        expect(item?.description).toBe('<p>实际 447 口，预期 暂无，前值 452</p>');
         expect(item?.guid).toBe('ushknews:rili:1184184');
         expect(item?.category).toEqual(expect.arrayContaining(['数据', '美国', '利多', '重要']));
     });
@@ -177,6 +176,8 @@ describe('calendar mappers', () => {
             url: '',
         });
 
+        expect(item?.title).toBe('「重要」古尔斯比接受CNBC的采访。');
+        expect(item?.description).toBe('<p>美国</p>');
         expect(item?.guid).toBe('ushknews:event:1185917');
         expect(item?.link).toBe('https://www.ushknews.com/?id=1185917');
         expect(item?.category).toEqual(expect.arrayContaining(['事件', '美国', '重要']));
