@@ -137,7 +137,7 @@ async function handler(ctx): Promise<Data> {
         });
 
     return {
-        title: `华尔街见闻 - 实时快讯 - ${titles[category]}`,
+        title: `华尔街见闻·${titles[category]}快讯`,
         link: currentUrl,
         language: 'zh-CN',
         item: items,

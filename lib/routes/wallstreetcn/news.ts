@@ -115,7 +115,7 @@ async function handler(ctx) {
     items = items.filter((item) => item !== null);
 
     return {
-        title: `华尔街见闻 - 资讯 - ${titles[category]}`,
+        title: `华尔街见闻·${titles[category]}资讯`,
         link: currentUrl,
         item: items,
         itunes_author: '华尔街见闻',

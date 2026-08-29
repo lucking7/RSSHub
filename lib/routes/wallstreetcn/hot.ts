@@ -81,7 +81,7 @@ async function handler(ctx) {
     );
 
     return {
-        title: '华尔街见闻 - 最热文章',
+        title: '华尔街见闻·最热文章',
         link: rootUrl,
         item: items,
         itunes_author: '华尔街见闻',

@@ -81,7 +81,7 @@ async function handler(ctx) {
                   }));
 
     return {
-        title: '财经日历 - 华尔街见闻',
+        title: '华尔街见闻·财经日历',
         link,
         item: items,
         itunes_author: '华尔街见闻',
