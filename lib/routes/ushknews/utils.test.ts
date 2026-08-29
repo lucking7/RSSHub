@@ -24,7 +24,9 @@ describe('isUshknewsBlank', () => {
     test('treats empty, None and nullish as blank', () => {
         expect(isUshknewsBlank('')).toBe(true);
         expect(isUshknewsBlank('None')).toBe(true);
+        expect(isUshknewsBlank('null')).toBe(true);
         expect(isUshknewsBlank(undefined)).toBe(true);
+        expect(isUshknewsBlank(null)).toBe(true);
         expect(formatUshknewsValue('')).toBe('暂无');
         expect(formatUshknewsValue(447)).toBe('447');
     });

@@ -187,8 +187,6 @@ export const extractUshknewsCategories = (item: UshknewsFlashItem, extra: string
     return [...new Set(tags.filter(Boolean))];
 };
 
-const distinctBody = (title: string, body: string): string => (body && stripHtml(body) !== stripHtml(title) ? body : '');
-
 const buildHtmlDescription = ({ body, images = [] }: { body: string; images?: string[] }): string => {
     const parts = images.map((pic) => `<p><img src="${pic}" alt=""></p>`);
     if (body) {
@@ -254,7 +252,7 @@ export const mapUshknewsFlashItem = (item: UshknewsFlashItem, extraCategories: s
     return applySourceImportance(
         {
             title,
-            description: buildHtmlDescription({ body: distinctBody(title, body), images }),
+            description: buildHtmlDescription({ body, images }),
             link,
             guid: `ushknews:flash:${item.id}`,
             ...(pubDateRaw && { pubDate: timezone(parseDate(pubDateRaw), 8) }),
@@ -286,12 +284,12 @@ export const mapUshknewsRiliItem = (item: UshknewsRiliItem): DataItem | undefine
     const unit = isUshknewsBlank(item.unit) ? '' : ` ${item.unit}`;
     const body = `实际 ${formatUshknewsValue(item.actual)}${unit}，预期 ${formatUshknewsValue(item.consensus)}，前值 ${formatUshknewsValue(item.previous)}`;
     const pubDate = item.timestr ? parseDate(item.timestr) : item.datetime ? timezone(parseDate(item.datetime), 8) : undefined;
-    const status = item.status_name && !isUshknewsBlank(item.status_name) ? item.status_name : '';
+    const status = isUshknewsBlank(item.status_name) ? '' : item.status_name;
 
     return applySourceImportance(
         {
             title,
-            description: buildHtmlDescription({ body: distinctBody(title, body) }),
+            description: buildHtmlDescription({ body }),
             link: ushknewsItemLink(item.id),
             guid: `ushknews:rili:${item.id}`,
             ...(pubDate && { pubDate }),
@@ -315,11 +313,11 @@ export const mapUshknewsEventItem = (item: UshknewsEventItem): DataItem | undefi
     if (!title) {
         return undefined;
     }
-    const place = [item.country, item.city, item.people].filter((value) => value && !isUshknewsBlank(value)).join(' · ');
+    const place = [item.country, item.city, item.people].filter((value) => !isUshknewsBlank(value)).join(' · ');
     return applySourceImportance(
         {
             title,
-            description: buildHtmlDescription({ body: distinctBody(title, place) }),
+            description: buildHtmlDescription({ body: place }),
             link: (item.url && !isUshknewsBlank(item.url) ? item.url : undefined) || ushknewsItemLink(item.id),
             guid: `ushknews:event:${item.id}`,
             ...(item.datetime && { pubDate: timezone(parseDate(item.datetime), 8) }),
