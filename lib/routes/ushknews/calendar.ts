@@ -58,7 +58,7 @@ async function handler(): Promise<Data> {
     );
 
     return {
-        title: '美港电讯 - 财经日历',
+        title: '美港电讯·财经日历',
         link: USHKNEWS_SITE,
         description: '美港电讯当日经济数据与财经事件',
         language: 'zh-CN',

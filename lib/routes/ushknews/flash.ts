@@ -72,9 +72,9 @@ export async function handler(ctx): Promise<Data> {
         .slice(0, limit);
 
     return {
-        title: `美港电讯 - ${name}`,
+        title: `美港电讯·${name}`,
         link: USHKNEWS_SITE,
-        description: `美港电讯实时快讯 - ${name}`,
+        description: `美港电讯实时快讯·${name}`,
         language: 'zh-CN',
         item: items,
         author: '美港电讯',
