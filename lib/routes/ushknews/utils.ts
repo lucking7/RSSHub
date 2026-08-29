@@ -187,9 +187,11 @@ export const extractUshknewsCategories = (item: UshknewsFlashItem, extra: string
     return [...new Set(tags.filter(Boolean))];
 };
 
-const buildHtmlDescription = ({ title, body, images = [] }: { title: string; body: string; images?: string[] }): string => {
+const distinctBody = (title: string, body: string): string => (body && stripHtml(body) !== stripHtml(title) ? body : '');
+
+const buildHtmlDescription = ({ body, images = [] }: { body: string; images?: string[] }): string => {
     const parts = images.map((pic) => `<p><img src="${pic}" alt=""></p>`);
-    if (body && stripHtml(body) !== stripHtml(title)) {
+    if (body) {
         parts.push(`<p>${body}</p>`);
     }
     return parts.join('');
@@ -252,7 +254,7 @@ export const mapUshknewsFlashItem = (item: UshknewsFlashItem, extraCategories: s
     return applySourceImportance(
         {
             title,
-            description: buildHtmlDescription({ title, body, images }),
+            description: buildHtmlDescription({ body: distinctBody(title, body), images }),
             link,
             guid: `ushknews:flash:${item.id}`,
             ...(pubDateRaw && { pubDate: timezone(parseDate(pubDateRaw), 8) }),
@@ -289,7 +291,7 @@ export const mapUshknewsRiliItem = (item: UshknewsRiliItem): DataItem | undefine
     return applySourceImportance(
         {
             title,
-            description: buildHtmlDescription({ title, body }),
+            description: buildHtmlDescription({ body: distinctBody(title, body) }),
             link: ushknewsItemLink(item.id),
             guid: `ushknews:rili:${item.id}`,
             ...(pubDate && { pubDate }),
@@ -317,7 +319,7 @@ export const mapUshknewsEventItem = (item: UshknewsEventItem): DataItem | undefi
     return applySourceImportance(
         {
             title,
-            description: buildHtmlDescription({ title, body: place }),
+            description: buildHtmlDescription({ body: distinctBody(title, place) }),
             link: (item.url && !isUshknewsBlank(item.url) ? item.url : undefined) || ushknewsItemLink(item.id),
             guid: `ushknews:event:${item.id}`,
             ...(item.datetime && { pubDate: timezone(parseDate(item.datetime), 8) }),
