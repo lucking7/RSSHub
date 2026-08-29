@@ -155,8 +155,6 @@ export const splitUshknewsFlashText = (item: UshknewsFlashItem): { title: string
     }
 
     const fallback = stripHtml(item.data?.title || content);
-    // Single-sentence flashes have no 【headline】; reuse of `content` as both
-    // title and body makes RSS-to-Telegram print the same line twice.
     if (stripHtml(content) === fallback) {
         return { title: fallback, body: '' };
     }
@@ -191,8 +189,6 @@ export const extractUshknewsCategories = (item: UshknewsFlashItem, extra: string
 
 const buildHtmlDescription = ({ title, body, images = [] }: { title: string; body: string; images?: string[] }): string => {
     const parts = images.map((pic) => `<p><img src="${pic}" alt=""></p>`);
-    // Description is body-only. Repeating `title` here duplicates the RSS
-    // `<title>` when clients such as RSS-to-Telegram render both fields.
     if (body && stripHtml(body) !== stripHtml(title)) {
         parts.push(`<p>${body}</p>`);
     }
