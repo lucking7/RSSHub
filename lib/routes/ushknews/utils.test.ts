@@ -24,7 +24,9 @@ describe('isUshknewsBlank', () => {
     test('treats empty, None and nullish as blank', () => {
         expect(isUshknewsBlank('')).toBe(true);
         expect(isUshknewsBlank('None')).toBe(true);
+        expect(isUshknewsBlank('null')).toBe(true);
         expect(isUshknewsBlank(undefined)).toBe(true);
+        expect(isUshknewsBlank(null)).toBe(true);
         expect(formatUshknewsValue('')).toBe('暂无');
         expect(formatUshknewsValue(447)).toBe('447');
     });
@@ -37,7 +39,21 @@ describe('splitUshknewsFlashText', () => {
             body: '上半年转亏。',
         });
         const content = `${'苹果提高了美国地区订阅价格。'.repeat(5)}结尾`;
-        expect(splitUshknewsFlashText({ data: { content } }).title).toBe(content);
+        expect(splitUshknewsFlashText({ data: { content } })).toEqual({ title: content, body: '' });
+    });
+
+    test('does not copy a single-sentence flash into body', () => {
+        expect(splitUshknewsFlashText({ data: { content: '尼泊尔外长：尼泊尔已请求专业服务和技术援助。' } })).toEqual({
+            title: '尼泊尔外长：尼泊尔已请求专业服务和技术援助。',
+            body: '',
+        });
+    });
+
+    test('keeps a distinct title field as headline and content as body', () => {
+        expect(splitUshknewsFlashText({ data: { title: '短标题', content: '完整正文内容。' } })).toEqual({
+            title: '短标题',
+            body: '完整正文内容。',
+        });
     });
 });
 
@@ -58,9 +74,34 @@ describe('mapUshknewsFlashItem', () => {
         );
 
         expect(item?.title).toBe('「重要」据CNBC：苹果提高了订阅价格。');
+        expect(item?.description).toBe('');
         expect(item?.guid).toBe('ushknews:flash:20260829013306596800');
         expect(item?.link).toBe('https://www.ushknews.com/?id=20260829013306596800');
         expect(item?.category).toEqual(['美股', '重要']);
+    });
+
+    test('puts only the body in description so RSS-to-Telegram does not repeat the title', () => {
+        const item = mapUshknewsFlashItem({
+            id: 'n1',
+            type: 0,
+            time: '2026-08-29 10:14:00',
+            data: { content: '尼泊尔外长：尼泊尔已请求专业服务和技术援助。' },
+        });
+
+        expect(item?.title).toBe('尼泊尔外长：尼泊尔已请求专业服务和技术援助。');
+        expect(item?.description).toBe('');
+    });
+
+    test('keeps 【】 body in description without repeating the headline', () => {
+        const item = mapUshknewsFlashItem({
+            id: 'b1',
+            type: 0,
+            time: '2026-08-29 00:00:00',
+            data: { content: '【保利置业】上半年转亏。' },
+        });
+
+        expect(item?.title).toBe('【保利置业】');
+        expect(item?.description).toBe('<p>上半年转亏。</p>');
     });
 
     test('maps type 1 data cards instead of dropping them as ads', () => {
@@ -85,6 +126,7 @@ describe('mapUshknewsFlashItem', () => {
         expect(item?.title).toBe('【纳斯达克】2027财年Q2 迈威尔科技(MRVL.O)');
         expect(item?.description).toContain('实际 0.33 $');
         expect(item?.description).toContain('预期 0.36');
+        expect(item?.description).not.toContain('迈威尔科技');
         expect(item?.category).toEqual(expect.arrayContaining(['数据', '美股', 'EPS', '纳斯达克']));
     });
 
@@ -99,6 +141,8 @@ describe('mapUshknewsFlashItem', () => {
 
         expect(item?.enclosure_url).toBe('https://cdn.example.com/a.png');
         expect(item?.enclosure_type).toBe('image/png');
+        expect(item?.description).toBe('<p><img src="https://cdn.example.com/a.png" alt=""></p>');
+        expect(item?.description).not.toContain('附图快讯');
     });
 });
 
@@ -119,8 +163,7 @@ describe('calendar mappers', () => {
         });
 
         expect(item?.title).toBe('「重要」美国至8月28日当周石油钻井总数(口)');
-        expect(item?.description).toContain('实际 447 口');
-        expect(item?.description).toContain('预期 暂无');
+        expect(item?.description).toBe('<p>实际 447 口，预期 暂无，前值 452</p>');
         expect(item?.guid).toBe('ushknews:rili:1184184');
         expect(item?.category).toEqual(expect.arrayContaining(['数据', '美国', '利多', '重要']));
     });
@@ -135,6 +178,8 @@ describe('calendar mappers', () => {
             url: '',
         });
 
+        expect(item?.title).toBe('「重要」古尔斯比接受CNBC的采访。');
+        expect(item?.description).toBe('<p>美国</p>');
         expect(item?.guid).toBe('ushknews:event:1185917');
         expect(item?.link).toBe('https://www.ushknews.com/?id=1185917');
         expect(item?.category).toEqual(expect.arrayContaining(['事件', '美国', '重要']));
