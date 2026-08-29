@@ -116,18 +116,9 @@ const stripHtml = (value?: string) =>
         .replaceAll(/\s+/g, ' ')
         .trim() ?? '';
 
-export const isUshknewsBlank = (value: unknown): boolean => {
-    switch (value) {
-        case undefined:
-        case null:
-        case '':
-        case 'None':
-        case 'null':
-            return true;
-        default:
-            return false;
-    }
-};
+const USHKNEWS_BLANK_VALUES = new Set<unknown>([undefined, null, '', 'None', 'null']);
+
+export const isUshknewsBlank = (value: unknown): boolean => USHKNEWS_BLANK_VALUES.has(value);
 
 export const formatUshknewsValue = (value: unknown): string => (isUshknewsBlank(value) ? '暂无' : String(value));
 
