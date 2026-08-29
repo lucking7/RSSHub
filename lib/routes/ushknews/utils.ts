@@ -117,10 +117,16 @@ const stripHtml = (value?: string) =>
         .trim() ?? '';
 
 export const isUshknewsBlank = (value: unknown): boolean => {
-    if ([undefined, null, ''].includes(value)) {
-        return true;
+    switch (value) {
+        case undefined:
+        case null:
+        case '':
+        case 'None':
+        case 'null':
+            return true;
+        default:
+            return false;
     }
-    return typeof value === 'string' && (value === 'None' || value === 'null');
 };
 
 export const formatUshknewsValue = (value: unknown): string => (isUshknewsBlank(value) ? '暂无' : String(value));
@@ -193,10 +199,7 @@ export const extractUshknewsCategories = (item: UshknewsFlashItem, extra: string
 };
 
 const buildHtmlDescription = ({ title, body, images = [] }: { title: string; body: string; images?: string[] }): string => {
-    const parts: string[] = [];
-    for (const pic of images) {
-        parts.push(`<p><img src="${pic}" alt=""></p>`);
-    }
+    const parts = images.map((pic) => `<p><img src="${pic}" alt=""></p>`);
     // Description is body-only. Repeating `title` here duplicates the RSS
     // `<title>` when clients such as RSS-to-Telegram render both fields.
     if (body && stripHtml(body) !== stripHtml(title)) {
