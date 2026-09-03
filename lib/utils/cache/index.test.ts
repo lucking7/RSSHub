@@ -60,6 +60,21 @@ describe('cache', () => {
         expect(fetcher).toHaveBeenCalledTimes(1);
     });
 
+    it('tryGet returns cached null as null', async () => {
+        process.env.CACHE_TYPE = 'memory';
+        const cache = (await import('@/utils/cache')).default;
+        if (!cache.clients.memoryCache || !cache.status.available) {
+            throw new Error('Memory cache client error');
+        }
+
+        cache.clients.memoryCache.set('cached-null', 'null');
+        const fetcher = vi.fn(() => Promise.resolve({ title: 'fresh' }));
+
+        const cached = await cache.tryGet('cached-null', fetcher);
+        expect(cached).toBeNull();
+        expect(fetcher).not.toHaveBeenCalled();
+    });
+
     it('redis', async () => {
         process.env.CACHE_TYPE = 'redis';
         const cache = (await import('@/utils/cache')).default;
