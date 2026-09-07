@@ -1084,10 +1084,6 @@
   "/jinritemai/docs/:dirId?": [
     "blade0910"
   ],
-  "/kaipanla/news/:type?": [],
-  "/kaipanla/review": [],
-  "/kaipanla/dapanzhibo/:category?": [],
-  "/kaipanla/zt": [],
   "/lagou/jobs/:position/:city": [
     "hoilc"
   ],
@@ -1482,6 +1478,13 @@
   "/jump/discount/:platform/:filter?/:countries?": [
     "zytomorrow"
   ],
+  "/kaipanhong/news/:type?": [],
+  "/kaipanhong/radar": [],
+  "/kaipanhong/dapanzhibo/:category?": [],
+  "/kaipanla/review": [],
+  "/kaipanla/zt": [],
+  "/kaipanla/news/:type?": [],
+  "/kaipanla/dapanzhibo/:category?": [],
   "/keep/user/:id": [
     "Dectinc",
     "DIYgod"

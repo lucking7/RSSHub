@@ -13981,120 +13981,6 @@
     "url": "op.jinritemai.com",
     "lang": "zh-CN"
   },
-  "kaipanla": {
-    "routes": {
-      "/news/:type?": {
-        "path": "/news/:type?",
-        "name": "新闻快讯",
-        "url": "longhuvip.com",
-        "maintainers": [],
-        "example": "/kaipanla/news",
-        "view": 0,
-        "parameters": {
-          "type": "新闻类型，可选：stock（股票，默认）、commodity（商品期货）"
-        },
-        "description": "开盘啦新闻快讯，来自财联社等权威财经媒体的实时资讯",
-        "categories": [
-          "finance"
-        ],
-        "features": {
-          "requireConfig": false,
-          "requirePuppeteer": false,
-          "antiCrawler": false,
-          "supportRadar": false,
-          "supportBT": false,
-          "supportPodcast": false,
-          "supportScihub": false
-        },
-        "cacheTtl": 1,
-        "location": "news.ts",
-        "module": "() => import('@/routes/kaipanla/news.ts')"
-      },
-      "/review": {
-        "path": "/review",
-        "name": "盘面点评",
-        "url": "longhuvip.com",
-        "maintainers": [],
-        "example": "/kaipanla/review",
-        "view": 0,
-        "description": "开盘啦盘面点评，包含市场综合强度评分和实时点评",
-        "categories": [
-          "finance"
-        ],
-        "features": {
-          "requireConfig": false,
-          "requirePuppeteer": false,
-          "antiCrawler": false,
-          "supportRadar": false,
-          "supportBT": false,
-          "supportPodcast": false,
-          "supportScihub": false
-        },
-        "cacheTtl": 1,
-        "location": "review.ts",
-        "module": "() => import('@/routes/kaipanla/review.ts')"
-      },
-      "/dapanzhibo/:category?": {
-        "path": "/dapanzhibo/:category?",
-        "name": "大盘直播",
-        "url": "longhuvip.com",
-        "maintainers": [],
-        "example": "/kaipanla/dapanzhibo",
-        "view": 0,
-        "parameters": {
-          "category": "可选筛选：板块名（如\"人工智能\"）、分析师名（如\"Livermore\"）、\"个股\"（含个股的直播）、\"板块\"（含板块的直播）"
-        },
-        "description": "开盘啦大盘直播，AI + 资深分析师实时解读市场，包含个股异动、板块轮动、大盘走势分析",
-        "categories": [
-          "finance"
-        ],
-        "features": {
-          "requireConfig": false,
-          "requirePuppeteer": false,
-          "antiCrawler": false,
-          "supportRadar": false,
-          "supportBT": false,
-          "supportPodcast": false,
-          "supportScihub": false
-        },
-        "cacheTtl": 1,
-        "location": "zhibo.ts",
-        "module": "() => import('@/routes/kaipanla/zhibo.ts')"
-      },
-      "/zt": {
-        "path": "/zt",
-        "name": "涨停表现",
-        "url": "longhuvip.com",
-        "maintainers": [],
-        "example": "/kaipanla/zt",
-        "view": 0,
-        "description": "开盘啦涨停表现，包含连板分布、封板率和平均封单数据",
-        "categories": [
-          "finance"
-        ],
-        "features": {
-          "requireConfig": false,
-          "requirePuppeteer": false,
-          "antiCrawler": false,
-          "supportRadar": false,
-          "supportBT": false,
-          "supportPodcast": false,
-          "supportScihub": false
-        },
-        "cacheTtl": 1,
-        "location": "zt.ts",
-        "module": "() => import('@/routes/kaipanla/zt.ts')"
-      }
-    },
-    "apiRoutes": {},
-    "name": "开盘啦",
-    "url": "longhuvip.com",
-    "categories": [
-      "finance"
-    ],
-    "description": "涨停板数据和实时市场快讯",
-    "lang": "zh-CN"
-  },
   "lagou": {
     "routes": {
       "/jobs/:position/:city": {
@@ -19082,6 +18968,210 @@
     "apiRoutes": {},
     "name": "JUMP",
     "url": "switch.jumpvg.com",
+    "lang": "zh-CN"
+  },
+  "kaipanhong": {
+    "routes": {
+      "/news/:type?": {
+        "path": "/news/:type?",
+        "name": "新闻快讯",
+        "url": "kaipanhong.com",
+        "maintainers": [],
+        "example": "/kaipanhong/news",
+        "view": 0,
+        "parameters": {
+          "type": "新闻类型，可选 stock、commodity（保留兼容名称）或原始类型 0、1、2，默认 stock"
+        },
+        "description": "开盘红新闻快讯，类型标签按上游原始分类保留。",
+        "categories": [
+          "finance"
+        ],
+        "features": {
+          "requireConfig": false,
+          "requirePuppeteer": false,
+          "antiCrawler": false,
+          "supportRadar": false,
+          "supportBT": false,
+          "supportPodcast": false,
+          "supportScihub": false
+        },
+        "cacheTtl": 1,
+        "location": "news.ts",
+        "module": "() => import('@/routes/kaipanhong/news.ts')"
+      },
+      "/radar": {
+        "path": "/radar",
+        "name": "盘口雷达",
+        "url": "kaipanhong.com",
+        "maintainers": [],
+        "example": "/kaipanhong/radar",
+        "view": 0,
+        "description": "开盘红盘口雷达事件流。",
+        "categories": [
+          "finance"
+        ],
+        "features": {
+          "requireConfig": false,
+          "requirePuppeteer": false,
+          "antiCrawler": false,
+          "supportRadar": false,
+          "supportBT": false,
+          "supportPodcast": false,
+          "supportScihub": false
+        },
+        "cacheTtl": 1,
+        "location": "radar.ts",
+        "module": "() => import('@/routes/kaipanhong/radar.ts')"
+      },
+      "/dapanzhibo/:category?": {
+        "path": "/dapanzhibo/:category?",
+        "name": "大盘直播",
+        "url": "kaipanhong.com",
+        "maintainers": [],
+        "example": "/kaipanhong/dapanzhibo",
+        "view": 0,
+        "parameters": {
+          "category": "可选筛选：板块名、分析师名、个股或板块"
+        },
+        "description": "开盘红大盘直播。",
+        "categories": [
+          "finance"
+        ],
+        "features": {
+          "requireConfig": false,
+          "requirePuppeteer": false,
+          "antiCrawler": false,
+          "supportRadar": false,
+          "supportBT": false,
+          "supportPodcast": false,
+          "supportScihub": false
+        },
+        "cacheTtl": 1,
+        "location": "zhibo.ts",
+        "module": "() => import('@/routes/kaipanhong/zhibo.ts')"
+      }
+    },
+    "apiRoutes": {},
+    "name": "开盘红",
+    "url": "kaipanhong.com",
+    "categories": [
+      "finance"
+    ],
+    "description": "开盘红财经快讯、大盘直播和盘口雷达",
+    "lang": "zh-CN"
+  },
+  "kaipanla": {
+    "routes": {
+      "/review": {
+        "path": "/review",
+        "name": "盘面点评",
+        "url": "longhuvip.com",
+        "maintainers": [],
+        "example": "/kaipanla/review",
+        "view": 0,
+        "description": "开盘啦盘面点评，包含市场综合强度评分和实时点评",
+        "categories": [
+          "finance"
+        ],
+        "features": {
+          "requireConfig": false,
+          "requirePuppeteer": false,
+          "antiCrawler": false,
+          "supportRadar": false,
+          "supportBT": false,
+          "supportPodcast": false,
+          "supportScihub": false
+        },
+        "cacheTtl": 1,
+        "location": "review.ts",
+        "module": "() => import('@/routes/kaipanla/review.ts')"
+      },
+      "/zt": {
+        "path": "/zt",
+        "name": "涨停表现",
+        "url": "longhuvip.com",
+        "maintainers": [],
+        "example": "/kaipanla/zt",
+        "view": 0,
+        "description": "开盘啦涨停表现，包含连板分布、封板率和平均封单数据",
+        "categories": [
+          "finance"
+        ],
+        "features": {
+          "requireConfig": false,
+          "requirePuppeteer": false,
+          "antiCrawler": false,
+          "supportRadar": false,
+          "supportBT": false,
+          "supportPodcast": false,
+          "supportScihub": false
+        },
+        "cacheTtl": 1,
+        "location": "zt.ts",
+        "module": "() => import('@/routes/kaipanla/zt.ts')"
+      },
+      "/news/:type?": {
+        "path": "/news/:type?",
+        "name": "新闻快讯",
+        "url": "longhuvip.com",
+        "maintainers": [],
+        "example": "/kaipanla/news",
+        "view": 0,
+        "parameters": {
+          "type": "新闻类型，可选 stock、commodity（保留兼容名称）或原始类型 0、1、2，默认 stock"
+        },
+        "description": "开盘红新闻快讯，保留开盘啦订阅路径兼容。",
+        "categories": [
+          "finance"
+        ],
+        "features": {
+          "requireConfig": false,
+          "requirePuppeteer": false,
+          "antiCrawler": false,
+          "supportRadar": false,
+          "supportBT": false,
+          "supportPodcast": false,
+          "supportScihub": false
+        },
+        "cacheTtl": 1,
+        "location": "news.ts",
+        "module": "() => import('@/routes/kaipanla/news.ts')"
+      },
+      "/dapanzhibo/:category?": {
+        "path": "/dapanzhibo/:category?",
+        "name": "大盘直播",
+        "url": "longhuvip.com",
+        "maintainers": [],
+        "example": "/kaipanla/dapanzhibo",
+        "view": 0,
+        "parameters": {
+          "category": "可选筛选：板块名、分析师名、个股或板块"
+        },
+        "description": "开盘红大盘直播，保留开盘啦订阅路径兼容。",
+        "categories": [
+          "finance"
+        ],
+        "features": {
+          "requireConfig": false,
+          "requirePuppeteer": false,
+          "antiCrawler": false,
+          "supportRadar": false,
+          "supportBT": false,
+          "supportPodcast": false,
+          "supportScihub": false
+        },
+        "cacheTtl": 1,
+        "location": "zhibo.ts",
+        "module": "() => import('@/routes/kaipanla/zhibo.ts')"
+      }
+    },
+    "apiRoutes": {},
+    "name": "开盘啦",
+    "url": "longhuvip.com",
+    "categories": [
+      "finance"
+    ],
+    "description": "涨停板数据和实时市场快讯",
     "lang": "zh-CN"
   },
   "keep": {

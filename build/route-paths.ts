@@ -1940,6 +1940,9 @@ export type RoutePath =
   | `/jump/discount/:platform/:filter?/:countries?`
   | `/junhe/legal-updates`
   | `/kadokawa/blog`
+  | `/kaipanhong/dapanzhibo/:category?`
+  | `/kaipanhong/news/:type?`
+  | `/kaipanhong/radar`
   | `/kaipanla/dapanzhibo/:category?`
   | `/kaipanla/news/:type?`
   | `/kaipanla/review`
