@@ -1,0 +1,188 @@
+openapi: 3.1.0
+info:
+    title: 开盘红观察接口（非官方）
+    version: 2026-09-07
+    license:
+        name: Documentation only
+        identifier: NOASSERTION
+    description: >-
+        基于 2026-09-07 抓包和一次匿名实测整理的非官方参考。只描述已匿名实测成功的四组 action；字段为抽样结构，不代表完整产品契约。上游是 POST 表单 JSON，RSSHub GET XML 路由不属于本 OpenAPI。
+servers:
+    - url: https://apparticle.kaipanhong.com
+      description: 文章与快讯网关
+    - url: https://apphwhq.kaipanhong.com
+      description: 首页、直播与行情网关
+paths:
+    /w1/api/index.php:
+        post:
+            summary: PHP 表单网关，多 action
+            description: >-
+                同一路径由 c 和 a 选择 action。请求体使用 application/x-www-form-urlencoded。以下 requestBody 使用 oneOf 表达四个已验证 action，不能将同一路径重复声明为四个 OpenAPI path 项。必须按 schema 的 x-upstream-server 使用对应 host，不得跨 host 混用。
+            operationId: kaipanhongGateway
+            security: []
+            parameters:
+                - in: header
+                  name: User-Agent
+                  required: false
+                  schema: { type: string }
+                  example: '%E5%BC%80%E7%9B%98%E7%BA%A2/0 CFNetwork/3860.700.1 Darwin/25.6.0'
+                  description: 可选的已观察 App UA。仅部分部署/请求条件下与结果相关，未证实为所有 action 的必需 header。
+            requestBody:
+                required: true
+                content:
+                    application/x-www-form-urlencoded:
+                        schema:
+                            oneOf:
+                                - $ref: '#/components/schemas/PCNewsFlashGetListRequest'
+                                - $ref: '#/components/schemas/ZhiBoContentRequest'
+                                - $ref: '#/components/schemas/MarketMoodRequest'
+                                - $ref: '#/components/schemas/RadarRequest'
+            responses:
+                '200':
+                    description: HTTP 成功不等于业务成功，仍须检查 errcode
+                    content:
+                        application/json:
+                            schema:
+                                anyOf:
+                                    - $ref: '#/components/schemas/PCNewsFlashGetListResponse'
+                                    - $ref: '#/components/schemas/ZhiBoContentResponse'
+                                    - $ref: '#/components/schemas/MarketMoodResponse'
+                                    - $ref: '#/components/schemas/RadarResponse'
+                                    - $ref: '#/components/schemas/BusinessError'
+                default:
+                    description: HTTP 层错误、超时或其他未观察错误
+                '400':
+                    description: HTTP 层请求错误；业务 errcode 非零仍可能以 200 返回
+components:
+    schemas:
+        Common:
+            type: object
+            required: [c, a, apiv, VerSion, PhoneOSNew]
+            properties:
+                c: { type: string, description: action 模块 }
+                a: { type: string, description: action 动作 }
+                apiv: { type: string, const: w47 }
+                VerSion: { type: string, const: 6.2.31.1 }
+                PhoneOSNew: { type: string, const: '2' }
+                Token: { type: string, description: 抓包存在但是否必需未知, writeOnly: true }
+                UserID: { type: string, description: 抓包存在但是否必需未知, writeOnly: true }
+                DeviceID: { type: string, description: 抓包存在但是否必需未知, writeOnly: true }
+        PCNewsFlashGetListRequest:
+            x-upstream-server: https://apparticle.kaipanhong.com
+            allOf:
+                - $ref: '#/components/schemas/Common'
+                - type: object
+                  properties:
+                      c: { const: PCNewsFlash }
+                      a: { const: GetList }
+                      Type: { type: string, enum: ['0', '1', '2'], description: 分类值，业务名称未知 }
+                      Index: { type: string, example: '0' }
+                      NewsID: { type: string, example: '0' }
+                      st: { type: string, example: '5' }
+        ZhiBoContentRequest:
+            x-upstream-server: https://apphwhq.kaipanhong.com
+            allOf:
+                - $ref: '#/components/schemas/Common'
+                - type: object
+                  properties:
+                      c: { const: ConceptionPoint }
+                      a: { const: ZhiBoContent }
+        MarketMoodRequest:
+            x-upstream-server: https://apphwhq.kaipanhong.com
+            allOf:
+                - $ref: '#/components/schemas/Common'
+                - type: object
+                  properties:
+                      c: { const: MarketMood }
+                      a: { const: MoodNumCount }
+        RadarRequest:
+            x-upstream-server: https://apphwhq.kaipanhong.com
+            allOf:
+                - $ref: '#/components/schemas/Common'
+                - type: object
+                  properties:
+                      c: { const: HomeDingPan }
+                      a: { const: Radar }
+                      Index: { type: string, example: '0' }
+                      st: { type: string, example: '5' }
+        ErrorFields:
+            type: object
+            properties:
+                errcode: { type: string, description: 业务结果码，具体非零含义未知, example: '0' }
+                t: { type: number, description: 上游字段，单位未知 }
+        BusinessError:
+            type: object
+            description: HTTP 可能仍为 200；errcode 非 0 表示业务失败，具体错误码和其他字段未观察。
+            required: [errcode]
+            properties:
+                errcode: { type: string, not: { const: '0' }, description: 非零业务结果码，具体含义未知 }
+        PCNewsFlashGetListResponse:
+            x-upstream-server: https://apparticle.kaipanhong.com
+            allOf:
+                - $ref: '#/components/schemas/ErrorFields'
+                - type: object
+                  required: [errcode, List]
+                  properties:
+                      List:
+                          type: array
+                          items:
+                              type: object
+                              properties:
+                                  CID: { type: string }
+                                  Time: { type: string, pattern: '^[0-9]+$', description: Unix 秒字符串 }
+                                  Title: { type: string }
+                                  Type: { type: string, description: 业务含义未知 }
+                                  PushUrl:
+                                      anyOf:
+                                          - { type: string, format: uri }
+                                          - { type: string, const: '' }
+                                      description: 可为空；为空时由客户端回退
+                                  Source: { type: string }
+                                  Content: { type: string }
+                                  Stocks:
+                                      type: array
+                                      items:
+                                          type: array
+                                          prefixItems:
+                                              - { type: string, description: 股票或板块代码 }
+                                              - { type: string, description: 名称 }
+                                              - { type: [string, number], description: 变化值，单位未知 }
+                                          items: {}
+                      Time: { type: number, description: 顶层时间字段，单位未知 }
+        ZhiBoContentResponse:
+            x-upstream-server: https://apphwhq.kaipanhong.com
+            allOf:
+                - $ref: '#/components/schemas/ErrorFields'
+                - type: object
+                  required: [errcode, List]
+                  properties:
+                      List: { type: array, items: { type: object, additionalProperties: true } }
+                      JHJJYD: { type: array, items: { type: string } }
+                      Notice: { type: string }
+                      Status: { type: number }
+                      Time: { type: number, description: 顶层时间字段，单位未知 }
+                      date: { type: string }
+                      ttag: { type: number, description: 单位未知 }
+        MarketMoodResponse:
+            x-upstream-server: https://apphwhq.kaipanhong.com
+            allOf:
+                - $ref: '#/components/schemas/ErrorFields'
+                - type: object
+                  required: [errcode, list]
+                  properties:
+                      list:
+                          type: object
+                          additionalProperties: { type: number, description: 单位和口径未知 }
+                      ttag: { type: number, description: 单位未知 }
+        RadarResponse:
+            x-upstream-server: https://apphwhq.kaipanhong.com
+            allOf:
+                - $ref: '#/components/schemas/ErrorFields'
+                - type: object
+                  required: [errcode, list]
+                  properties:
+                      list: { type: array, items: { type: object, additionalProperties: true } }
+                      num: { type: number }
+                      date: { type: string }
+                      time: { type: number, description: 单位和时区未知 }
+                      ttag: { type: number, description: 单位未知 }

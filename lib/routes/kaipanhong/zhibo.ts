@@ -1,18 +1,18 @@
 import type { Route } from '@/types';
 import { ViewType } from '@/types';
 
-import { zhiboHandler } from '../kaipanhong/shared';
+import { zhiboHandler } from './shared';
 
 export const route: Route = {
     path: '/dapanzhibo/:category?',
     name: '大盘直播',
-    url: 'longhuvip.com',
+    url: 'kaipanhong.com',
     maintainers: [],
     handler: zhiboHandler,
-    example: '/kaipanla/dapanzhibo',
+    example: '/kaipanhong/dapanzhibo',
     view: ViewType.Articles,
     parameters: { category: '可选筛选：板块名、分析师名、个股或板块' },
-    description: '开盘红大盘直播，保留开盘啦订阅路径兼容。',
+    description: '开盘红大盘直播。',
     categories: ['finance'],
     features: { requireConfig: false, requirePuppeteer: false, antiCrawler: false, supportRadar: false, supportBT: false, supportPodcast: false, supportScihub: false },
     cacheTtl: 1,

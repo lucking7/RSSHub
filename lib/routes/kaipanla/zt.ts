@@ -5,6 +5,13 @@ import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
 const KAIPANLA_CACHE_TTL = 1;
+const escapeHtml = (value: unknown): string =>
+    String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
 
 export const route: Route = {
     path: '/zt',
@@ -52,21 +59,36 @@ async function handler(): Promise<Data> {
         false
     );
 
-    const info = response.info || [];
+    if (!Array.isArray(response.info) || response.info.length < 12) {
+        throw new Error('开盘啦涨停表现数据缺少有效 info');
+    }
+    if (String(response.errcode) !== '0') {
+        throw new Error(`开盘啦涨停表现 API 业务错误，errcode=${String(response.errcode)}`);
+    }
+    const info = response.info;
+    const sourceDate = response.date || response.Day || response.day || response.Time;
+    if (!sourceDate) {
+        throw new Error('开盘啦涨停表现数据缺少源日期');
+    }
+    const sourceDateText = String(sourceDate);
+    const sourceDateNumber = typeof sourceDate === 'number' || (typeof sourceDate === 'string' && /^\d+(?:\.\d+)?$/.test(sourceDateText)) ? Number(sourceDate) : NaN;
+    const sourceDateValue = Number.isFinite(sourceDateNumber) ? new Date(sourceDateNumber > 1e12 ? sourceDateNumber : sourceDateNumber * 1000) : new Date(sourceDateText);
+    if (Number.isNaN(sourceDateValue.getTime())) {
+        throw new TypeError('开盘啦涨停表现数据源日期无效');
+    }
 
     // Upstream ZhangTingExpression `info[]`: [0-3] 1/2/3/high-board counts, [4-7] seal rates, [8-10] avg seals (1-3 boards), [11] comment.
-    const yiBan = info[0] || 0;
-    const erBan = info[1] || 0;
-    const sanBan = info[2] || 0;
-    const gaoBan = info[3] || 0;
-    const yiBanRate = info[4] || 0;
-    const erBanRate = info[5] || 0;
-    const sanBanRate = info[6] || 0;
-    const gaoBanRate = info[7] || 0;
-    const yiBanSeal = info[8] || 0;
-    const erBanSeal = info[9] || 0;
-    const sanBanSeal = info[10] || 0;
-    const comment = info[11] || '数据更新中';
+    const values = info.slice(0, 11).map((value) => {
+        if ((typeof value !== 'number' && typeof value !== 'string') || String(value).trim() === '') {
+            throw new Error('开盘啦涨停表现 info 含非法数值');
+        }
+        return Number(value);
+    });
+    if (values.some((value) => !Number.isFinite(value))) {
+        throw new Error('开盘啦涨停表现 info 含非法数值');
+    }
+    const [yiBan, erBan, sanBan, gaoBan, yiBanRate, erBanRate, sanBanRate, gaoBanRate, yiBanSeal, erBanSeal, sanBanSeal] = values;
+    const comment = info[11] ?? '数据更新中';
 
     const totalZt = yiBan + erBan + sanBan + gaoBan;
     const avgSealRate = ((yiBanRate + erBanRate + sanBanRate + gaoBanRate) / 4).toFixed(2);
@@ -89,7 +111,7 @@ async function handler(): Promise<Data> {
     description += '<div style="background: #f5f5f5; border-left: 3px solid #1890ff; padding: 10px 15px; margin: 0 0 15px 0; border-radius: 4px;">';
     description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">涨停表现分析</h3>';
     description += `• <strong>${sentiment}</strong> | 平均封板率 ${avgSealRate}%<br>`;
-    description += `<p style="margin: 10px 0 0 0; line-height: 1.6;">${comment}</p>`;
+    description += `<p style="margin: 10px 0 0 0; line-height: 1.6;">${escapeHtml(comment)}</p>`;
     description += '</div>';
 
     description += '<div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 0 0 15px 0; border-radius: 4px;">';
@@ -143,9 +165,9 @@ async function handler(): Promise<Data> {
             {
                 title,
                 description,
-                pubDate: parseDate(new Date()),
+                pubDate: parseDate(sourceDateValue),
                 link: 'https://www.longhuvip.com/',
-                guid: `kaipanla:zt-expression:${Date.now()}`,
+                guid: `kaipanla:zt-expression:${sourceDateText}:${info.join('|')}`,
                 author: '开盘啦',
             },
         ],

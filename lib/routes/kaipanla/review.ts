@@ -5,6 +5,13 @@ import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
 const KAIPANLA_CACHE_TTL = 1;
+const escapeHtml = (value: unknown): string =>
+    String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
 
 export const route: Route = {
     path: '/review',
@@ -52,9 +59,29 @@ async function handler(): Promise<Data> {
         false
     );
 
-    const info = response.info || {};
-    const strong = Math.trunc(Number(info.strong)) || 0;
-    const sign = info.sign || '';
+    if (String(response.errcode) !== '0') {
+        throw new Error(`开盘啦盘面点评 API 业务错误，errcode=${String(response.errcode)}`);
+    }
+    if (!response.info || typeof response.info !== 'object' || Array.isArray(response.info)) {
+        throw new Error('开盘啦盘面点评数据缺少有效 info');
+    }
+    const info = response.info;
+    const strongValue = typeof info.strong === 'number' ? info.strong : typeof info.strong === 'string' && info.strong.trim() !== '' ? Number(info.strong) : NaN;
+    if (!Number.isFinite(strongValue) || info.sign === undefined) {
+        throw new Error('开盘啦盘面点评 info 缺少有效评分或点评');
+    }
+    const strong = Math.trunc(strongValue);
+    const sign = String(info.sign);
+    const sourceDate = response.date || response.Day || response.day || response.Time;
+    if (!sourceDate) {
+        throw new Error('开盘啦盘面点评数据缺少源日期');
+    }
+    const sourceDateText = String(sourceDate);
+    const sourceDateNumber = typeof sourceDate === 'number' || (typeof sourceDate === 'string' && /^\d+(?:\.\d+)?$/.test(sourceDateText)) ? Number(sourceDate) : NaN;
+    const sourceDateValue = Number.isFinite(sourceDateNumber) ? new Date(sourceDateNumber > 1e12 ? sourceDateNumber : sourceDateNumber * 1000) : new Date(sourceDateText);
+    if (Number.isNaN(sourceDateValue.getTime())) {
+        throw new TypeError('开盘啦盘面点评数据源日期无效');
+    }
 
     let sentiment = '中性';
     if (strong >= 80) {
@@ -78,7 +105,7 @@ async function handler(): Promise<Data> {
 
     description += '<div style="background: #f5f5f5; border-left: 3px solid #52c41a; padding: 10px 15px; margin: 0 0 15px 0; border-radius: 4px;">';
     description += '<h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: #333; text-decoration: underline;">盘面点评</h3>';
-    description += `<p style="margin: 0; line-height: 1.6;">${sign}</p>`;
+    description += `<p style="margin: 0; line-height: 1.6;">${escapeHtml(sign)}</p>`;
     description += '</div>';
 
     description += '<div style="background: #f5f5f5; border-left: 3px solid #faad14; padding: 10px 15px; margin: 0; border-radius: 4px;">';
@@ -98,9 +125,9 @@ async function handler(): Promise<Data> {
             {
                 title,
                 description,
-                pubDate: parseDate(new Date()),
+                pubDate: parseDate(sourceDateValue),
                 link: 'https://www.longhuvip.com/',
-                guid: `kaipanla:review:${Date.now()}`,
+                guid: `kaipanla:review:${sourceDateText}:${strong}:${sign}`,
                 author: '开盘啦',
             },
         ],
