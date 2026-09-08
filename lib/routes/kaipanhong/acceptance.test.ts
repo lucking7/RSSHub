@@ -34,6 +34,55 @@ beforeEach(() => {
 });
 
 describe('kaipanhong and kaipanla news/zhibo', () => {
+    it.each(['https://', 'http://'])('filters the fixed portrait with %s and query parameters without dropping the entry', async (protocol) => {
+        mockedGot.mockResolvedValue(response({ errcode: 0, List: [zhiboItem({ Image: `${protocol}appresi.longhuvip.com/uploadImg/adv/ArticleImage/1727336533_456.png?version=2` })] }));
+        const feed = await data(zhiboRoute);
+        expect(feed.item).toHaveLength(1);
+        expect(feed.item[0].description).not.toContain('<img');
+        expect(feed.item[0].guid).toBe('kaipanla:zhibo:12');
+    });
+
+    it('preserves genuine illustrations even when multiple entries share an image', async () => {
+        const Image = 'https://appresi.longhuvip.com/uploadImg/adv/ArticleImage/chart.png';
+        mockedGot.mockResolvedValue(response({ errcode: 0, List: [zhiboItem({ Image }), zhiboItem({ ID: 13, Image })] }));
+        const feed = await data(zhiboRoute);
+        expect(feed.item.every((item) => item.description.includes(Image))).toBe(true);
+    });
+
+    it('puts explanations before compact sector and stock quotes', async () => {
+        mockedGot.mockResolvedValue(
+            response({
+                errcode: 0,
+                List: [
+                    zhiboItem({
+                        Interpretation: '布伦特原油涨超1%',
+                        BoomReason: '<原因>',
+                        PlateName: '石油石化',
+                        PlateJE: '591285059.000',
+                        PlateZDF: '2.20',
+                        Stock: [
+                            ['603619', '中曼石油', '9.36'],
+                            ['300164', '通源石油', '-4.31'],
+                            ['002490', '山东墨龙', 0],
+                        ],
+                    }),
+                ],
+            })
+        );
+        const html = (await data(zhiboRoute)).item[0].description;
+        expect(html.indexOf('布伦特原油')).toBeLessThan(html.indexOf('板块'));
+        expect(html).toContain('&lt;原因&gt;');
+        expect(html).toContain('石油石化 +2.20% · 成交额 5.91亿');
+        expect(html).toContain('中曼石油 (603619) +9.36%<br/>通源石油 (300164) -4.31%<br/>山东墨龙 (002490) 0.00%');
+        expect(html).not.toContain('<table');
+        expect(html).not.toContain('**');
+    });
+
+    it.each([null, '', false, 'NaN', '-1', '20%'])('omits invalid turnover %p', async (PlateJE) => {
+        mockedGot.mockResolvedValue(response({ errcode: 0, List: [zhiboItem({ PlateName: '板块', PlateJE })] }));
+        expect((await data(zhiboRoute)).item[0].description).not.toContain('成交额');
+    });
+
     it.each(['stock', 'commodity', '0', '1', '2'])('posts supported news type %s with fixed anonymous form', async (type) => {
         mockedGot.mockResolvedValue(response({ errcode: 0, List: [newsItem()] }));
         await data(newsRoute, { type });
