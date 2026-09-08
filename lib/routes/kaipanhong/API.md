@@ -101,6 +101,10 @@
 
 无需额外参数的匿名请求返回 `errcode=0`；一次样本含 41 条。`List` 中可见 `ID`、`Time`、`Comment`、`PlateCode`、`PlateName`、`Interpretation`、`UserName`、`Image`、`Stock`、`DisStock`、`BoomReason` 等字段。昵称、字段名和内容均不能证明“原创”或 AI 生成。
 
+直播展示先输出正文、解读和爆发原因，再输出紧凑的板块和个股行情，每只股票占一行。`PlateJE` 按万、亿缩写，不额外断言币种。仅过滤 `appresi.longhuvip.com/uploadImg/adv/ArticleImage/1727336533_456.png` 这一固定人物配图（忽略协议及查询参数），不删除对应消息，不按作者过滤，也不去重其他图表。新旧品牌路由共用此行为。
+
+直播条目的 GUID 保持 `kaipanla:zhibo:{ID}`，行情或解读更新不会改变 GUID。按 GUID 去重的消费者（包括当前 RSStT）不会自动重新发送后补正文。调整展示顺序不能解决历史消息补发问题，不应以行情变化生成新 GUID，否则会反复推送。
+
 本轮同批匿名对照中，新旧端点 41/41 条 `ID` 重合；去掉旧端点 `Comment` 末尾固定的“该内容由AI大模型根据行情自动生成”尾注后，`Comment` 全部一致。新端点不返回该尾注，不能据此证明内容转为人工原创，也不推断差异原因；这是本轮样本观察，不是长期保证。
 
 #### `apphwhq.MarketMood/MoodNumCount`

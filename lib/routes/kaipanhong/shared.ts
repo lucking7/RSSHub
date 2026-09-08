@@ -6,7 +6,7 @@ import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
-import { renderSectorAndStockCards, renderStockCard, type StockItem } from '../_finance/stock-card';
+import { renderSectorAndStockCards, type StockItem } from '../_finance/stock-card';
 
 const CACHE_TTL = 1;
 const NEWS_API = 'https://apparticle.kaipanhong.com/w1/api/index.php';
@@ -78,6 +78,31 @@ const numericChange = (value: unknown): number | undefined => {
 };
 const fingerprint = (value: string): string => createHash('sha256').update(value).digest('hex');
 
+const liveImage = (value: unknown): string => {
+    const image = safeUrl(value, '');
+    if (!image) {
+        return '';
+    }
+    const url = new URL(image);
+    // This exact reusable author portrait is not a news illustration. Keep other images, even repeated charts.
+    return url.hostname === 'appresi.longhuvip.com' && url.pathname === '/uploadImg/adv/ArticleImage/1727336533_456.png' ? '' : image;
+};
+
+const changeLabel = (value: unknown): string => {
+    const change = numericChange(value);
+    return change === undefined ? '' : ` ${change > 0 ? '+' : ''}${change.toFixed(2)}%`;
+};
+
+const turnoverLabel = (value: unknown): string => {
+    const amount = numericChange(value);
+    if (amount === undefined || amount < 0 || String(value).includes('%')) {
+        return '';
+    }
+    // Scale the upstream number without asserting an undocumented currency unit.
+    const formatted = amount >= 1e8 ? `${(amount / 1e8).toFixed(2)}亿` : amount >= 1e4 ? `${(amount / 1e4).toFixed(2)}万` : String(amount);
+    return ` · 成交额 ${formatted}`;
+};
+
 const typeNames: Record<string, string> = { '0': '类型0', '1': '类型1', '2': '类型2' };
 
 export async function newsHandler(ctx): Promise<Data> {
@@ -138,28 +163,27 @@ export async function zhiboHandler(ctx): Promise<Data> {
         }
         const fallback = `https://www.kaipanhong.com/#dapanzhibo-${encodeURIComponent(String(item.ID))}`;
         let description = '';
-        const imageUrl = safeUrl(item.Image, '');
+        const imageUrl = liveImage(item.Image);
         if (imageUrl) {
             description += `<p><img src="${escapeHtml(imageUrl)}" /></p>`;
         }
         description += `<p>${escapeHtml(item.Comment)}</p>`;
-        if (validText(item.PlateName)) {
-            description += renderStockCard('板块', '#1890ff', [{ name: escapeHtml(item.PlateName), code: item.PlateJE ? escapeHtml(`成交额: ${item.PlateJE}`) : '', change: numericChange(item.PlateZDF) }]);
-        }
-        if (Array.isArray(item.Stock) && item.Stock.length) {
-            description += renderStockCard(
-                '相关个股',
-                '#52c41a',
-                item.Stock.filter((stock) => Array.isArray(stock) && stock.length >= 2 && validId(stock[0]) && validText(stock[1]))
-                    .slice(0, 15)
-                    .map(([code, name, change]: any[]) => ({ name: escapeHtml(name), code: escapeHtml(code), change: numericChange(change) }))
-            );
-        }
         if (item.Interpretation) {
             description += `<p><strong>解读</strong>：${escapeHtml(item.Interpretation)}</p>`;
         }
         if (item.BoomReason) {
             description += `<p><strong>爆发原因</strong>：${escapeHtml(item.BoomReason)}</p>`;
+        }
+        if (validText(item.PlateName)) {
+            description += `<p><strong>板块</strong>：${escapeHtml(item.PlateName)}${changeLabel(item.PlateZDF)}${turnoverLabel(item.PlateJE)}</p>`;
+        }
+        if (Array.isArray(item.Stock) && item.Stock.length) {
+            const stocks = item.Stock.filter((stock) => Array.isArray(stock) && stock.length >= 2 && validId(stock[0]) && validText(stock[1]))
+                .slice(0, 15)
+                .map(([code, name, change]: any[]) => `${escapeHtml(name)} (${escapeHtml(code)})${changeLabel(change)}`);
+            if (stocks.length) {
+                description += `<p><strong>相关个股</strong><br/>${stocks.join('<br/>')}</p>`;
+            }
         }
         const categories = [
             item.PlateName,
