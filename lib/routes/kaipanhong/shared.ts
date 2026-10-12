@@ -84,8 +84,8 @@ const liveImage = (value: unknown): string => {
         return '';
     }
     const url = new URL(image);
-    // This exact reusable author portrait is not a news illustration. Keep other images, even repeated charts.
-    return url.hostname === 'appresi.longhuvip.com' && url.pathname === '/uploadImg/adv/ArticleImage/1727336533_456.png' ? '' : image;
+    // The reusable portrait keeps its path when CDN hosts change. Preserve all other images, even repeated charts.
+    return url.pathname === '/uploadImg/adv/ArticleImage/1727336533_456.png' ? '' : image;
 };
 
 const changeLabel = (value: unknown): string => {

@@ -34,11 +34,18 @@ beforeEach(() => {
 });
 
 describe('kaipanhong and kaipanla news/zhibo', () => {
-    it.each(['https://', 'http://'])('filters the fixed portrait with %s and query parameters without dropping the entry', async (protocol) => {
-        mockedGot.mockResolvedValue(response({ errcode: 0, List: [zhiboItem({ Image: `${protocol}appresi.longhuvip.com/uploadImg/adv/ArticleImage/1727336533_456.png?version=2` })] }));
-        const feed = await data(zhiboRoute);
+    const portraitCases = ['appresi.longhuvip.com', 'appresi.kaipanhong.com', 'cdn.example.com'].flatMap((host) =>
+        ['https:', 'http:'].flatMap((protocol) =>
+            ['', '?version=2#preview'].flatMap((suffix) => [zhiboRoute, legacyZhiboRoute].map((route) => ({ route, image: `${protocol}//${host}/uploadImg/adv/ArticleImage/1727336533_456.png${suffix}` })))
+        )
+    );
+    it.each(portraitCases)('filters the fixed portrait at $image without dropping content', async ({ route, image }) => {
+        mockedGot.mockResolvedValue(response({ errcode: 0, List: [zhiboItem({ Image: image, Interpretation: '保留解读' })] }));
+        const feed = await data(route);
         expect(feed.item).toHaveLength(1);
         expect(feed.item[0].description).not.toContain('<img');
+        expect(feed.item[0].description).toContain('直播内容');
+        expect(feed.item[0].description).toContain('保留解读');
         expect(feed.item[0].guid).toBe('kaipanla:zhibo:12');
     });
 
