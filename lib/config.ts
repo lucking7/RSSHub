@@ -78,6 +78,7 @@ type ConfigEnvKeys =
     | 'OPENAI_PROMPT'
     | 'OPENAI_PROMPT_TITLE'
     | 'OPENAI_EXTRA_HEADERS'
+    | 'OPENAI_FALLBACK_MODEL'
     // Follow
     | 'FOLLOW_OWNER_USER_ID'
     | 'FOLLOW_DESCRIPTION'
@@ -348,6 +349,7 @@ export type Config = {
     openai: {
         apiKey?: string;
         model?: string;
+        fallbackModel?: string;
         temperature?: number;
         maxTokens?: number;
         endpoint: string;
@@ -875,6 +877,7 @@ const calculateValue = () => {
         openai: {
             apiKey: envs.OPENAI_API_KEY,
             model: envs.OPENAI_MODEL || 'gpt-3.5-turbo-16k',
+            fallbackModel: envs.OPENAI_FALLBACK_MODEL,
             temperature: toInt(envs.OPENAI_TEMPERATURE, 0.2),
             maxTokens: toInt(envs.OPENAI_MAX_TOKENS, 0) || undefined,
             endpoint: envs.OPENAI_API_ENDPOINT || 'https://api.openai.com/v1',

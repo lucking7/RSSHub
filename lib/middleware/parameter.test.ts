@@ -476,6 +476,31 @@ describe('openai', () => {
         expect(parsedDescriptionOnly.items[0].content).toContain('AI processed content.');
     });
 
+    it('falls back to OPENAI_FALLBACK_MODEL when the primary model fails', async () => {
+        const { default: server } = await import('@/setup.test');
+        const models: string[] = [];
+        server.use(
+            mswHttp.post('https://api.openai.mock/v1/chat/completions', async ({ request }) => {
+                const { model } = (await request.json()) as { model: string };
+                models.push(model);
+                return model === 'primary' ? HttpResponse.json({ error: 'unavailable' }, { status: 500 }) : HttpResponse.json({ choices: [{ message: { content: 'Fallback content.' } }] });
+            })
+        );
+        const { inputOption, model, fallbackModel } = config.openai;
+        config.openai.inputOption = 'title';
+        config.openai.model = 'primary';
+        config.openai.fallbackModel = 'backup';
+        try {
+            const result = await runMiddleware({ item: [{ title: 'Fallback', link: 'https://example.com/fallback-model' }] }, { chatgpt: 'true' });
+            expect(models).toEqual(['primary', 'backup']);
+            expect(result.item[0].title).toBe('Fallback content.');
+        } finally {
+            config.openai.inputOption = inputOption;
+            config.openai.model = model;
+            config.openai.fallbackModel = fallbackModel;
+        }
+    });
+
     it('sends extra headers without overriding authorization', async () => {
         const { default: server } = await import('@/setup.test');
         let headers: Headers | undefined;
