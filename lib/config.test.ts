@@ -36,6 +36,20 @@ describe('config', () => {
         delete process.env['EMAIL_CONFIG_oo.qq.com'];
     });
 
+    it('openai extra headers', async () => {
+        process.env.OPENAI_EXTRA_HEADERS = JSON.stringify({ 'x-opencode-session': 'rsshub', Authorization: 'Bearer other', retries: 1 });
+
+        const { config } = await import('./config');
+        expect(config.openai.headers).toEqual({ 'x-opencode-session': 'rsshub' });
+
+        process.env.OPENAI_EXTRA_HEADERS = 'not json';
+        vi.resetModules();
+        const { config: invalidConfig } = await import('./config');
+        expect(invalidConfig.openai.headers).toEqual({});
+
+        delete process.env.OPENAI_EXTRA_HEADERS;
+    });
+
     it('discuz cookie', async () => {
         process.env.DISCUZ_COOKIE_12 = 'cookie1';
         process.env.DISCUZ_COOKIE_34 = 'cookie2';
