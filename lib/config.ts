@@ -77,6 +77,7 @@ type ConfigEnvKeys =
     | 'OPENAI_INPUT_OPTION'
     | 'OPENAI_PROMPT'
     | 'OPENAI_PROMPT_TITLE'
+    | 'OPENAI_EXTRA_HEADERS'
     // Follow
     | 'FOLLOW_OWNER_USER_ID'
     | 'FOLLOW_DESCRIPTION'
@@ -353,6 +354,7 @@ export type Config = {
         inputOption: string;
         promptTitle: string;
         promptDescription: string;
+        headers: Record<string, string>;
     };
     follow: {
         ownerUserId?: string;
@@ -734,6 +736,23 @@ const toBoolean = (value: string | undefined, defaultValue: boolean) => {
 
 const toInt = (value: string | undefined, defaultValue?: number) => (value === undefined ? defaultValue : Number.parseInt(value));
 
+// Header values must be strings; Authorization is always derived from OPENAI_API_KEY.
+const parseOpenAIHeaders = (value: string | undefined): Record<string, string> => {
+    if (!value) {
+        return {};
+    }
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(value);
+    } catch {
+        return {};
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        return {};
+    }
+    return Object.fromEntries(Object.entries(parsed).filter(([key, val]) => typeof val === 'string' && key.toLowerCase() !== 'authorization'));
+};
+
 const calculateValue = () => {
     const bilibili_cookies: Record<string, string | undefined> = {};
     const email_config: Record<string, string | undefined> = {};
@@ -862,6 +881,7 @@ const calculateValue = () => {
             inputOption: envs.OPENAI_INPUT_OPTION || 'description',
             promptDescription: envs.OPENAI_PROMPT || 'Please summarize the following article and reply with markdown format.',
             promptTitle: envs.OPENAI_PROMPT_TITLE || 'Please translate the following title into Simplified Chinese and reply only translated text.',
+            headers: parseOpenAIHeaders(envs.OPENAI_EXTRA_HEADERS),
         },
         follow: {
             ownerUserId: envs.FOLLOW_OWNER_USER_ID,

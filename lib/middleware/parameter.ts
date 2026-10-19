@@ -48,6 +48,7 @@ const getAiCompletion = async (prompt: string, text: string) => {
             temperature: config.openai.temperature,
         },
         headers: {
+            ...config.openai.headers,
             Authorization: `Bearer ${config.openai.apiKey}`,
         },
     });

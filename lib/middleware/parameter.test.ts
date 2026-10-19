@@ -1,4 +1,5 @@
 import { Context } from 'hono';
+import { http as mswHttp, HttpResponse } from 'msw';
 import Parser from 'rss-parser';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -473,6 +474,28 @@ describe('openai', () => {
         const parsedDescriptionOnly = await parser.parseString(await responseDescriptionOnly.text());
         expect(parsedDescriptionOnly.items[0].title).not.toContain('AI processed content.');
         expect(parsedDescriptionOnly.items[0].content).toContain('AI processed content.');
+    });
+
+    it('sends extra headers without overriding authorization', async () => {
+        const { default: server } = await import('@/setup.test');
+        let headers: Headers | undefined;
+        server.use(
+            mswHttp.post('https://api.openai.mock/v1/chat/completions', ({ request }) => {
+                headers = request.headers;
+                return HttpResponse.json({ choices: [{ message: { content: 'AI processed content.' } }] });
+            })
+        );
+        const { inputOption, headers: originalHeaders } = config.openai;
+        config.openai.inputOption = 'title';
+        config.openai.headers = { 'x-opencode-session': 'rsshub' };
+        try {
+            await runMiddleware({ item: [{ title: 'Extra Headers', link: 'https://example.com/extra-headers' }] }, { chatgpt: 'true' });
+            expect(headers?.get('x-opencode-session')).toBe('rsshub');
+            expect(headers?.get('authorization')).toBe(`Bearer ${config.openai.apiKey}`);
+        } finally {
+            config.openai.inputOption = inputOption;
+            config.openai.headers = originalHeaders;
+        }
     });
 });
 
