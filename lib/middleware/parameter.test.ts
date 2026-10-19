@@ -486,8 +486,10 @@ describe('openai', () => {
                 return model === 'primary' ? HttpResponse.json({ error: 'unavailable' }, { status: 500 }) : HttpResponse.json({ choices: [{ message: { content: 'Fallback content.' } }] });
             })
         );
-        const { inputOption, model, fallbackModel } = config.openai;
+        const { inputOption, slowMinSamples, model, fallbackModel } = config.openai;
         config.openai.inputOption = 'title';
+        // keep the shared router from taking over across tests
+        config.openai.slowMinSamples = Number.MAX_SAFE_INTEGER;
         config.openai.model = 'primary';
         config.openai.fallbackModel = 'backup';
         try {
@@ -496,8 +498,42 @@ describe('openai', () => {
             expect(result.item[0].title).toBe('Fallback content.');
         } finally {
             config.openai.inputOption = inputOption;
+            config.openai.slowMinSamples = slowMinSamples;
             config.openai.model = model;
             config.openai.fallbackModel = fallbackModel;
+        }
+    });
+
+    it('switches to OPENAI_FALLBACK_MODEL when the primary model times out', async () => {
+        const { default: server } = await import('@/setup.test');
+        const models: string[] = [];
+        server.use(
+            mswHttp.post('https://api.openai.mock/v1/chat/completions', async ({ request }) => {
+                const { model } = (await request.json()) as { model: string };
+                models.push(model);
+                if (model === 'primary') {
+                    await new Promise((resolve) => setTimeout(resolve, 500));
+                }
+                return HttpResponse.json({ choices: [{ message: { content: `${model} content.` } }] });
+            })
+        );
+        const { inputOption, slowMinSamples, model, fallbackModel, titleTimeout } = config.openai;
+        config.openai.inputOption = 'title';
+        // keep the shared router from taking over across tests
+        config.openai.slowMinSamples = Number.MAX_SAFE_INTEGER;
+        config.openai.model = 'primary';
+        config.openai.fallbackModel = 'backup';
+        config.openai.titleTimeout = 100;
+        try {
+            const result = await runMiddleware({ item: [{ title: 'Timeout', link: 'https://example.com/fallback-timeout' }] }, { chatgpt: 'true' });
+            expect(models).toEqual(['primary', 'backup']);
+            expect(result.item[0].title).toBe('backup content.');
+        } finally {
+            config.openai.inputOption = inputOption;
+            config.openai.slowMinSamples = slowMinSamples;
+            config.openai.model = model;
+            config.openai.fallbackModel = fallbackModel;
+            config.openai.titleTimeout = titleTimeout;
         }
     });
 

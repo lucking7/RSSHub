@@ -11,7 +11,10 @@ import { simplecc } from 'simplecc-wasm';
 
 import { config } from '@/config';
 import type { Data, DataItem } from '@/types';
+import type { AiTask } from '@/utils/ai-model-router';
+import { AiModelRouter } from '@/utils/ai-model-router';
 import cache from '@/utils/cache';
+import logger from '@/utils/logger';
 import ofetch from '@/utils/ofetch';
 
 const md = markdownit({
@@ -34,11 +37,14 @@ const resolveRelativeLink = ($: CheerioAPI, elem: Element, attr: string, baseUrl
     }
 };
 
-const requestAiCompletion = async (model: string | undefined, prompt: string, text: string, retry?: number): Promise<string> => {
+const requestAiCompletion = async (model: string | undefined, prompt: string, text: string, options: { retry?: number; timeout?: number } = {}): Promise<string> => {
     const apiUrl = `${config.openai.endpoint}/chat/completions`;
+    const { retry, timeout } = options;
     const response = await ofetch(apiUrl, {
         method: 'POST',
         ...(retry !== undefined && { retry }),
+        // ofetch's own timeout stops at the response headers; a signal also covers reading the body
+        ...(timeout && timeout > 0 && { signal: AbortSignal.timeout(timeout) }),
         body: {
             model,
             max_tokens: config.openai.maxTokens,
@@ -57,21 +63,41 @@ const requestAiCompletion = async (model: string | undefined, prompt: string, te
     return response.choices?.[0]?.message?.content ?? '';
 };
 
-// Switch to OPENAI_FALLBACK_MODEL, without retrying the primary model, when it errors or returns no content.
-const getAiCompletion = async (prompt: string, text: string) => {
+const aiModelRouter = new AiModelRouter(() => ({
+    slowMs: { title: config.openai.slowTitleMs, description: config.openai.slowDescriptionMs },
+    windowMs: config.openai.slowWindow * 1000,
+    minSamples: config.openai.slowMinSamples,
+    slowRatio: config.openai.slowRatio,
+    fallbackDurationMs: config.openai.fallbackDuration * 1000,
+    maxFallbackShare: config.openai.fallbackMaxShare,
+}));
+
+// With OPENAI_FALLBACK_MODEL set, the primary model runs without retries under OPENAI_TITLE_TIMEOUT / OPENAI_TIMEOUT,
+// and the fallback model under OPENAI_FALLBACK_TIMEOUT.
+// Its errors, timeouts and empty replies switch the request to the fallback model, and a sustained
+// slow ratio hands a share of requests to the fallback model for a while (see AiModelRouter).
+const getAiCompletion = async (prompt: string, text: string, task: AiTask) => {
     const { model, fallbackModel } = config.openai;
+    const timeout = task === 'title' ? config.openai.titleTimeout : config.openai.timeout;
     if (!fallbackModel || fallbackModel === model) {
         return requestAiCompletion(model, prompt, text);
     }
-    try {
-        const content = await requestAiCompletion(model, prompt, text, 0);
-        if (content) {
-            return content;
-        }
-    } catch {
-        // fall through to the fallback model
+    if (aiModelRouter.useFallback()) {
+        return requestAiCompletion(fallbackModel, prompt, text, { timeout: config.openai.fallbackTimeout });
     }
-    return requestAiCompletion(fallbackModel, prompt, text);
+
+    const startedAt = Date.now();
+    let content = '';
+    try {
+        content = await requestAiCompletion(model, prompt, text, { retry: 0, timeout });
+    } catch {
+        // handled below as a failed sample
+    }
+    const result = aiModelRouter.record(task, Date.now() - startedAt, !content);
+    if (result.entered) {
+        logger.warn(`AI model ${model} is slow (${Math.round(result.ratio * 100)}% of recent requests), handing ${Math.round(result.share * 100)}% of requests to ${fallbackModel} for ${config.openai.fallbackDuration}s`);
+    }
+    return content || requestAiCompletion(fallbackModel, prompt, text, { timeout: config.openai.fallbackTimeout });
 };
 
 const getAuthorString = (item: DataItem) => {
@@ -356,7 +382,7 @@ const middleware: MiddlewareHandler = async (ctx, next) => {
                         if (config.openai.inputOption === 'description' && item.description) {
                             const description = await cache.tryGet(`openai:description:${item.link}`, async () => {
                                 const description = convert(item.description!);
-                                const descriptionMd = await getAiCompletion(config.openai.promptDescription, description);
+                                const descriptionMd = await getAiCompletion(config.openai.promptDescription, description, 'description');
                                 return md.render(descriptionMd);
                             });
                             // add it to the description
@@ -368,7 +394,7 @@ const middleware: MiddlewareHandler = async (ctx, next) => {
                         else if (config.openai.inputOption === 'title' && item.title) {
                             const title = await cache.tryGet(`openai:title:${item.link}`, async () => {
                                 const title = convert(item.title!);
-                                return await getAiCompletion(config.openai.promptTitle, title);
+                                return await getAiCompletion(config.openai.promptTitle, title, 'title');
                             });
                             // replace the title
                             if (title !== '') {
@@ -379,7 +405,7 @@ const middleware: MiddlewareHandler = async (ctx, next) => {
                         else if (config.openai.inputOption === 'both' && item.title && item.description) {
                             const title = await cache.tryGet(`openai:title:${item.link}`, async () => {
                                 const title = convert(item.title!);
-                                return await getAiCompletion(config.openai.promptTitle, title);
+                                return await getAiCompletion(config.openai.promptTitle, title, 'title');
                             });
                             // replace the title
                             if (title !== '') {
@@ -388,7 +414,7 @@ const middleware: MiddlewareHandler = async (ctx, next) => {
 
                             const description = await cache.tryGet(`openai:description:${item.link}`, async () => {
                                 const description = convert(item.description!);
-                                const descriptionMd = await getAiCompletion(config.openai.promptDescription, description);
+                                const descriptionMd = await getAiCompletion(config.openai.promptDescription, description, 'description');
                                 return md.render(descriptionMd);
                             });
                             // add it to the description

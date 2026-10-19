@@ -79,6 +79,16 @@ type ConfigEnvKeys =
     | 'OPENAI_PROMPT_TITLE'
     | 'OPENAI_EXTRA_HEADERS'
     | 'OPENAI_FALLBACK_MODEL'
+    | 'OPENAI_TIMEOUT'
+    | 'OPENAI_TITLE_TIMEOUT'
+    | 'OPENAI_FALLBACK_TIMEOUT'
+    | 'OPENAI_SLOW_TITLE_MS'
+    | 'OPENAI_SLOW_DESCRIPTION_MS'
+    | 'OPENAI_SLOW_WINDOW'
+    | 'OPENAI_SLOW_MIN_SAMPLES'
+    | 'OPENAI_SLOW_RATIO'
+    | 'OPENAI_FALLBACK_DURATION'
+    | 'OPENAI_FALLBACK_MAX_SHARE'
     // Follow
     | 'FOLLOW_OWNER_USER_ID'
     | 'FOLLOW_DESCRIPTION'
@@ -350,6 +360,16 @@ export type Config = {
         apiKey?: string;
         model?: string;
         fallbackModel?: string;
+        timeout: number;
+        titleTimeout: number;
+        fallbackTimeout: number;
+        slowTitleMs: number;
+        slowDescriptionMs: number;
+        slowWindow: number;
+        slowMinSamples: number;
+        slowRatio: number;
+        fallbackDuration: number;
+        fallbackMaxShare: number;
         temperature?: number;
         maxTokens?: number;
         endpoint: string;
@@ -738,6 +758,12 @@ const toBoolean = (value: string | undefined, defaultValue: boolean) => {
 
 const toInt = (value: string | undefined, defaultValue?: number) => (value === undefined ? defaultValue : Number.parseInt(value));
 
+// Unlike toInt, keeps an explicit 0 and falls back to the default only for missing or invalid values.
+const toNumber = (value: string | undefined, defaultValue: number, min = -Infinity, max = Infinity) => {
+    const parsed = value?.trim() ? Number(value) : NaN;
+    return Number.isFinite(parsed) ? Math.min(Math.max(parsed, min), max) : defaultValue;
+};
+
 // Header values must be strings; Authorization is always derived from OPENAI_API_KEY.
 const parseOpenAIHeaders = (value: string | undefined): Record<string, string> => {
     if (!value) {
@@ -878,6 +904,16 @@ const calculateValue = () => {
             apiKey: envs.OPENAI_API_KEY,
             model: envs.OPENAI_MODEL || 'gpt-3.5-turbo-16k',
             fallbackModel: envs.OPENAI_FALLBACK_MODEL,
+            timeout: toNumber(envs.OPENAI_TIMEOUT, 0, 0),
+            titleTimeout: toNumber(envs.OPENAI_TITLE_TIMEOUT, toNumber(envs.OPENAI_TIMEOUT, 0, 0), 0),
+            fallbackTimeout: toNumber(envs.OPENAI_FALLBACK_TIMEOUT, 0, 0),
+            slowTitleMs: toNumber(envs.OPENAI_SLOW_TITLE_MS, 15000, 0),
+            slowDescriptionMs: toNumber(envs.OPENAI_SLOW_DESCRIPTION_MS, 45000, 0),
+            slowWindow: toNumber(envs.OPENAI_SLOW_WINDOW, 600, 0),
+            slowMinSamples: toNumber(envs.OPENAI_SLOW_MIN_SAMPLES, 5, 1),
+            slowRatio: toNumber(envs.OPENAI_SLOW_RATIO, 0.5, 0, 1),
+            fallbackDuration: toNumber(envs.OPENAI_FALLBACK_DURATION, 900, 0),
+            fallbackMaxShare: toNumber(envs.OPENAI_FALLBACK_MAX_SHARE, 0.9, 0, 1),
             temperature: toInt(envs.OPENAI_TEMPERATURE, 0.2),
             maxTokens: toInt(envs.OPENAI_MAX_TOKENS, 0) || undefined,
             endpoint: envs.OPENAI_API_ENDPOINT || 'https://api.openai.com/v1',
