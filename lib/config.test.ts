@@ -50,6 +50,19 @@ describe('config', () => {
         delete process.env.OPENAI_EXTRA_HEADERS;
     });
 
+    it('openai slow fallback numbers', async () => {
+        process.env.OPENAI_TIMEOUT = '45000';
+        process.env.OPENAI_FALLBACK_DURATION = '0';
+        process.env.OPENAI_SLOW_RATIO = '1.5';
+
+        const { config } = await import('./config');
+        expect(config.openai).toMatchObject({ timeout: 45000, titleTimeout: 45000, fallbackDuration: 0, slowRatio: 1, slowWindow: 600 });
+
+        delete process.env.OPENAI_TIMEOUT;
+        delete process.env.OPENAI_FALLBACK_DURATION;
+        delete process.env.OPENAI_SLOW_RATIO;
+    });
+
     it('discuz cookie', async () => {
         process.env.DISCUZ_COOKIE_12 = 'cookie1';
         process.env.DISCUZ_COOKIE_34 = 'cookie2';
