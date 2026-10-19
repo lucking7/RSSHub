@@ -34,12 +34,13 @@ const resolveRelativeLink = ($: CheerioAPI, elem: Element, attr: string, baseUrl
     }
 };
 
-const getAiCompletion = async (prompt: string, text: string) => {
+const requestAiCompletion = async (model: string | undefined, prompt: string, text: string, retry?: number): Promise<string> => {
     const apiUrl = `${config.openai.endpoint}/chat/completions`;
     const response = await ofetch(apiUrl, {
         method: 'POST',
+        ...(retry !== undefined && { retry }),
         body: {
-            model: config.openai.model,
+            model,
             max_tokens: config.openai.maxTokens,
             messages: [
                 { role: 'system', content: prompt },
@@ -53,7 +54,24 @@ const getAiCompletion = async (prompt: string, text: string) => {
         },
     });
 
-    return response.choices[0].message.content;
+    return response.choices?.[0]?.message?.content ?? '';
+};
+
+// Switch to OPENAI_FALLBACK_MODEL, without retrying the primary model, when it errors or returns no content.
+const getAiCompletion = async (prompt: string, text: string) => {
+    const { model, fallbackModel } = config.openai;
+    if (!fallbackModel || fallbackModel === model) {
+        return requestAiCompletion(model, prompt, text);
+    }
+    try {
+        const content = await requestAiCompletion(model, prompt, text, 0);
+        if (content) {
+            return content;
+        }
+    } catch {
+        // fall through to the fallback model
+    }
+    return requestAiCompletion(fallbackModel, prompt, text);
 };
 
 const getAuthorString = (item: DataItem) => {
