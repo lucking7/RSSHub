@@ -1,3 +1,5 @@
+import { escapeText } from 'entities';
+
 import type { Route } from '@/types';
 import ofetch from '@/utils/ofetch';
 import { parseDate } from '@/utils/parse-date';
@@ -42,6 +44,23 @@ const MacrodataSuffix = {
 
 const getMacrodataUrl = (countryId, wscnTicker) => `${rootUrl}/data-analyse/${wscnTicker}/${MacrodataSuffix[countryId]}`;
 
+const hasValue = (value: unknown) => value !== undefined && value !== null && String(value).trim() !== '' && String(value).trim() !== '-';
+
+const formatMacrodata = (item) => {
+    const country = String(item.country ?? '').trim();
+    const event = String(item.title ?? '').trim();
+    const title = !country || event.startsWith(country) ? event : `${country} · ${event}`;
+    const previous = hasValue(item.revised) ? item.revised : item.previous;
+    const values = [item.actual, item.forecast, previous];
+    const formatValue = (value) => (hasValue(value) ? escapeText(`${value}${item.unit ?? ''}`) : '-');
+    const description = [
+        `<p>${escapeText(title)}</p>`,
+        `<p>重要性：${'★'.repeat(item.importance)}</p>`,
+        ...(values.some(hasValue) ? [`<p>今值：${formatValue(item.actual)}<br/>预期：${formatValue(item.forecast)}<br/>前值：${formatValue(previous)}</p>`] : []),
+    ].join('');
+    return { title, description };
+};
+
 async function handler(ctx) {
     const { section = 'macrodatas' } = ctx.req.param();
 
@@ -62,8 +81,7 @@ async function handler(ctx) {
     const items =
         section === 'macrodatas'
             ? response.data.items.map((item) => ({
-                  title: `${item.country}${item.title}`,
-                  description: `${item.country}${item.title} 重要性: ${'★'.repeat(item.importance)} 今值: ${item.actual || '-'}${item.actual && item.unit} 预期: ${item.forecast || '-'}${item.forecast && item.unit} 前值: ${item.revised || item.previous || '-'}${(item.revised || item.previous) && item.unit}`,
+                  ...formatMacrodata(item),
                   link: item.uri && MacrodataSuffix[item.country_id] && getMacrodataUrl(item.country_id, item.wscn_ticker),
                   guid: item.id,
                   pubDate: parseDate(item.public_date, 'X'),
