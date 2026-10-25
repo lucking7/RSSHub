@@ -78,6 +78,8 @@ type ConfigEnvKeys =
     | 'OPENAI_PROMPT'
     | 'OPENAI_PROMPT_TITLE'
     | 'OPENAI_EXTRA_HEADERS'
+    | 'OPENAI_EXTRA_BODY'
+    | 'OPENAI_FALLBACK_EXTRA_BODY'
     | 'OPENAI_FALLBACK_MODEL'
     | 'OPENAI_TIMEOUT'
     | 'OPENAI_TITLE_TIMEOUT'
@@ -377,6 +379,8 @@ export type Config = {
         promptTitle: string;
         promptDescription: string;
         headers: Record<string, string>;
+        extraBody: Record<string, unknown>;
+        fallbackExtraBody: Record<string, unknown>;
     };
     follow: {
         ownerUserId?: string;
@@ -781,6 +785,18 @@ const parseOpenAIHeaders = (value: string | undefined): Record<string, string> =
     return Object.fromEntries(Object.entries(parsed).filter(([key, val]) => typeof val === 'string' && key.toLowerCase() !== 'authorization'));
 };
 
+const parseOpenAIBody = (value: string | undefined): Record<string, unknown> => {
+    if (!value) {
+        return {};
+    }
+    try {
+        const parsed: unknown = JSON.parse(value);
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : {};
+    } catch {
+        return {};
+    }
+};
+
 const calculateValue = () => {
     const bilibili_cookies: Record<string, string | undefined> = {};
     const email_config: Record<string, string | undefined> = {};
@@ -921,6 +937,8 @@ const calculateValue = () => {
             promptDescription: envs.OPENAI_PROMPT || 'Please summarize the following article and reply with markdown format.',
             promptTitle: envs.OPENAI_PROMPT_TITLE || 'Please translate the following title into Simplified Chinese and reply only translated text.',
             headers: parseOpenAIHeaders(envs.OPENAI_EXTRA_HEADERS),
+            extraBody: parseOpenAIBody(envs.OPENAI_EXTRA_BODY),
+            fallbackExtraBody: parseOpenAIBody(envs.OPENAI_FALLBACK_EXTRA_BODY),
         },
         follow: {
             ownerUserId: envs.FOLLOW_OWNER_USER_ID,

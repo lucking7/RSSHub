@@ -3,6 +3,8 @@ import { http as mswHttp, HttpResponse } from 'msw';
 import Parser from 'rss-parser';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { AiModelRouter } from '@/utils/ai-model-router';
+
 process.env.OPENAI_API_KEY = 'sk-1234567890';
 process.env.OPENAI_API_ENDPOINT = 'https://api.openai.mock/v1';
 
@@ -556,6 +558,82 @@ describe('openai', () => {
         } finally {
             config.openai.inputOption = inputOption;
             config.openai.headers = originalHeaders;
+        }
+    });
+
+    it('sends provider-specific parameters without overriding the configured request', async () => {
+        const { default: server } = await import('@/setup.test');
+        let body: Record<string, unknown> | undefined;
+        server.use(
+            mswHttp.post('https://api.openai.mock/v1/chat/completions', async ({ request }) => {
+                body = (await request.json()) as Record<string, unknown>;
+                return HttpResponse.json({ choices: [{ message: { content: 'Translated title.' } }] });
+            })
+        );
+        const original = { ...config.openai };
+        Object.assign(config.openai, {
+            inputOption: 'title',
+            fallbackModel: undefined,
+            extraBody: {
+                thinking: { type: 'disabled' },
+                model: 'unexpected-model',
+                messages: [],
+                stream: true,
+                max_tokens: 1,
+                temperature: 2,
+            },
+        });
+        try {
+            const result = await runMiddleware({ item: [{ title: 'Original title', link: 'https://example.com/extra-body' }] }, { chatgpt: 'true' });
+            expect(body).toEqual({
+                thinking: { type: 'disabled' },
+                model: original.model,
+                messages: [
+                    { role: 'system', content: original.promptTitle },
+                    { role: 'user', content: 'Original title' },
+                ],
+                stream: false,
+                temperature: original.temperature,
+            });
+            expect(result.item[0].title).toBe('Translated title.');
+        } finally {
+            Object.assign(config.openai, original);
+        }
+    });
+
+    it.each(['failure', 'takeover'])('uses independent fallback parameters on %s', async (mode) => {
+        const { default: server } = await import('@/setup.test');
+        const bodies: Array<Record<string, unknown>> = [];
+        server.use(
+            mswHttp.post('https://api.openai.mock/v1/chat/completions', async ({ request }) => {
+                const body = (await request.json()) as Record<string, unknown>;
+                bodies.push(body);
+                return body.model === 'primary' ? HttpResponse.json({ error: 'unavailable' }, { status: 500 }) : HttpResponse.json({ choices: [{ message: { content: 'Fallback translation.' } }] });
+            })
+        );
+        const original = { ...config.openai };
+        const takeover = mode === 'takeover' ? vi.spyOn(AiModelRouter.prototype, 'useFallback').mockReturnValue(true) : undefined;
+        Object.assign(config.openai, {
+            inputOption: 'title',
+            model: 'primary',
+            fallbackModel: 'backup',
+            slowMinSamples: Number.MAX_SAFE_INTEGER,
+            extraBody: { thinking: { type: 'disabled' } },
+            fallbackExtraBody: { reasoning_effort: 'low', model: 'unexpected-model' },
+        });
+        try {
+            const result = await runMiddleware({ item: [{ title: 'Original title', link: `https://example.com/extra-body-${mode}` }] }, { chatgpt: 'true' });
+            expect(bodies.map((body) => body.model)).toEqual(mode === 'failure' ? ['primary', 'backup'] : ['backup']);
+            if (mode === 'failure') {
+                expect(bodies[0]).toMatchObject({ thinking: { type: 'disabled' }, stream: false });
+                expect(bodies[0]).not.toHaveProperty('reasoning_effort');
+            }
+            expect(bodies.at(-1)).toMatchObject({ model: 'backup', reasoning_effort: 'low', stream: false });
+            expect(bodies.at(-1)).not.toHaveProperty('thinking');
+            expect(result.item[0].title).toBe('Fallback translation.');
+        } finally {
+            Object.assign(config.openai, original);
+            takeover?.mockRestore();
         }
     });
 });
