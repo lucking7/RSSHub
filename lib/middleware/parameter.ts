@@ -37,7 +37,7 @@ const resolveRelativeLink = ($: CheerioAPI, elem: Element, attr: string, baseUrl
     }
 };
 
-const requestAiCompletion = async (model: string | undefined, prompt: string, text: string, options: { retry?: number; timeout?: number } = {}): Promise<string> => {
+const requestAiCompletion = async (model: string | undefined, prompt: string, text: string, options: { retry?: number; timeout?: number; fallback?: boolean } = {}): Promise<string> => {
     const apiUrl = `${config.openai.endpoint}/chat/completions`;
     const { retry, timeout } = options;
     const response = await ofetch(apiUrl, {
@@ -46,6 +46,7 @@ const requestAiCompletion = async (model: string | undefined, prompt: string, te
         // ofetch's own timeout stops at the response headers; a signal also covers reading the body
         ...(timeout && timeout > 0 && { signal: AbortSignal.timeout(timeout) }),
         body: {
+            ...(options.fallback ? config.openai.fallbackExtraBody : config.openai.extraBody),
             model,
             max_tokens: config.openai.maxTokens,
             messages: [
@@ -53,6 +54,7 @@ const requestAiCompletion = async (model: string | undefined, prompt: string, te
                 { role: 'user', content: text },
             ],
             temperature: config.openai.temperature,
+            stream: false,
         },
         headers: {
             ...config.openai.headers,
@@ -83,7 +85,7 @@ const getAiCompletion = async (prompt: string, text: string, task: AiTask) => {
         return requestAiCompletion(model, prompt, text);
     }
     if (aiModelRouter.useFallback()) {
-        return requestAiCompletion(fallbackModel, prompt, text, { timeout: config.openai.fallbackTimeout });
+        return requestAiCompletion(fallbackModel, prompt, text, { timeout: config.openai.fallbackTimeout, fallback: true });
     }
 
     const startedAt = Date.now();
@@ -97,7 +99,7 @@ const getAiCompletion = async (prompt: string, text: string, task: AiTask) => {
     if (result.entered) {
         logger.warn(`AI model ${model} is slow (${Math.round(result.ratio * 100)}% of recent requests), handing ${Math.round(result.share * 100)}% of requests to ${fallbackModel} for ${config.openai.fallbackDuration}s`);
     }
-    return content || requestAiCompletion(fallbackModel, prompt, text, { timeout: config.openai.fallbackTimeout });
+    return content || requestAiCompletion(fallbackModel, prompt, text, { timeout: config.openai.fallbackTimeout, fallback: true });
 };
 
 const getAuthorString = (item: DataItem) => {

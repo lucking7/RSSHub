@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import server from '@/setup.test';
 
 afterEach(() => {
+    vi.unstubAllEnvs();
     vi.resetModules();
 });
 
@@ -61,6 +62,42 @@ describe('config', () => {
         delete process.env.OPENAI_TIMEOUT;
         delete process.env.OPENAI_FALLBACK_DURATION;
         delete process.env.OPENAI_SLOW_RATIO;
+    });
+
+    it('keeps primary and fallback request bodies independent', async () => {
+        vi.stubEnv('OPENAI_EXTRA_BODY', JSON.stringify({ thinking: { type: 'disabled' } }));
+        vi.stubEnv('OPENAI_FALLBACK_EXTRA_BODY', JSON.stringify({ reasoning_effort: 'low' }));
+
+        const { config } = await import('./config');
+        expect(config.openai.extraBody).toEqual({ thinking: { type: 'disabled' } });
+        expect(config.openai.fallbackExtraBody).toEqual({ reasoning_effort: 'low' });
+    });
+
+    it('does not inherit the primary request body for an unconfigured fallback', async () => {
+        vi.stubEnv('OPENAI_EXTRA_BODY', JSON.stringify({ thinking: { type: 'disabled' } }));
+        vi.stubEnv('OPENAI_FALLBACK_EXTRA_BODY', undefined);
+
+        const { config } = await import('./config');
+        expect(config.openai.extraBody).toEqual({ thinking: { type: 'disabled' } });
+        expect(config.openai.fallbackExtraBody).toEqual({});
+    });
+
+    it('defaults unconfigured request bodies to empty objects', async () => {
+        vi.stubEnv('OPENAI_EXTRA_BODY', undefined);
+        vi.stubEnv('OPENAI_FALLBACK_EXTRA_BODY', undefined);
+
+        const { config } = await import('./config');
+        expect(config.openai.extraBody).toEqual({});
+        expect(config.openai.fallbackExtraBody).toEqual({});
+    });
+
+    it.each(['not json', '[]', 'null', '"value"', '42', 'true'])('ignores invalid request body %s', async (value) => {
+        vi.stubEnv('OPENAI_EXTRA_BODY', value);
+        vi.stubEnv('OPENAI_FALLBACK_EXTRA_BODY', value);
+
+        const { config } = await import('./config');
+        expect(config.openai.extraBody).toEqual({});
+        expect(config.openai.fallbackExtraBody).toEqual({});
     });
 
     it('discuz cookie', async () => {
